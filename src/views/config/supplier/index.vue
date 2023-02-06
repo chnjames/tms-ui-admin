@@ -1,0 +1,289 @@
+<template>
+  <div class="app-container">
+
+    <!-- 搜索工作栏 -->
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
+      <el-form-item prop="name">
+        <el-input v-model="queryParams.name" placeholder="请输入客户名称" clearable @keyup.enter.native="handleQuery"/>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
+        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+      </el-form-item>
+    </el-form>
+    <!-- 操作工具栏 -->
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                   v-hasPermi="['config:customer:create']">新增</el-button>
+      </el-col>
+      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+    </el-row>
+
+    <!-- 列表 -->
+    <el-table v-loading="loading" :data="list" :span-method="objectSpanMethod">
+      <el-table-column label="公司名称" align="center" prop="name" />
+      <el-table-column label="公司地址" align="center" prop="address" />
+      <el-table-column label="联系人" align="center" prop="contactName" />
+      <el-table-column label="联系电话" align="center" prop="contactMobile" />
+      <el-table-column label="邮箱地址" align="center" prop="email" />
+      <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
+        <template v-slot="scope">
+          <span>{{ parseTime(scope.row.updateTime) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <template v-slot="scope">
+          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
+                     v-hasPermi="['config:customer:update']">编辑</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
+                     v-hasPermi="['config:customer:delete']">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- 分页组件 -->
+    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
+                @pagination="getList"/>
+
+    <!-- 对话框(添加 / 修改) -->
+    <el-drawer :title="title" :visible.sync="open" size="30%" append-to-body>
+      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="公司名称" prop="name">
+          <el-select v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
+                     style="width: 100%" @change="bindSupplier">
+            <el-option v-for="(item, index) in supplierList" :key="index" :label="item.name" :value="item.name"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="公司地址" prop="address">
+          <el-input :disabled="!form.name" v-model="form.address" placeholder="请输入公司地址" />
+        </el-form-item>
+        <el-form-item label="联系人" prop="contactName">
+          <el-input v-model="form.contactName" placeholder="请输入联系人" />
+        </el-form-item>
+        <el-form-item label="联系电话" prop="contactMobile">
+          <el-input v-model="form.contactMobile" placeholder="请输入联系电话" />
+        </el-form-item>
+        <el-form-item label="邮箱地址" prop="email">
+          <el-input v-model="form.email" placeholder="请输入邮箱地址" />
+        </el-form-item>
+      </el-form>
+      <div class="dialog-footer">
+        <el-divider/>
+        <el-row type="flex" class="row-bg" justify="end">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+        </el-row>
+      </div>
+    </el-drawer>
+  </div>
+</template>
+
+<script>
+import { createSupplier, updateSupplier, deleteSupplier, getSupplier, getSupplierPage, getSupplierSimpleList } from "@/api/config/supplier";
+import Editor from '@/components/Editor';
+
+export default {
+  name: "Supplier",
+  components: {
+    Editor,
+  },
+  data() {
+    return {
+      // 遮罩层
+      loading: true,
+      // 显示搜索条件
+      showSearch: true,
+      // 总条数
+      total: 0,
+      // 客户列表
+      list: [],
+      // 供应商精简列表
+      supplierList: [],
+      // 弹出层标题
+      title: "",
+      // 是否显示弹出层
+      open: false,
+      // 查询参数
+      queryParams: {
+        pageNo: 1,
+        pageSize: 10,
+        name: null
+      },
+      // 表单参数
+      form: {
+        supplierId: null,
+        name: null,
+        address: null,
+        contactName: null,
+        contactMobile: null,
+        contactId: null,
+        email: null,
+        status: 0
+      },
+      // 表单校验
+      rules: {
+        name: [{ required: true, message: "公司名称不能为空", trigger: "blur" }],
+        address: [{ required: true, message: "公司地址不能为空", trigger: "blur" }],
+        contactName: [{ required: true, message: "联系人不能为空", trigger: "blur" }],
+        contactMobile: [{ required: true, message: "联系电话不能为空", trigger: "blur" }],
+        email: [{ required: true, message: "邮箱地址不能为空", trigger: "blur" }]
+      }
+    };
+  },
+  created() {
+    this.getList();
+    this.getSupplierSimpleList();
+  },
+  methods: {
+    /** 查询列表 */
+    getList() {
+      this.loading = true;
+      // 执行查询
+      getSupplierPage(this.queryParams).then(response => {
+        this.list = response.data.list;
+        this.total = response.data.total;
+        this.loading = false;
+      });
+    },
+    /** 获取供应商精简信息列表 */
+    getSupplierSimpleList() {
+      getSupplierSimpleList().then(response => {
+        this.supplierList = response.data;
+      });
+    },
+    /** 选择供应商 */
+    bindSupplier(val) {
+      this.form.address = this.supplierList.find(item => item.name === val)?.address || "";
+    },
+    /** 取消按钮 */
+    cancel() {
+      this.open = false;
+      this.reset();
+    },
+    /** 表单重置 */
+    reset() {
+      this.form = {
+        supplierId: undefined,
+        name: undefined,
+        address: undefined,
+        email: undefined,
+        contactName: undefined,
+        contactMobile: undefined,
+        contactId: undefined,
+        status: 0
+      };
+      this.resetForm("form");
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNo = 1;
+      this.getList();
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+    /** 新增按钮操作 */
+    handleAdd() {
+      this.reset();
+      this.open = true;
+      this.title = "添加客户";
+    },
+    /** 修改按钮操作 */
+    handleUpdate(row) {
+      this.reset();
+      const params = {
+        contactId: row.contactId,
+        supplierId: row.supplierId
+      };
+      getSupplier(params).then(response => {
+        this.form = response.data;
+        this.open = true;
+        this.title = "修改客户";
+      });
+    },
+    /** 提交按钮 */
+    submitForm() {
+      this.$refs["form"].validate(valid => {
+        if (!valid) {
+          return;
+        }
+        // 修改的提交
+        if (this.form.supplierId != null) {
+          updateSupplier(this.form).then(response => {
+            this.$modal.msgSuccess("修改成功");
+            this.open = false;
+            this.getList();
+            this.getSupplierSimpleList();
+          });
+          return;
+        }
+        // 添加的提交
+        createSupplier(this.form).then(response => {
+          this.$modal.msgSuccess("新增成功");
+          this.open = false;
+          this.getList();
+          this.getSupplierSimpleList();
+        });
+      });
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const id = row.supplierId;
+      this.$modal.confirm('是否确认删除客户编号为"' + id + '"的数据项?').then(function() {
+        return deleteSupplier(id);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
+    },
+    /** 合并行 */
+    objectSpanMethod({ row, column, rowIndex, columnIndex }) {
+      if (columnIndex === 0 || columnIndex === 1) {
+        const _row = (this.mergeColumn(this.list).one)[rowIndex]
+        const _col = _row > 0 ? 1 : 0
+        return {
+          rowspan: _row,
+          colspan: _col
+        }
+      }
+    },
+    //判断合并行数
+    mergeColumn(data) {
+      const spanOneArr = []
+      let concatOne = 0
+      data.forEach((item, index) => {
+        if (index === 0) {
+          spanOneArr.push(1)
+        } else {
+          //name 修改
+          if (item.supplierId === data[index - 1].supplierId) { //第一列需合并相同内容的字段
+            spanOneArr[concatOne] += 1
+            spanOneArr.push(0)
+          } else {
+            spanOneArr.push(1)
+            concatOne = index
+          }
+        }
+      })
+      return {
+        one: spanOneArr
+      }
+    }
+  }
+};
+</script>
+<style lang="scss" scoped>
+.drawer-form {
+  padding: 20px;
+}
+.dialog-footer {
+  background-color: #FFFFFF;
+  text-align: right;
+  padding: 10px 20px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+</style>
