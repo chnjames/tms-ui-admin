@@ -54,3 +54,12 @@ export function exportCustomerExcel(query) {
     responseType: 'blob'
   })
 }
+// 获取客户精简信息列表
+export function getCustomerSimpleList(query) {
+  return request({
+    url: '/config/customer/list-all-simple',
+    method: 'get',
+    params: query
+  })
+}
+

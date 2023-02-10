@@ -46,7 +46,7 @@
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
                 @pagination="getList"/>
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" size="30%" append-to-body>
+    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="给目标起个名字"/>

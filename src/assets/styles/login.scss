@@ -63,15 +63,18 @@ $buttonHeight: $buttonH * 1px;
   font-weight: 400;
   .logo {
     // 元素
-    width: $logoWidth;
-    height: $logoHeight;
-    background-image: url($logoImage);
-    background-size: contain;
+    //width: $logoWidth;
+    //height: $logoHeight;
+    //background-image: url($logoImage);
+    //background-size: contain;
+    font-size: 50px;
+    letter-spacing: 10px;
+    text-align: center;
     // 定位
     position: absolute;
     top: 50px;
-    left: 50%;
-    margin-left: -$logoWidth/2;
+    //left: 50%;
+    //margin-left: -$logoWidth/2;
   }
   .content {
     // 元素

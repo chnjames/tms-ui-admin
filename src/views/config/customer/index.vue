@@ -46,13 +46,16 @@
                 @pagination="getList"/>
 
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" size="30%" append-to-body>
+    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="公司名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入公司名称" />
+          <el-select v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
+                     style="width: 100%" @change="bindCustomer">
+            <el-option v-for="(item, index) in customerList" :key="index" :label="item.name" :value="item.name"/>
+          </el-select>
         </el-form-item>
         <el-form-item label="公司地址" prop="address">
-          <el-input v-model="form.address" placeholder="请输入公司地址" />
+          <el-input :disabled="isDisCompany" v-model="form.address" placeholder="请输入公司地址" />
         </el-form-item>
         <el-form-item label="联系人" prop="contactName">
           <el-input v-model="form.contactName" placeholder="请输入联系人" />
@@ -76,7 +79,7 @@
 </template>
 
 <script>
-import { createCustomer, updateCustomer, deleteCustomer, getCustomer, getCustomerPage, exportCustomerExcel } from "@/api/config/customer";
+import { createCustomer, updateCustomer, deleteCustomer, getCustomer, getCustomerPage, exportCustomerExcel, getCustomerSimpleList } from "@/api/config/customer";
 import Editor from '@/components/Editor';
 
 export default {
@@ -94,6 +97,8 @@ export default {
       total: 0,
       // 客户列表
       list: [],
+      // 客户精简列表
+      customerList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -115,6 +120,7 @@ export default {
         contactMobile: null,
         contactId: null
       },
+      isDisCompany: false,
       // 表单校验
       rules: {
         name: [{ required: true, message: "公司名称不能为空", trigger: "blur" }],
@@ -127,6 +133,17 @@ export default {
   },
   created() {
     this.getList();
+    this.getCustomerSimpleList();
+  },
+  watch: {
+    form: {
+      handler(val) {
+        const company = this.customerList.find(item => item.name === val.name);
+        val.companyId = company?.id || '';
+        this.isDisCompany = !!(val.name && val.companyId);
+      },
+      deep: true
+    }
   },
   methods: {
     /** 查询列表 */
@@ -138,6 +155,18 @@ export default {
         this.total = response.data.total;
         this.loading = false;
       });
+    },
+    /** 获取供应商精简信息列表 */
+    getCustomerSimpleList() {
+      getCustomerSimpleList().then(response => {
+        this.customerList = response.data;
+      });
+    },
+    /** 选择供应商 */
+    bindCustomer(val) {
+      const company = this.customerList.find(item => item.name === val);
+      this.form.address = company?.address || '';
+      this.form.companyId = company?.id || '';
     },
     /** 取消按钮 */
     cancel() {
@@ -199,6 +228,7 @@ export default {
             this.$modal.msgSuccess("修改成功");
             this.open = false;
             this.getList();
+            this.getCustomerSimpleList();
           });
           return;
         }
@@ -207,6 +237,7 @@ export default {
           this.$modal.msgSuccess("新增成功");
           this.open = false;
           this.getList();
+          this.getCustomerSimpleList();
         });
       });
     },

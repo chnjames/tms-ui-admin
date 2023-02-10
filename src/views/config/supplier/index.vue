@@ -46,7 +46,7 @@
                 @pagination="getList"/>
 
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" size="30%" append-to-body>
+    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="公司名称" prop="name">
           <el-select v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
@@ -55,7 +55,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="公司地址" prop="address">
-          <el-input :disabled="!form.name" v-model="form.address" placeholder="请输入公司地址" />
+          <el-input :disabled="isDisCompany" v-model="form.address" placeholder="请输入公司地址" />
         </el-form-item>
         <el-form-item label="联系人" prop="contactName">
           <el-input v-model="form.contactName" placeholder="请输入联系人" />
@@ -114,12 +114,13 @@ export default {
         supplierId: null,
         name: null,
         address: null,
+        companyId: null,
         contactName: null,
         contactMobile: null,
         contactId: null,
-        email: null,
-        status: 0
+        email: null
       },
+      isDisCompany: false,
       // 表单校验
       rules: {
         name: [{ required: true, message: "公司名称不能为空", trigger: "blur" }],
@@ -133,6 +134,16 @@ export default {
   created() {
     this.getList();
     this.getSupplierSimpleList();
+  },
+  watch: {
+    form: {
+      handler(val) {
+        const company = this.supplierList.find(item => item.name === val.name);
+        val.companyId = company?.id || '';
+        this.isDisCompany = !!(val.name && val.companyId);
+      },
+      deep: true
+    }
   },
   methods: {
     /** 查询列表 */
@@ -153,7 +164,9 @@ export default {
     },
     /** 选择供应商 */
     bindSupplier(val) {
-      this.form.address = this.supplierList.find(item => item.name === val)?.address || "";
+      const company = this.supplierList.find(item => item.name === val);
+      this.form.address = company?.address || '';
+      this.form.companyId = company?.id || '';
     },
     /** 取消按钮 */
     cancel() {
@@ -166,11 +179,11 @@ export default {
         supplierId: undefined,
         name: undefined,
         address: undefined,
+        companyId: undefined,
         email: undefined,
         contactName: undefined,
         contactMobile: undefined,
-        contactId: undefined,
-        status: 0
+        contactId: undefined
       };
       this.resetForm("form");
     },
@@ -231,8 +244,12 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const id = row.supplierId;
+      const params = {
+        contactId: row.contactId,
+        supplierId: row.supplierId
+      };
       this.$modal.confirm('是否确认删除客户编号为"' + id + '"的数据项?').then(function() {
-        return deleteSupplier(id);
+        return deleteSupplier(params);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");

@@ -3,14 +3,18 @@
 
     <!-- 搜索工作栏 -->
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="物料名称" prop="name">
-        <el-input v-model="queryParams.name" placeholder="请输入物料名称" clearable @keyup.enter.native="handleQuery"/>
+      <el-form-item prop="brand">
+        <el-select v-model="queryParams.brand" placeholder="选择物料品牌" clearable @clear="bindBrandClear">
+          <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
+        </el-select>
       </el-form-item>
-      <el-form-item label="物料品牌" prop="brand">
-        <el-input v-model="queryParams.brand" placeholder="请输入物料品牌" clearable @keyup.enter.native="handleQuery"/>
+      <el-form-item prop="category">
+        <el-select v-model="queryParams.category" placeholder="选择物料类别" clearable @clear="bindCategoryClear">
+          <el-option v-for="(item, index) in categoryList" :key="index" :label="item.category" :value="item.category" />
+        </el-select>
       </el-form-item>
-      <el-form-item label="物料类别" prop="category">
-        <el-input v-model="queryParams.category" placeholder="请输入物料类别" clearable @keyup.enter.native="handleQuery"/>
+      <el-form-item prop="name">
+        <el-input v-model="queryParams.name" placeholder="请输入物料名称/编号" clearable @keyup.enter.native="handleQuery"/>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
@@ -33,13 +37,13 @@
 
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list">
-      <el-table-column label="物料编号" align="center" prop="id" />
-      <el-table-column label="物料名称" align="center" prop="name" />
-      <el-table-column label="物料编码" align="center" prop="code" />
-      <el-table-column label="物料品牌" align="center" prop="brand" />
-      <el-table-column label="物料类别" align="center" prop="category" />
-      <el-table-column label="物料规格型号" align="center" prop="specs" />
-      <el-table-column label="物料库存预警" align="center" prop="warnStock" />
+      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column label="物料编号" sortable align="center" prop="code" />
+      <el-table-column label="物料名称" sortable align="center" prop="name" />
+      <el-table-column label="物料品牌" sortable align="center" prop="brand" />
+      <el-table-column label="物料类别" sortable align="center" prop="category" />
+      <el-table-column label="规格型号" align="center" prop="specs" />
+      <el-table-column label="预警数量" align="center" prop="warnStock" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
@@ -54,37 +58,56 @@
                 @pagination="getList"/>
 
     <!-- 对话框(添加 / 修改) -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" v-dialogDrag append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="物料名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入物料名称" />
-        </el-form-item>
+    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
+      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="物料编码" prop="code">
           <el-input v-model="form.code" placeholder="请输入物料编码" />
         </el-form-item>
+        <el-form-item label="物料名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入物料名称" />
+        </el-form-item>
         <el-form-item label="物料品牌" prop="brand">
-          <el-input v-model="form.brand" placeholder="请输入物料品牌" />
+          <el-select v-model="form.brand" filterable allow-create default-first-option placeholder="请选择物料品牌"
+                     style="width: 100%">
+            <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
+          </el-select>
         </el-form-item>
         <el-form-item label="物料类别" prop="category">
-          <el-input v-model="form.category" placeholder="请输入物料类别" />
+          <el-select v-model="form.category" filterable allow-create default-first-option placeholder="请选择物料类别"
+                     style="width: 100%">
+            <el-option v-for="(item, index) in categoryList" :key="index" :label="item.category" :value="item.category" />
+          </el-select>
         </el-form-item>
         <el-form-item label="物料规格型号" prop="specs">
-          <el-input v-model="form.specs" placeholder="请输入物料规格型号" />
+          <el-autocomplete style="width: 100%" value-key="specs" v-model="form.specs" :fetch-suggestions="querySearch" placeholder="请输入物料规格型号" :trigger-on-focus="false" @select="handleSelect"></el-autocomplete>
         </el-form-item>
         <el-form-item label="物料库存预警" prop="warnStock">
-          <el-input v-model="form.warnStock" placeholder="请输入物料库存预警" />
+          <el-input-number style="width: 100%" v-model="form.warnStock" controls-position="right" :min="0"></el-input-number>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
+      <div class="dialog-footer">
+        <el-divider/>
+        <el-row type="flex" class="row-bg" justify="end">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+        </el-row>
       </div>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
 <script>
-import { createMaterial, updateMaterial, deleteMaterial, getMaterial, getMaterialPage, exportMaterialExcel } from "@/api/warehouse/material";
+import {
+  getBrandList,
+  getCategoryList,
+  getSpecList,
+  createMaterial,
+  updateMaterial,
+  deleteMaterial,
+  getMaterial,
+  getMaterialPage,
+  exportMaterialExcel
+} from '@/api/warehouse/material'
 
 export default {
   name: "Material",
@@ -106,16 +129,30 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      // 品牌列表
+      brandList: [],
+      // 类别列表
+      categoryList: [],
+      // 规格型号列表
+      specList: [],
       // 查询参数
       queryParams: {
         pageNo: 1,
         pageSize: 10,
         name: null,
         brand: null,
-        category: null,
+        category: null
       },
       // 表单参数
-      form: {},
+      form: {
+        id: null,
+        name: null,
+        code: null,
+        brand: null,
+        category: null,
+        specs: null,
+        warnStock: 0
+      },
       // 表单校验
       rules: {
         name: [{ required: true, message: "物料名称不能为空", trigger: "blur" }],
@@ -123,14 +160,35 @@ export default {
         brand: [{ required: true, message: "物料品牌不能为空", trigger: "blur" }],
         category: [{ required: true, message: "物料类别不能为空", trigger: "blur" }],
         specs: [{ required: true, message: "物料规格型号不能为空", trigger: "blur" }],
-        warnStock: [{ required: true, message: "物料库存预警不能为空", trigger: "blur" }],
+        warnStock: [{ required: true, message: "物料库存预警不能为空", trigger: "blur", type: "number" }],
       }
     };
   },
   created() {
+    this.getBrandList();
+    this.getCategoryList();
+    this.getSpecList();
     this.getList();
   },
   methods: {
+    /** 品牌列表 */
+    getBrandList() {
+      getBrandList().then(response => {
+        this.brandList = response.data;
+      });
+    },
+    /** 类别列表 */
+    getCategoryList() {
+      getCategoryList().then(response => {
+        this.categoryList = response.data;
+      });
+    },
+    /** 规格型号列表 */
+    getSpecList() {
+      getSpecList().then(response => {
+        this.specList = response.data;
+      });
+    },
     /** 查询列表 */
     getList() {
       this.loading = true;
@@ -140,6 +198,27 @@ export default {
         this.total = response.data.total;
         this.loading = false;
       });
+    },
+    /** 清除品牌 */
+    bindBrandClear() {
+      this.queryParams.brand = null
+    },
+    /** 清除类别 */
+    bindCategoryClear() {
+      this.queryParams.category = null
+    },
+    querySearch(queryString, cb) {
+      const specs = this.specList;
+      const results = queryString ? specs.filter(this.createFilter(queryString)) : specs;
+      cb(results);
+    },
+    createFilter(queryString) {
+      return (restaurant) => {
+        return (restaurant.specs.indexOf(queryString) === 0);
+      };
+    },
+    handleSelect(item) {
+      console.log(item);
     },
     /** 取消按钮 */
     cancel() {
@@ -155,7 +234,7 @@ export default {
         brand: undefined,
         category: undefined,
         specs: undefined,
-        warnStock: undefined,
+        warnStock: 0
       };
       this.resetForm("form");
     },
@@ -173,16 +252,16 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加物料基础数据";
+      this.title = "添加物料";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       const id = row.id;
-      getMaterial(id).then(response => {
+      getMaterial({id}).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改物料基础数据";
+        this.title = "修改物料";
       });
     },
     /** 提交按钮 */
@@ -197,6 +276,9 @@ export default {
             this.$modal.msgSuccess("修改成功");
             this.open = false;
             this.getList();
+            this.getBrandList();
+            this.getCategoryList();
+            this.getSpecList();
           });
           return;
         }
@@ -205,6 +287,9 @@ export default {
           this.$modal.msgSuccess("新增成功");
           this.open = false;
           this.getList();
+          this.getBrandList();
+          this.getCategoryList();
+          this.getSpecList();
         });
       });
     },
@@ -212,9 +297,12 @@ export default {
     handleDelete(row) {
       const id = row.id;
       this.$modal.confirm('是否确认删除物料基础数据编号为"' + id + '"的数据项?').then(function() {
-          return deleteMaterial(id);
+          return deleteMaterial({id});
         }).then(() => {
           this.getList();
+          this.getBrandList();
+          this.getCategoryList();
+          this.getSpecList();
           this.$modal.msgSuccess("删除成功");
         }).catch(() => {});
     },
@@ -235,3 +323,16 @@ export default {
   }
 };
 </script>
+<style lang="scss" scoped>
+.drawer-form {
+  padding: 20px;
+}
+.dialog-footer {
+  background-color: #FFFFFF;
+  text-align: right;
+  padding: 10px 20px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+</style>

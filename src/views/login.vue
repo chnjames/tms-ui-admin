@@ -1,6 +1,6 @@
 <template xmlns="">
   <div class="container">
-    <div class="logo"></div>
+    <div class="logo">益哒创新</div>
     <!-- 登录区域 -->
     <div class="content">
       <!-- 配图 -->

@@ -1,5 +1,32 @@
 import request from '@/utils/request'
 
+// 获得品牌列表
+export function getBrandList(query) {
+  return request({
+    url: '/warehouse/material/brand-list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 获得类别列表
+export function getCategoryList(query) {
+  return request({
+    url: '/warehouse/material/category-list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 获得规格列表
+export function getSpecList(query) {
+  return request({
+    url: '/warehouse/material/specs-list',
+    method: 'get',
+    params: query
+  })
+}
+
 // 创建物料基础数据
 export function createMaterial(data) {
   return request({
@@ -19,18 +46,20 @@ export function updateMaterial(data) {
 }
 
 // 删除物料基础数据
-export function deleteMaterial(id) {
+export function deleteMaterial(query) {
   return request({
-    url: '/warehouse/material/delete?id=' + id,
-    method: 'delete'
+    url: '/warehouse/material/delete',
+    method: 'delete',
+    params: query
   })
 }
 
 // 获得物料基础数据
-export function getMaterial(id) {
+export function getMaterial(query) {
   return request({
-    url: '/warehouse/material/get?id=' + id,
-    method: 'get'
+    url: '/warehouse/material/get',
+    method: 'get',
+    params: query
   })
 }
 

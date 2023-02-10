@@ -15,7 +15,7 @@
         <!-- 搜索工作栏 -->
         <el-form v-show="showSearch" :model="queryParams" ref="queryForm" size="small" :inline="true">
           <el-form-item prop="type">
-            <el-select v-model="queryParams.type" placeholder="设备类型" clearable size="small" @clear="handleClear">
+            <el-select v-model="queryParams.type" placeholder="设备类型" clearable @clear="handleClear">
               <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.type" :value="item.type"/>
             </el-select>
           </el-form-item>
@@ -73,7 +73,7 @@
       </el-col>
     </el-row>
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" size="30%" append-to-body>
+    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="设备编码" prop="code">
           <el-input v-model="form.code" placeholder="请输入设备编码"/>
