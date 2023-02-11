@@ -49,7 +49,7 @@
     <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="公司名称" prop="name">
-          <el-select v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
+          <el-select v-model="form.name" :disabled="isEdit" filterable allow-create default-first-option placeholder="请选择公司名称"
                      style="width: 100%" @change="bindSupplier">
             <el-option v-for="(item, index) in supplierList" :key="index" :label="item.name" :value="item.name"/>
           </el-select>
@@ -109,6 +109,8 @@ export default {
         pageSize: 10,
         name: null
       },
+      // 是否编辑
+      isEdit: false,
       // 表单参数
       form: {
         supplierId: null,
@@ -167,6 +169,7 @@ export default {
       const company = this.supplierList.find(item => item.name === val);
       this.form.address = company?.address || '';
       this.form.companyId = company?.id || '';
+      this.form.supplierId = company?.id || '';
     },
     /** 取消按钮 */
     cancel() {
@@ -200,12 +203,14 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      this.isEdit = false;
       this.open = true;
       this.title = "添加客户";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
+      this.isEdit = true;
       const params = {
         contactId: row.contactId,
         supplierId: row.supplierId

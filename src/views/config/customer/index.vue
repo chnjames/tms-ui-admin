@@ -21,7 +21,7 @@
     </el-row>
 
     <!-- 列表 -->
-    <el-table v-loading="loading" :data="list">
+    <el-table v-loading="loading" :data="list" :span-method="objectSpanMethod">
       <el-table-column label="公司名称" align="center" prop="name" />
       <el-table-column label="公司地址" show-overflow-tooltip align="center" prop="address" />
       <el-table-column label="联系人" align="center" prop="contactName" />
@@ -167,6 +167,7 @@ export default {
       const company = this.customerList.find(item => item.name === val);
       this.form.address = company?.address || '';
       this.form.companyId = company?.id || '';
+      this.form.customerId = company?.id || '';
     },
     /** 取消按钮 */
     cancel() {
@@ -223,7 +224,7 @@ export default {
           return;
         }
         // 修改的提交
-        if (this.form.id != null) {
+        if (this.form.customerId != null) {
           updateCustomer(this.form).then(response => {
             this.$modal.msgSuccess("修改成功");
             this.open = false;
@@ -243,7 +244,7 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const id = row.contactId;
+      const id = row.customerId;
       const params = {
         contactId: row.contactId,
         customerId: row.customerId
@@ -268,6 +269,39 @@ export default {
           this.$download.excel(response, '客户.xls');
           this.exportLoading = false;
         }).catch(() => {});
+    },
+    /** 合并行 */
+    objectSpanMethod({ row, column, rowIndex, columnIndex }) {
+      if (columnIndex === 0 || columnIndex === 1) {
+        const _row = (this.mergeColumn(this.list).one)[rowIndex]
+        const _col = _row > 0 ? 1 : 0
+        return {
+          rowspan: _row,
+          colspan: _col
+        }
+      }
+    },
+    //判断合并行数
+    mergeColumn(data) {
+      const spanOneArr = []
+      let concatOne = 0
+      data.forEach((item, index) => {
+        if (index === 0) {
+          spanOneArr.push(1)
+        } else {
+          //name 修改
+          if (item.customerId === data[index - 1].customerId) { //第一列需合并相同内容的字段
+            spanOneArr[concatOne] += 1
+            spanOneArr.push(0)
+          } else {
+            spanOneArr.push(1)
+            concatOne = index
+          }
+        }
+      })
+      return {
+        one: spanOneArr
+      }
     }
   }
 };
