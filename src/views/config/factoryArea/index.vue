@@ -198,6 +198,7 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
+      this.getSimpleFactoryArea()
     },
     /** 重置按钮操作 */
     resetQuery() {
@@ -232,6 +233,7 @@ export default {
             this.$modal.msgSuccess('修改成功')
             this.open = false
             this.getList()
+            this.getSimpleFactoryArea()
           })
           return
         }
@@ -240,6 +242,7 @@ export default {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
+          this.getSimpleFactoryArea()
         })
       })
     },
@@ -252,6 +255,7 @@ export default {
         return deleteFactoryArea(id)
       }).then(() => {
         this.getList()
+        this.getSimpleFactoryArea()
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })

@@ -73,7 +73,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="物料类别" prop="category">
-          <el-select v-model="form.category" filterable allow-create default-first-option placeholder="请选择物料类别"
+          <el-select v-model="form.category" :disabled="isReadonly" filterable allow-create default-first-option placeholder="请选择物料类别"
                      style="width: 100%">
             <el-option v-for="(item, index) in categoryList" :key="index" :label="item.category" :value="item.category" />
           </el-select>
@@ -135,6 +135,8 @@ export default {
       categoryList: [],
       // 规格型号列表
       specList: [],
+      // 是否只读
+      isReadonly: false,
       // 查询参数
       queryParams: {
         pageNo: 1,
@@ -251,12 +253,14 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      this.isReadonly = false;
       this.open = true;
       this.title = "添加物料";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
+      this.isReadonly = true;
       const id = row.id;
       getMaterial({id}).then(response => {
         this.form = response.data;

@@ -49,13 +49,14 @@
     <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="公司名称" prop="name">
-          <el-select v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
+          <el-select v-if="!isEdit" v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
                      style="width: 100%" @change="bindCustomer">
             <el-option v-for="(item, index) in customerList" :key="index" :label="item.name" :value="item.name"/>
           </el-select>
+           <el-input v-else v-model="form.name" placeholder="请输入公司名称" />
         </el-form-item>
         <el-form-item label="公司地址" prop="address">
-          <el-input :disabled="isDisCompany" v-model="form.address" placeholder="请输入公司地址" />
+          <el-input :disabled="isDisCompany&&!isEdit" v-model="form.address" placeholder="请输入公司地址" />
         </el-form-item>
         <el-form-item label="联系人" prop="contactName">
           <el-input v-model="form.contactName" placeholder="请输入联系人" />
@@ -103,6 +104,8 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      // 是否是编辑
+      isEdit: false,
       // 查询参数
       queryParams: {
         pageNo: 1,
@@ -201,12 +204,14 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      this.isEdit = false;
       this.open = true;
       this.title = "添加客户";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
+      this.isEdit = true;
       const params = {
         contactId: row.contactId,
         customerId: row.customerId

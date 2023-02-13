@@ -176,6 +176,11 @@ export default {
       this.loading = true
       // 执行查询
       getStoreAreaPage(this.queryParams).then(response => {
+        const { list } = response.data
+        list.map(item => {
+          const [row, layer, column] = item.specs?.split('-') || []
+          item.quantity = row * layer * column
+        })
         this.list = this.handleTree(response.data.list, 'id')
         this.total = response.data.total
         this.loading = false
@@ -189,11 +194,7 @@ export default {
     },
     /** 切换仓储类型 */
     handleTypeChange(val) {
-      if (val === 0) {
-        this.isWarehouse = false
-      } else {
-        this.isWarehouse = true
-      }
+      this.isWarehouse = val !== 0;
     },
     /** 展开/折叠操作 */
     toggleExpandAll() {

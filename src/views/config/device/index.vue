@@ -215,7 +215,9 @@ export default {
     getSimpleFactoryArea() {
       this.treeLoading = true
       getSimpleFactoryArea().then(response => {
-        this.treeData = this.handleTree(response.data)
+        const menu = { id: '', name: '顶级', children: [] }
+        menu.children = this.handleTree(response.data)
+        this.treeData = [menu]
         this.treeLoading = false
       })
     },
