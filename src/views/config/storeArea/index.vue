@@ -51,7 +51,7 @@
     <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择类型" style="width: 100%" @change="handleTypeChange">
+          <el-select v-model="form.type" :disabled="isEdit" placeholder="请选择类型" style="width: 100%" @change="handleTypeChange">
             <el-option v-for="dict in this.getDictDatas(DICT_TYPE.CONFIG_STORE_TYPE)"
                        :key="dict.value" :label="dict.label" :value="parseInt(dict.value)"/>
           </el-select>
@@ -135,6 +135,8 @@ export default {
       isExpandAll: true,
       // 重新渲染表格状态
       refreshTable: true,
+      // 是否是编辑
+      isEdit: false,
       // 查询参数
       queryParams: {
         pageNo: 1,
@@ -237,12 +239,14 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset()
+      this.isEdit = false
       this.open = true
       this.title = '添加仓库/库区'
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset()
+      this.isEdit = true
       const id = row.id
       getStoreArea(id).then(response => {
         this.form = response.data
