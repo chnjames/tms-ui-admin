@@ -220,7 +220,7 @@ export default {
           return;
         }
         // 修改的提交
-        if (this.form.supplierId != null) {
+        if (this.form.contactId != null) {
           updateSupplier(this.form).then(response => {
             this.$modal.msgSuccess("修改成功");
             this.open = false;

@@ -218,7 +218,7 @@ export default {
           return;
         }
         // 修改的提交
-        if (this.form.customerId != null) {
+        if (this.form.contactId != null) {
           updateCustomer(this.form).then(response => {
             this.$modal.msgSuccess("修改成功");
             this.open = false;
