@@ -48,6 +48,7 @@
           <el-table-column type="selection" width="55" align="center"/>
           <el-table-column label="设备编码" align="center" prop="code"/>
           <el-table-column label="设备名称" align="center" prop="name" show-overflow-tooltip/>
+          <el-table-column label="所在区域" align="center" prop="factoryAreaName"/>
           <el-table-column label="设备类型" align="center" prop="type"/>
           <el-table-column label="设备规格" align="center" prop="description"/>
           <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
