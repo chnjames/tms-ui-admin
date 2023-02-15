@@ -23,7 +23,6 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
@@ -185,11 +184,6 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
     },
     /** 提交按钮 */
     submitForm() {

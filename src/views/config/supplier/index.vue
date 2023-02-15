@@ -8,7 +8,6 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
     <!-- 操作工具栏 -->
@@ -46,8 +45,8 @@
                 @pagination="getList"/>
 
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
+    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="公司名称" prop="name">
           <el-select v-if="!isEdit" v-model="form.name" filterable allow-create default-first-option placeholder="请选择公司名称"
                      style="width: 100%" @change="bindSupplier">
@@ -68,25 +67,22 @@
           <el-input v-model="form.email" placeholder="请输入邮箱地址" />
         </el-form-item>
       </el-form>
-      <div class="dialog-footer">
-        <el-divider/>
-        <el-row type="flex" class="row-bg" justify="end">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </el-row>
-      </div>
-    </el-drawer>
+      <template slot="footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </template>
+    </drawer-plus>
   </div>
 </template>
 
 <script>
 import { createSupplier, updateSupplier, deleteSupplier, getSupplier, getSupplierPage, getSupplierSimpleList } from "@/api/config/supplier";
-import Editor from '@/components/Editor';
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
 
 export default {
   name: "Supplier",
   components: {
-    Editor,
+    DrawerPlus
   },
   data() {
     return {
@@ -196,11 +192,6 @@ export default {
       this.queryParams.pageNo = 1;
       this.getList();
     },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
@@ -297,16 +288,3 @@ export default {
   }
 };
 </script>
-<style lang="scss" scoped>
-.drawer-form {
-  padding: 20px;
-}
-.dialog-footer {
-  background-color: #FFFFFF;
-  text-align: right;
-  padding: 10px 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
-</style>

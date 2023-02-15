@@ -1,18 +1,14 @@
 <template>
   <div class="app-container">
-    <el-card style="margin-bottom: 20px">
-      <el-row type="flex" justify="center">
-        <el-col :span="20">
-          <el-input placeholder="请输入"></el-input>
-        </el-col>
-        <el-col :span="4">
-          <el-button-group>
-            <el-button type="primary">文档搜索</el-button>
-            <el-button type="primary">合同搜索</el-button>
-          </el-button-group>
-        </el-col>
-      </el-row>
-    </el-card>
+    <div class="search">
+      <el-input placeholder="请输入" class="search-input" />
+      <el-tooltip class="item" effect="dark" content="文档搜索" placement="bottom">
+        <i class="el-icon-document document-icon" @click="handleQuery"></i>
+      </el-tooltip>
+      <el-tooltip class="item" effect="dark" content="合同搜索" placement="bottom">
+        <i class="el-icon-s-check check-icon" @click="handleQuery"></i>
+      </el-tooltip>
+    </div>
     <el-card>
       <!-- 搜索工作栏 -->
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
@@ -104,17 +100,26 @@
     </el-card>
 
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="120px">
-        <el-form-item label="物料编码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入物料编码" />
+    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
+        <el-form-item label="类型" prop="type">
+          <el-select v-model="form.type" style="width: 100%" placeholder="请选择">
+            <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand"/>
+          </el-select>
         </el-form-item>
-        <el-form-item label="物料名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入物料名称" />
+        <el-form-item label="设备名称" prop="name">
+          <el-select v-model="form.name" style="width: 100%" filterable placeholder="请选择">
+            <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="物料品牌" prop="brand">
-          <el-select v-model="form.brand" filterable allow-create default-first-option placeholder="请选择物料品牌"
-                     style="width: 100%">
+        <el-form-item label="设备编号" prop="code">
+          <div>E29349123435</div>
+        </el-form-item>
+        <el-form-item label="负责人" prop="header">
+          <el-input v-model="form.header" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="内部关注人" prop="header">
+          <el-select v-model="form.header" style="width: 100%" filterable multiple placeholder="请选择">
             <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
           </el-select>
         </el-form-item>
@@ -131,14 +136,11 @@
           <el-input-number style="width: 100%" v-model="form.warnStock" controls-position="right" :min="0"></el-input-number>
         </el-form-item>
       </el-form>
-      <div class="dialog-footer">
-        <el-divider/>
-        <el-row type="flex" class="row-bg" justify="end">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </el-row>
-      </div>
-    </el-drawer>
+      <template slot="footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </template>
+    </drawer-plus>
   </div>
 </template>
 
@@ -154,10 +156,12 @@ import {
   getMaterialPage,
   exportMaterialExcel
 } from '@/api/warehouse/material'
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
 
 export default {
   name: "Overview",
   components: {
+    DrawerPlus
   },
   data() {
     return {
@@ -298,7 +302,7 @@ export default {
       this.reset();
       this.isReadonly = false;
       this.open = true;
-      this.title = "添加物料";
+      this.title = "新建项目";
     },
     /** 详情按钮操作 */
     handleDetail(row) {
@@ -313,7 +317,7 @@ export default {
       getMaterial({id}).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改物料";
+        this.title = "修改项目";
       });
     },
     /** 提交按钮 */
@@ -379,15 +383,27 @@ export default {
 :deep(.el-form-item--small .el-form-item__content) {
   line-height: normal;
 }
-.drawer-form {
-  padding: 20px;
+.search {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  border-radius: 20px;
+  padding: 0 10px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 10%);
+  margin-bottom: 20px;
+  box-sizing: border-box;
+  &-input {
+    flex: 1;
+    box-sizing: border-box;
+  }
+  .document-icon, .check-icon {
+    font-size: 20px;
+    color: #409EFF;
+    margin: 0 10px;
+  }
 }
-.dialog-footer {
-  background-color: #FFFFFF;
-  text-align: right;
-  padding: 10px 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
+::v-deep .search-input .el-input__inner {
+  border: 0;
 }
 </style>

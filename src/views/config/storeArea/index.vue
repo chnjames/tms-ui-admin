@@ -7,7 +7,6 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
-        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
     <!-- 操作工具栏 -->
@@ -25,7 +24,7 @@
     <!-- 列表 -->
     <el-table v-if="refreshTable" v-loading="loading" :data="list" row-key="id" :default-expand-all="isExpandAll"
               :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
-      <el-table-column label="名称" align="center" prop="name"/>
+      <el-table-column label="名称" prop="name"/>
       <el-table-column label="储位数量" align="center" prop="quantity"/>
       <el-table-column label="储位规格(排*层*列)" align="center" prop="specs"/>
       <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
@@ -48,8 +47,8 @@
     />
 
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
+    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="类型" prop="type">
           <el-select v-model="form.type" :disabled="isEdit" placeholder="请选择类型" style="width: 100%" @change="handleTypeChange">
             <el-option v-for="dict in this.getDictDatas(DICT_TYPE.CONFIG_STORE_TYPE)"
@@ -86,14 +85,11 @@
           </el-row>
         </el-form-item>
       </el-form>
-      <div class="dialog-footer">
-        <el-divider/>
-        <el-row type="flex" class="row-bg" justify="end">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </el-row>
-      </div>
-    </el-drawer>
+      <template slot="footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </template>
+    </drawer-plus>
   </div>
 </template>
 
@@ -106,12 +102,12 @@ import {
   getStoreAreaPage,
   getStoreSimpleList
 } from '@/api/config/storeArea'
-import Editor from '@/components/Editor'
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
 
 export default {
   name: 'StoreArea',
   components: {
-    Editor
+    DrawerPlus
   },
   data() {
     return {
@@ -191,6 +187,7 @@ export default {
     /** 获取仓库精简信息列表 */
     getStoreSimpleList() {
       getStoreSimpleList().then(response => {
+        response.data.unshift({ id: 0, name: '顶级仓库' })
         this.storeList = response.data
       })
     },
@@ -230,11 +227,6 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -276,6 +268,7 @@ export default {
             this.$modal.msgSuccess('修改成功')
             this.open = false
             this.getList()
+            this.getStoreSimpleList()
           })
           return
         }
@@ -284,6 +277,7 @@ export default {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
+          this.getStoreSimpleList()
         })
       })
     },
@@ -294,6 +288,7 @@ export default {
         return deleteStoreArea(id)
       }).then(() => {
         this.getList()
+        this.getStoreSimpleList()
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })
@@ -301,17 +296,3 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
-.drawer-form {
-  padding: 20px;
-}
-
-.dialog-footer {
-  background-color: #FFFFFF;
-  text-align: right;
-  padding: 10px 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
-</style>

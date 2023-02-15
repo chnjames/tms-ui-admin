@@ -120,17 +120,3 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
-.drawer-form {
-  padding: 20px;
-}
-
-.dialog-footer {
-  background-color: #FFFFFF;
-  text-align: right;
-  padding: 10px 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
-</style>

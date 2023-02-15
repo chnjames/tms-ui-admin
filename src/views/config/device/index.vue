@@ -25,7 +25,6 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
-            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
           </el-form-item>
         </el-form>
         <!-- 操作工具栏 -->
@@ -73,8 +72,8 @@
       </el-col>
     </el-row>
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
+    <drawer-plus  :title="title" :visible.sync="open" :size="500" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="设备编码" prop="code">
           <el-input v-model="form.code" placeholder="请输入设备编码"/>
         </el-form-item>
@@ -96,14 +95,11 @@
           />
         </el-form-item>
       </el-form>
-      <div class="dialog-footer">
-        <el-divider/>
-        <el-row type="flex" class="row-bg" justify="end">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </el-row>
-      </div>
-    </el-drawer>
+      <template slot="footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </template>
+    </drawer-plus>
   </div>
 </template>
 
@@ -119,10 +115,11 @@ import {
 import TreeSelect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { getSimpleFactoryArea } from '@/api/config/factoryArea'
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
 
 export default {
   name: 'Device',
-  components: { TreeSelect },
+  components: { DrawerPlus, TreeSelect },
   data() {
     return {
       // 遮罩层
@@ -274,11 +271,8 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
+      this.getSimpleFactoryArea()
+      this.getDeviceTypeList()
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -320,6 +314,8 @@ export default {
             this.$modal.msgSuccess('修改成功')
             this.open = false
             this.getList()
+            this.getSimpleFactoryArea()
+            this.getDeviceTypeList()
           })
           return
         }
@@ -328,6 +324,8 @@ export default {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
+          this.getSimpleFactoryArea()
+          this.getDeviceTypeList()
         })
       })
     },
@@ -338,6 +336,8 @@ export default {
         return deleteDevice(id)
       }).then(() => {
         this.getList()
+        this.getSimpleFactoryArea()
+        this.getDeviceTypeList()
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })
@@ -345,17 +345,3 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
-.drawer-form {
-  padding: 20px;
-}
-
-.dialog-footer {
-  background-color: #FFFFFF;
-  text-align: right;
-  padding: 10px 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
-</style>

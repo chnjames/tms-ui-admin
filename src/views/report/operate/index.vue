@@ -1,8 +1,8 @@
 <template>
   <div class="app-container">
-    <el-row type="flex" justify="space-between" class="mb20">
-      <el-col :span="4">
-        <el-card>
+    <el-row :gutter="20" justify="space-between">
+      <el-col :xl="6" :lg="6" :md="12" :sm="12" :xs="24">
+        <el-card class="mb20">
           <div slot="header">
             <span>近1月采购支出</span>
             <el-button style="float: right; padding: 3px 0" plain type="text">查看详情</el-button>
@@ -15,8 +15,8 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="4">
-        <el-card>
+      <el-col :xl="6" :lg="6" :md="12" :sm="12" :xs="24">
+        <el-card class="mb20">
           <div slot="header">
             <span>近1月销售收入</span>
             <el-button style="float: right; padding: 3px 0" type="text">查看详情</el-button>
@@ -29,8 +29,8 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="4">
-        <el-card>
+      <el-col :xl="6" :lg="6" :md="12" :sm="12" :xs="24">
+        <el-card class="mb20">
           <div slot="header">
             <span>当前应收账款</span>
           </div>
@@ -42,8 +42,8 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="4">
-        <el-card>
+      <el-col :xl="6" :lg="6" :md="12" :sm="12" :xs="24">
+        <el-card class="mb20">
           <div slot="header">
             <span>延期未收款金额</span>
           </div>
@@ -55,32 +55,18 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="4">
-        <el-card>
-          <div slot="header">
-            <span>资产存货价值</span>
-            <el-button style="float: right; padding: 3px 0" type="text">查看详情</el-button>
-          </div>
-          <div class="card-layout">
-            <div class="icon">
-              <i class="el-icon-coin"></i>
-            </div>
-            <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num" />
-          </div>
-        </el-card>
-      </el-col>
     </el-row>
     <el-card class="mb20">
       <div slot="header" style="padding-bottom: 10px">
         <span style="font-size: 18px;">财务分析</span>
         <el-date-picker
-          style="float: right;"
+          style="float: right;width: 260px"
           size="mini"
           v-model="financeTime"
           type="daterange"
           align="right"
           unlink-panels
-          range-separator="至"
+          range-separator="-"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :picker-options="pickerOptions">
@@ -117,12 +103,13 @@
         <div style="float: right;">
           <el-date-picker
             class="mr20"
+            style="width: 260px"
             size="mini"
             v-model="financeTime"
             type="daterange"
             align="right"
             unlink-panels
-            range-separator="至"
+            range-separator="-"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             :picker-options="pickerOptions">

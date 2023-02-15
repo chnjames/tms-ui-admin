@@ -8,7 +8,6 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
-        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
     <!-- 操作工具栏 -->
@@ -26,8 +25,8 @@
     <!-- 列表 -->
     <el-table v-if="refreshTable" v-loading="loading" :data="list" row-key="id" :default-expand-all="isExpandAll"
               :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
-      <el-table-column label="名称" align="center" prop="name"/>
-      <el-table-column label="描述" show-overflow-tooltip align="center" prop="description"/>
+      <el-table-column label="名称" prop="name"/>
+      <el-table-column label="描述" show-overflow-tooltip prop="description"/>
       <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
         <template v-slot="scope">
           <span>{{ parseTime(scope.row.updateTime) }}</span>
@@ -46,8 +45,8 @@
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
                 @pagination="getList"/>
     <!-- 对话框(添加 / 修改) -->
-    <el-drawer :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form class="drawer-form" ref="form" :model="form" :rules="rules" label-width="80px">
+    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="给目标起个名字"/>
         </el-form-item>
@@ -59,14 +58,11 @@
                        :show-count="true" placeholder="选择上级"/>
         </el-form-item>
       </el-form>
-      <div class="dialog-footer">
-        <el-divider/>
-        <el-row type="flex" class="row-bg" justify="end">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </el-row>
-      </div>
-    </el-drawer>
+      <template slot="footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </template>
+    </drawer-plus>
   </div>
 </template>
 
@@ -81,10 +77,11 @@ import {
 } from '@/api/config/factoryArea'
 import TreeSelect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
 
 export default {
   name: 'FactoryArea',
-  components: { TreeSelect },
+  components: { DrawerPlus, TreeSelect },
   data() {
     return {
       // 遮罩层
@@ -200,11 +197,6 @@ export default {
       this.getList()
       this.getSimpleFactoryArea()
     },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm('queryForm')
-      this.handleQuery()
-    },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset()
@@ -263,17 +255,3 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
-.drawer-form {
-  padding: 20px;
-}
-
-.dialog-footer {
-  background-color: #FFFFFF;
-  text-align: right;
-  padding: 10px 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
-</style>
