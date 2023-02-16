@@ -122,11 +122,26 @@ export default {
       isDisCompany: false,
       // 表单校验
       rules: {
-        name: [{ required: true, message: "公司名称不能为空", trigger: "blur" }],
-        address: [{ required: true, message: "公司地址不能为空", trigger: "blur" }],
-        contactName: [{ required: true, message: "联系人不能为空", trigger: "blur" }],
-        contactMobile: [{ required: true, message: "联系电话不能为空", trigger: "blur" }],
-        email: [{ required: true, message: "邮箱地址不能为空", trigger: "blur" }]
+        name: [
+          { required: true, message: "公司名称不能为空", trigger: "blur" },
+          { max: 30, message: '公司名称不能超过30个字符', trigger: 'blur' }
+        ],
+        address: [
+          { required: true, message: "公司地址不能为空", trigger: "blur" },
+          { max: 50, message: '公司地址不能超过50个字符', trigger: 'blur' }
+        ],
+        contactName: [
+          { required: true, message: "联系人不能为空", trigger: "blur" },
+          { max: 30, message: '联系人不能超过30个字符', trigger: 'blur' }
+        ],
+        contactMobile: [
+          { required: true, message: "联系电话不能为空", trigger: "blur" },
+          { pattern: /^1\d{10}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+        ],
+        email: [
+          { required: true, message: "邮箱地址不能为空", trigger: "blur" },
+          { pattern: /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/, message: '请输入正确的邮箱地址', trigger: 'blur' }
+        ]
       }
     };
   },
@@ -240,12 +255,12 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const id = row.supplierId;
+      const name = row.contactName;
       const params = {
         contactId: row.contactId,
         supplierId: row.supplierId
       };
-      this.$modal.confirm('是否确认删除客户编号为"' + id + '"的数据项?').then(function() {
+      this.$modal.confirm('是否确认删除联系人为"' + name + '"的数据项?').then(function() {
         return deleteSupplier(params);
       }).then(() => {
         this.getList();

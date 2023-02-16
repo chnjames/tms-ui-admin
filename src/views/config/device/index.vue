@@ -46,11 +46,11 @@
         <el-table v-loading="loading" :data="list" ref="multipleTable">
           <!--选择-->
           <el-table-column type="selection" width="55" align="center"/>
-          <el-table-column label="设备编码" align="center" prop="code"/>
-          <el-table-column label="设备名称" align="center" prop="name" show-overflow-tooltip/>
-          <el-table-column label="所在区域" align="center" prop="factoryAreaName"/>
+          <el-table-column label="设备编码" prop="code"/>
+          <el-table-column label="设备名称" prop="name" show-overflow-tooltip/>
           <el-table-column label="设备类型" align="center" prop="type"/>
           <el-table-column label="设备规格" align="center" prop="description"/>
+          <el-table-column label="上级名称" align="center" prop="factoryAreaName"/>
           <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
             <template v-slot="scope">
               <span>{{ parseTime(scope.row.updateTime) }}</span>
@@ -154,8 +154,7 @@ export default {
         code: undefined,
         type: undefined,
         description: undefined,
-        factoryAreaId: undefined,
-        status: 0
+        factoryAreaId: undefined
       },
       // 表单校验
       rules: {
@@ -263,8 +262,7 @@ export default {
         code: undefined,
         type: undefined,
         description: undefined,
-        factoryAreaId: undefined,
-        status: 0
+        factoryAreaId: undefined
       }
       this.resetForm('form')
     },
@@ -331,7 +329,8 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const id = row.id
-      this.$modal.confirm('是否确认删除设备编号为"' + id + '"的数据项?').then(function() {
+      const name = row.name
+      this.$modal.confirm('是否确认删除设备名称为"' + name + '"的数据项?').then(function() {
         return deleteDevice(id)
       }).then(() => {
         this.getList()

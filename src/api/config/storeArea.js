@@ -37,7 +37,7 @@ export function getStoreArea(id) {
 // 获得仓库/库区分页
 export function getStoreAreaPage(query) {
   return request({
-    url: '/config/store-area/page',
+    url: '/config/store-area/list',
     method: 'get',
     params: query
   })

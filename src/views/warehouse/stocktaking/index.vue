@@ -21,7 +21,7 @@
     <!-- 列表 -->
     <el-table v-if="refreshTable" v-loading="loading" :data="list" row-key="id" :default-expand-all="isExpandAll"
               :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
-      <el-table-column label="名称" align="center" prop="name"/>
+      <el-table-column label="名称" prop="name"/>
       <el-table-column label="储位数量" align="center" prop="quantity"/>
       <el-table-column label="储位规格(排*层*列)" align="center" prop="specs"/>
       <el-table-column label="最新开始时间" align="center" prop="lastStocktakingBeginTime" width="180">
@@ -40,10 +40,6 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- 分页组件 -->
-    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
-                @pagination="getList"
-    />
   </div>
 </template>
 
@@ -60,8 +56,6 @@ export default {
       loading: true,
       // 显示搜索条件
       showSearch: true,
-      // 总条数
-      total: 0,
       // 仓库盘点列表
       list: [],
       // 弹出层标题
@@ -69,7 +63,7 @@ export default {
       // 是否显示弹出层
       open: false,
       // 是否展开，默认全部展开
-      isExpandAll: true,
+      isExpandAll: false,
       // 重新渲染表格状态
       refreshTable: true,
       // 查询参数
@@ -89,13 +83,12 @@ export default {
       this.loading = true
       // 执行查询
       getStocktakingPage(this.queryParams).then(response => {
-        const { list } = response.data
-        list.map(item => {
+        const { data } = response
+        data.map(item => {
           const [row, layer, column] = item.specs?.split('-') || []
           item.quantity = row * layer * column
         })
-        this.list = this.handleTree(response.data.list, 'id')
-        this.total = response.data.total
+        this.list = this.handleTree(data)
         this.loading = false
       })
     },

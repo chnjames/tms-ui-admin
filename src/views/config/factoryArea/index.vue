@@ -41,9 +41,6 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- 分页组件 -->
-    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
-                @pagination="getList"/>
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
@@ -89,11 +86,9 @@ export default {
       // 显示搜索条件
       showSearch: true,
       // 是否展开，默认全部展开
-      isExpandAll: true,
+      isExpandAll: false,
       // 重新渲染表格状态
       refreshTable: true,
-      // 总条数
-      total: 0,
       // 工厂区域列表
       list: [],
       // 弹出层标题
@@ -102,8 +97,6 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        pageNo: 1,
-        pageSize: 10,
         name: null
       },
       // 表单参数
@@ -111,7 +104,6 @@ export default {
         id: undefined,
         name: undefined,
         description: undefined,
-        status: 0,
         parentId: undefined
       },
       // 表单校验
@@ -122,7 +114,7 @@ export default {
         ],
         description: [
           { required: true, message: '描述不能为空', trigger: 'blur' },
-          { max: 120, message: '描述不能超过120个字', trigger: 'blur' }
+          { max: 100, message: '描述不能超过100个字', trigger: 'blur' }
         ],
         parentId: [
           { required: true, message: '上级不能为空', trigger: 'blur' }
@@ -142,8 +134,7 @@ export default {
       this.loading = true
       // 执行查询
       getFactoryAreaPage(this.queryParams).then(response => {
-        this.total = response.data.total
-        this.list = this.handleTree(response.data.list, 'id')
+        this.list = this.handleTree(response.data)
         this.loading = false
       })
     },
@@ -152,7 +143,7 @@ export default {
       getSimpleFactoryArea().then(response => {
         this.menuOptions = []
         const menu = { id: 0, name: '顶级', children: [] }
-        menu.children = this.handleTree(response.data, 'id')
+        menu.children = this.handleTree(response.data)
         this.menuOptions.push(menu)
       })
     },
@@ -186,7 +177,6 @@ export default {
         id: undefined,
         name: undefined,
         description: undefined,
-        status: 0,
         parentId: undefined
       }
       this.resetForm('form')

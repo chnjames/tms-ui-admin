@@ -37,7 +37,7 @@ export function getFactoryArea(id) {
 // 获得工厂区域分页
 export function getFactoryAreaPage(query) {
   return request({
-    url: '/config/factory-area/page',
+    url: '/config/factory-area/list',
     method: 'get',
     params: query
   })

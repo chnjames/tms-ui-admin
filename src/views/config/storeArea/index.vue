@@ -41,11 +41,6 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- 分页组件 -->
-    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
-                @pagination="getList"
-    />
-
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
@@ -115,8 +110,6 @@ export default {
       loading: true,
       // 显示搜索条件
       showSearch: true,
-      // 总条数
-      total: 0,
       // 仓库/库区列表
       list: [],
       // 所属仓库列表
@@ -128,7 +121,7 @@ export default {
       // 是否显示弹出层
       open: false,
       // 是否展开，默认全部展开
-      isExpandAll: true,
+      isExpandAll: false,
       // 重新渲染表格状态
       refreshTable: true,
       // 是否是编辑
@@ -148,8 +141,7 @@ export default {
         specs: undefined,
         row: undefined,
         layer: undefined,
-        column: undefined,
-        status: 0
+        column: undefined
       },
       // 表单校验
       rules: {
@@ -174,13 +166,12 @@ export default {
       this.loading = true
       // 执行查询
       getStoreAreaPage(this.queryParams).then(response => {
-        const { list } = response.data
-        list.map(item => {
+        const {data} = response
+        data.map(item => {
           const [row, layer, column] = item.specs?.split('-') || []
           item.quantity = row * layer * column
         })
-        this.list = this.handleTree(response.data.list, 'id')
-        this.total = response.data.total
+        this.list = this.handleTree(data, 'id')
         this.loading = false
       })
     },
@@ -218,8 +209,7 @@ export default {
         specs: undefined,
         row: undefined,
         layer: undefined,
-        column: undefined,
-        status: 0
+        column: undefined
       }
       this.resetForm('form')
     },
@@ -284,7 +274,8 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const id = row.id
-      this.$modal.confirm('是否确认删除仓库/库区编号为"' + id + '"的数据项?').then(function() {
+      const name = row.name
+      this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
         return deleteStoreArea(id)
       }).then(() => {
         this.getList()
