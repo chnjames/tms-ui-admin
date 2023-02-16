@@ -195,7 +195,6 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
-      this.getSimpleFactoryArea()
     },
     /** 新增按钮操作 */
     handleAdd() {

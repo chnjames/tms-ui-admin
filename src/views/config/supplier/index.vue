@@ -249,6 +249,7 @@ export default {
         return deleteSupplier(params);
       }).then(() => {
         this.getList();
+        this.getSupplierSimpleList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => {});
     },

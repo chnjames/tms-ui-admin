@@ -218,10 +218,10 @@ export default {
     };
   },
   created() {
+    this.getList();
     this.getBrandList();
     this.getCategoryList();
     this.getSpecList();
-    this.getList();
   },
   methods: {
     /** 品牌列表 */

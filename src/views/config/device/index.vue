@@ -272,8 +272,6 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
-      this.getSimpleFactoryArea()
-      this.getDeviceTypeList()
     },
     /** 新增按钮操作 */
     handleAdd() {
