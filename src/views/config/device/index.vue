@@ -232,6 +232,7 @@ export default {
     /** 侧边栏菜单点击事件 */
     handleNodeClick(data) {
       this.queryParams.factoryAreaId = data.id
+      this.queryParams.pageNo = 1
       this.getList()
     },
     /** 清除设备类型 */

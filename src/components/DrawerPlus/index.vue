@@ -33,10 +33,14 @@ export default {
 $height: 60px;
 .content {
   padding: 20px;
+  height: calc(100% - #{$height});
 }
 .scrollbar {
   height: 100%;
   position: relative;
+  :deep(.el-scrollbar__view) {
+    height: calc(100% - #{$height});
+  }
 
   .seat {
     height: $height;
