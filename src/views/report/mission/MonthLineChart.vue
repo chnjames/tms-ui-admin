@@ -1,5 +1,5 @@
 <template>
-  <charts :options="options" />
+  <charts :options="options" height="400px" />
 </template>
 
 <script>
@@ -13,10 +13,11 @@ export default {
         tooltip: {
           trigger: 'axis'
         },
+        color: ['#409EFF', '#67C23A', '#E6A23C'],
         legend: {
           left: 'center',
-          bottom: '10',
-          data: ['销售收入', '客户欠款']
+          bottom: 10,
+          data: ['总任务数量', '已完成数量', '未完成数量']
         },
         grid: {
           left: '3%',
@@ -27,10 +28,27 @@ export default {
         },
         xAxis: {
           type: 'category',
+          axisLine: {
+            lineStyle: {
+              color: '#999'
+            }
+          },
+          axisTick: {
+            alignWithLabel: true
+          },
           data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
         },
         yAxis: {
           type: 'value',
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          axisLabel: {
+            color:'#abb8ce',
+          },
           splitLine: {
             show: true,
             lineStyle: {
@@ -44,13 +62,20 @@ export default {
         },
         series: [
           {
-            name: '销售收入',
+            name: '总任务数量',
             type: 'line',
-            data: [15000, 20000, 10000, 50000, 90000, 50000, 60000, 80000, 100000, 120000, 150000, 200000]
+            smooth: false,
+            data: [12, 56, 23, 63, 93, 47, 73, 23, 56, 56, 18, 43]
           }, {
-            name: '客户欠款',
+            name: '已完成数量',
             type: 'line',
-            data: [5000, 10000, 5000, 20000, 30000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+            smooth: false,
+            data: [8, 48, 20, 58, 79, 16, 52, 21, 49, 43, 17, 21]
+          }, {
+            name: '未完成数量',
+            type: 'line',
+            smooth: false,
+            data: [4, 8, 3, 5, 14, 31, 21, 2, 7, 13, 1, 22]
           }
         ]
       }

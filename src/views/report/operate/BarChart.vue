@@ -1,52 +1,16 @@
 <template>
-  <div :class="className" :style="{height:height,width:width}"/>
+  <charts :options="options" />
 </template>
 
 <script>
-import echarts from 'echarts'
-
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
+import Charts from '@/components/Charts/index.vue'
 
 export default {
   name: 'BarChart',
-  mixins: [resize],
-  props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    width: {
-      type: String,
-      default: '100%'
-    },
-    height: {
-      type: String,
-      default: '300px'
-    }
-  },
+  components: { Charts },
   data() {
     return {
-      chart: null
-    }
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.initChart()
-    })
-  },
-  beforeDestroy() {
-    if (!this.chart) {
-      return
-    }
-    this.chart.dispose()
-    this.chart = null
-  },
-  methods: {
-    initChart() {
-      this.chart = echarts.init(this.$el, 'macarons')
-
-      this.chart.setOption({
+      options: {
         tooltip: {
           trigger: 'axis',
           axisPointer: {
@@ -55,14 +19,14 @@ export default {
         },
         legend: {
           left: 'center',
-          bottom: '10',
+          bottom: 0,
           data: ['物料采购', '资产存货']
         },
         grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '10%',
-          top: '3%',
+          top: 10,
+          left: '2%',
+          right: '2%',
+          bottom: '8%',
           containLabel: true
         },
         xAxis: {
@@ -95,12 +59,8 @@ export default {
             data: [1228470.00, 1248570.00, 1116511.20, 1228450.00, 1228640.00, 1225470.00, 1222570.00, 1228630.00, 1220200.00, 1266670.00, 1228900.00, 1228942.00]
           }
         ]
-      })
+      }
     }
   }
 }
 </script>
-
-<style scoped>
-
-</style>

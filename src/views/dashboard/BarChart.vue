@@ -1,52 +1,16 @@
 <template>
-  <div :class="className" :style="{height:height,width:width}" />
+  <charts :options="options" />
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
-import resize from './mixins/resize'
-
+import Charts from '@/components/Charts/index.vue'
 const animationDuration = 6000
 
 export default {
-  mixins: [resize],
-  props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    width: {
-      type: String,
-      default: '100%'
-    },
-    height: {
-      type: String,
-      default: '300px'
-    }
-  },
+  components: { Charts },
   data() {
     return {
-      chart: null
-    }
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.initChart()
-    })
-  },
-  beforeDestroy() {
-    if (!this.chart) {
-      return
-    }
-    this.chart.dispose()
-    this.chart = null
-  },
-  methods: {
-    initChart() {
-      this.chart = echarts.init(this.$el, 'macarons')
-
-      this.chart.setOption({
+      options: {
         tooltip: {
           trigger: 'axis',
           axisPointer: { // 坐标轴指示器，坐标轴触发有效
@@ -95,7 +59,7 @@ export default {
           data: [30, 52, 200, 334, 390, 330, 220],
           animationDuration
         }]
-      })
+      }
     }
   }
 }
