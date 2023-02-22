@@ -13,6 +13,7 @@ export default {
         tooltip: {
           trigger: 'axis'
         },
+        color: ['#409EFF', '#67C23A'],
         legend: {
           left: 'center',
           bottom: '10',
@@ -27,10 +28,27 @@ export default {
         },
         xAxis: {
           type: 'category',
+          axisLine: {
+            lineStyle: {
+              color: '#999'
+            }
+          },
+          axisTick: {
+            alignWithLabel: true
+          },
           data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
         },
         yAxis: {
           type: 'value',
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          axisLabel: {
+            color:'#abb8ce',
+          },
           splitLine: {
             show: true,
             lineStyle: {
@@ -46,11 +64,13 @@ export default {
           {
             name: '销售收入',
             type: 'line',
-            data: [15000, 20000, 10000, 50000, 90000, 50000, 60000, 80000, 100000, 120000, 150000, 200000]
+            smooth: false,
+            data: [7, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
           }, {
             name: '客户欠款',
             type: 'line',
-            data: [5000, 10000, 5000, 20000, 30000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+            smooth: false,
+            data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17, 16.6, 14.2, 10.3, 6.6, 4.8]
           }
         ]
       }

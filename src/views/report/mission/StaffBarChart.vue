@@ -6,7 +6,7 @@
 import Charts from '@/components/Charts/index.vue'
 
 export default {
-  name: 'BarChart',
+  name: 'StaffBarChart',
   components: { Charts },
   data() {
     return {

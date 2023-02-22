@@ -5,7 +5,7 @@
 <script>
 import Charts from '@/components/Charts/index.vue'
 export default {
-  name: 'LineChart',
+  name: 'MonthLineChart',
   components: { Charts },
   data() {
     return {

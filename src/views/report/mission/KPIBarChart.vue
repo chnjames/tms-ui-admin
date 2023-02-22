@@ -6,7 +6,7 @@
 import Charts from '@/components/Charts/index.vue'
 
 export default {
-  name: 'BaseBarChart',
+  name: 'KPIBarChart',
   components: { Charts },
   data() {
     return {
