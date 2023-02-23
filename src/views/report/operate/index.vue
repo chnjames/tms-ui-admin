@@ -222,7 +222,6 @@ export default {
 .operate-container {
   padding: 20px;
   background-color: rgb(240, 242, 245);
-  position: relative;
 }
 
 .card-panel-num {
@@ -271,7 +270,7 @@ export default {
 .chart-wrapper {
   background: #fff;
   padding: 16px 16px 0;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 @media (max-width: 1024px) {

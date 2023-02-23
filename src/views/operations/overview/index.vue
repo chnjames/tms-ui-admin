@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="overview-container">
     <div class="search">
       <el-input placeholder="请输入" class="search-input" />
       <el-tooltip class="item" effect="dark" content="文档搜索" placement="bottom">
@@ -380,6 +380,12 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+.overview-container {
+  padding: 20px;
+  background-color: rgb(240, 242, 245);
+  height: 100%;
+  position: absolute;
+}
 :deep(.el-form-item--small .el-form-item__content) {
   line-height: normal;
 }
