@@ -1,15 +1,17 @@
 <template>
   <div class="overview-container">
     <div class="search">
-      <el-input placeholder="请输入" class="search-input" />
-      <el-tooltip class="item" effect="dark" content="文档搜索" placement="bottom">
-        <i class="el-icon-document document-icon" @click="handleQuery"></i>
-      </el-tooltip>
-      <el-tooltip class="item" effect="dark" content="合同搜索" placement="bottom">
-        <i class="el-icon-s-check check-icon" @click="handleQuery"></i>
-      </el-tooltip>
+      <el-row type="flex" justify="end">
+        <el-col :xs="12" :sm="12" :md="12" :lg="16" :xl="16"><el-input placeholder="请输入" class="search-input" /></el-col>
+        <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="4">
+          <el-button-group>
+            <el-button type="primary" @click="handleSearch">文档搜索</el-button>
+            <el-button type="primary" @click="handleSearch">合同搜索</el-button>
+          </el-button-group>
+        </el-col>
+      </el-row>
     </div>
-    <el-card>
+    <el-card shadow="never">
       <!-- 搜索工作栏 -->
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
         <el-form-item prop="status">
@@ -46,7 +48,7 @@
       <el-row :gutter="10" class="mb8">
         <el-col :span="1.5">
           <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                     v-hasPermi="['warehouse:material:create']">新增</el-button>
+                     v-hasPermi="['operations:overview:create']">新增</el-button>
         </el-col>
         <el-col :span="1.5">
           <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
@@ -62,10 +64,10 @@
             <el-image :src="scope.row.icon" :preview-src-list="[scope.row.icon]" fit="cover" style="width: 50px; height: 50px"></el-image>
           </template>
         </el-table-column>
-        <el-table-column label="项目名称" align="center" prop="name">
+        <el-table-column label="项目名称" prop="name" show-overflow-tooltip>
           <template v-slot="scope">
-            <div class="name">{{scope.row.name}}</div>
-            <div class="desc">{{scope.row.desc}}</div>
+            <div class="project-name">YOUITMS系统开发</div>
+            <span>那是一种内在他们到达不了，也无法触那是一种内在他们到达不了，也无法</span>
           </template>
         </el-table-column>
         <el-table-column label="负责人" align="center" prop="head" />
@@ -90,7 +92,7 @@
             <el-button size="mini" type="text" icon="el-icon-view" @click="handleDetail(scope.row)"
                        v-hasPermi="['warehouse:material:delete']">详情</el-button>
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-                       v-hasPermi="['warehouse:material:delete']">删除</el-button>
+                       v-hasPermi="['operations:overview:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -107,6 +109,7 @@
             <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand"/>
           </el-select>
         </el-form-item>
+        <!--设备维保类型-->
         <el-form-item label="设备名称" prop="name">
           <el-select v-model="form.name" style="width: 100%" filterable placeholder="请选择">
             <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
@@ -114,6 +117,17 @@
         </el-form-item>
         <el-form-item label="设备编号" prop="code">
           <div>E29349123435</div>
+        </el-form-item>
+        <!--项目管理类型-->
+        <el-form-item label="项目类型" prop="code">
+          <div>普通型(子任务设置无先后顺序)</div>
+        </el-form-item>
+        <!--生产管理类型-->
+        <el-form-item label="项目类型" prop="code">
+          <div>流程型(子任务顺序执行)</div>
+        </el-form-item>
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="form.title" placeholder="给目标起个名字" />
         </el-form-item>
         <el-form-item label="负责人" prop="header">
           <el-input v-model="form.header" placeholder="请输入" />
@@ -123,17 +137,16 @@
             <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
           </el-select>
         </el-form-item>
-        <el-form-item label="物料类别" prop="category">
-          <el-select v-model="form.category" :disabled="isReadonly" filterable allow-create default-first-option placeholder="请选择物料类别"
-                     style="width: 100%">
+        <el-form-item label="开始时间" prop="startTime">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.startTime" type="date" value-format="yyyy-MM-dd" placeholder="选择开始时间" />
+        </el-form-item>
+        <el-form-item label="任务周期" prop="period">
+          <el-select v-model="form.period" placeholder="选择任务周期" clearable style="width: 100%">
             <el-option v-for="(item, index) in categoryList" :key="index" :label="item.category" :value="item.category" />
           </el-select>
         </el-form-item>
-        <el-form-item label="物料规格型号" prop="specs">
-          <el-autocomplete style="width: 100%" value-key="specs" v-model="form.specs" :fetch-suggestions="querySearch" placeholder="请输入物料规格型号" :trigger-on-focus="false" @select="handleSelect"></el-autocomplete>
-        </el-form-item>
-        <el-form-item label="物料库存预警" prop="warnStock">
-          <el-input-number style="width: 100%" v-model="form.warnStock" controls-position="right" :min="0"></el-input-number>
+        <el-form-item label="结束时间" prop="endTime">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.endTime" type="date" value-format="yyyy-MM-dd" placeholder="选择结束时间" />
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -287,6 +300,12 @@ export default {
       };
       this.resetForm("form");
     },
+    /** 文档/合同搜索 */
+    handleSearch() {
+      this.$router.push({
+        path: "/operations/search"
+      })
+    },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNo = 1;
@@ -384,32 +403,23 @@ export default {
   padding: 20px;
   background-color: rgb(240, 242, 245);
   height: 100%;
+  width: 100%;
   position: absolute;
 }
 :deep(.el-form-item--small .el-form-item__content) {
   line-height: normal;
 }
 .search {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 40px;
-  border-radius: 20px;
-  padding: 0 10px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 10%);
+  background-color: #FFFFFF;
+  padding: 20px;
   margin-bottom: 20px;
-  box-sizing: border-box;
   &-input {
-    flex: 1;
-    box-sizing: border-box;
-  }
-  .document-icon, .check-icon {
-    font-size: 20px;
-    color: #409EFF;
-    margin: 0 10px;
+    width: 100%;
   }
 }
-::v-deep .search-input .el-input__inner {
-  border: 0;
+/*项目名称*/
+.project-name {
+  font-size: 14px;
+  font-weight: 600;
 }
 </style>
