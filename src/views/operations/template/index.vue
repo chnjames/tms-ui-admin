@@ -150,16 +150,16 @@
                       </el-col>
                     </el-row>
                   </el-col>
-                  <i class="outer el-icon-delete"></i>
+                  <i class="inter el-icon-delete"  v-if="item.taskList.length > 1" @click="deleteInterItems(task, idx)"></i>
                 </el-row>
               </el-card>
-              <el-button type="primary" icon="el-icon-plus" plain style="margin-top: 10px;width: 100%">添加任务项</el-button>
+              <el-button type="primary" icon="el-icon-plus" @click="addInterItems(item, index)" plain style="margin-top: 10px;width: 100%">添加任务项</el-button>
             </el-col>
-            <i class="outer el-icon-delete"></i>
+            <i class="outer el-icon-delete" v-if="form.partsList.length > 1" @click="deleteOuterItems(item, index)"></i>
           </el-row>
         </el-card>
         <!--添加外层内容-->
-        <el-button type="primary" plain icon="el-icon-plus" style="margin-top: 10px;width: 100%">添加部位 & 任务项</el-button>
+        <el-button type="primary" plain icon="el-icon-plus" @click="addOuterItems" style="margin-top: 10px;width: 100%">添加部位 & 任务项</el-button>
       </el-form>
       <template slot="footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -350,6 +350,53 @@ export default {
         this.title = '修改'
       })
     },
+    /** 添加任务项操作 */
+    addInterItems(item, index) {
+      console.log(item, index)
+      item.taskList.push({
+        taskName: undefined, // 任务名称
+        outcome: undefined, // 执行结果
+        termOne: undefined, // 条件1
+        valueOne: undefined, // 条件1的值
+        termTwo: undefined, // 条件2
+        valueTwo: undefined, // 条件2的值
+        spare: undefined, // 备件
+        previous: undefined, // 前值
+        after: undefined, // 后值
+        quantity: 0 // 备件数量
+      })
+    },
+    /** 删除任务项操作 */
+    deleteInterItems(task, idx) {
+      console.log(task, idx)
+      this.form.partsList[idx].taskList.splice(task, 1)
+    },
+    /** 添加部位&任务项操作 */
+    addOuterItems() {
+      this.form.partsList.push({
+        location: undefined,
+        image: undefined,
+        taskList: [
+          {
+            taskName: undefined, // 任务名称
+            outcome: undefined, // 执行结果
+            termOne: undefined, // 条件1
+            valueOne: undefined, // 条件1的值
+            termTwo: undefined, // 条件2
+            valueTwo: undefined, // 条件2的值
+            spare: undefined, // 备件
+            previous: undefined, // 前值
+            after: undefined, // 后值
+            quantity: 0 // 备件数量
+          }
+        ]
+      })
+    },
+    /** 删除部位&任务项操作 */
+    deleteOuterItems(item, index) {
+      console.log(item, index)
+      this.form.partsList.splice(index, 1)
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs['form'].validate(valid => {
@@ -397,8 +444,10 @@ export default {
   .el-form-item {
     margin-bottom: 20px;
   }
-
-  .outer {
+  .el-card {
+    margin-bottom: 20px;
+  }
+  .outer, .inter {
     color: #F56C6C;
     font-size: 16px;
     top: 8px;
