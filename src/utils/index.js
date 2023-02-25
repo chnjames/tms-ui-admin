@@ -438,3 +438,30 @@ export function toCamelCase(str, upperCaseFirst) {
 
   return str;
 }
+/**
+ * 时间处理方法
+ * 根据指定时间和现在时间，自动计算；
+ * < 24小时,以小时为单位；处理为x小时前
+ * > 24小时,以天为单位；处理为x天前
+ * > 30天，以月为单位；处理为x月前
+ * > 1年，以年为单位；处理为x年前
+ */
+export function timeFormat(time) {
+  const date = new Date(time);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const day = diff / (1000 * 60 * 60 * 24);
+  const month = diff / (1000 * 60 * 60 * 24 * 30);
+  const year = diff / (1000 * 60 * 60 * 24 * 30 * 12);
+  if (year > 1) {
+    return `${parseInt(year)}年前`;
+  } else if (month > 1) {
+    return `${parseInt(month)}月前`;
+  } else if (day > 1) {
+    return `${parseInt(day)}天前`;
+  } else {
+    return `${parseInt(day * 24)}小时前`;
+  }
+}
+
+
