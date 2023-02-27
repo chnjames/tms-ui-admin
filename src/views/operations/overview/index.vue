@@ -171,6 +171,9 @@
                           value-format="timestamp" placeholder="选择结束时间"
           />
         </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input type="textarea" :rows="3" v-model="form.description" placeholder="请输入项目描述"/>
+        </el-form-item>
       </el-form>
       <template slot="footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -266,7 +269,8 @@ export default {
         followerIds: [], // 内部关注人
         beginTime: undefined,
         period: undefined, // 任务周期
-        endTime: undefined
+        endTime: undefined,
+        description: undefined
       },
       // 表单校验
       rules: {
@@ -386,7 +390,8 @@ export default {
         followerIds: [], // 内部关注人
         beginTime: undefined,
         endTime: undefined,
-        period: undefined // 任务周期
+        period: undefined, // 任务周期
+        description: undefined
       }
       this.resetForm('form')
     },
@@ -415,6 +420,7 @@ export default {
         const { data } = response
         data.blameId = data.blame.id
         data.followerIds = data.followers.map(item => item.id)
+        data.deptId = data.dept.id
         this.form = data
         console.log(this.form)
         this.open = true
