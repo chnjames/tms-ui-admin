@@ -43,6 +43,15 @@ export function getOverviewPage(query) {
   })
 }
 
+// 更新项目关注人
+export function updateOverviewFollowers(data) {
+  return request({
+    url: '/operations/project/follower/update',
+    method: 'put',
+    data: data
+  })
+}
+
 // 导出项目主表 Excel
 export function exportOverviewExcel(query) {
   return request({
@@ -50,5 +59,57 @@ export function exportOverviewExcel(query) {
     method: 'get',
     params: query,
     responseType: 'blob'
+  })
+}
+
+// 创建项目合同
+export function createContract(data) {
+  return request({
+    url: '/operations/contract/create',
+    method: 'post',
+    data: data
+  })
+}
+
+// 删除项目合同
+export function deleteContract(id) {
+  return request({
+    url: '/operations/contract/delete?id=' + id,
+    method: 'delete'
+  })
+}
+
+// 获得项目合同分页
+export function getContractPage(query) {
+  return request({
+    url: '/operations/contract/page',
+    method: 'get',
+    params: query
+  })
+}
+
+// 创建项目文档
+export function createDocument(data) {
+  return request({
+    url: '/operations/document/create',
+    method: 'post',
+    data: data
+  })
+}
+
+// 删除项目文档
+export function deleteDocument(id) {
+  return request({
+    url: '/operations/document/delete?id=' + id,
+    method: 'delete'
+  })
+}
+
+// 获得项目文档分页
+export function getDocumentPage(query) {
+  return request({
+    url: '/operations/document/page',
+    method: 'get',
+    params: query
   })
 }

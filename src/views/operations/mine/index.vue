@@ -17,7 +17,7 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['operations:overview:create']">新增</el-button>
+                   v-hasPermi="['operations:project:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
@@ -46,7 +46,7 @@
       <el-table-column v-if="taskType === 'finish'" label="操作" align="center" width="100" class-name="small-padding fixed-width" fixed="right">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-delete" @click.stop="handleDelete(scope.row)"
-                     v-hasPermi="['operations:overview:delete']">删除</el-button>
+                     v-hasPermi="['operations:project:delete']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

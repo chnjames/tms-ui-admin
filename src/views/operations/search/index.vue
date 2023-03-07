@@ -3,13 +3,15 @@
     <div class="search">
       <el-row type="flex" justify="end">
         <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="4">
-          <el-button type="primary">返回项目</el-button>
+          <el-button type="primary" @click="bindBack">返回项目</el-button>
         </el-col>
-        <el-col :xs="12" :sm="12" :md="12" :lg="16" :xl="16"><el-input placeholder="请输入" class="search-input" /></el-col>
+        <el-col :xs="12" :sm="12" :md="12" :lg="16" :xl="16">
+          <el-input placeholder="请输入" class="search-input" v-model="queryParams.name" />
+        </el-col>
         <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="4">
           <el-button-group>
-            <el-button type="primary" @click="handleSearch">文档搜索</el-button>
-            <el-button type="primary" @click="handleSearch">合同搜索</el-button>
+            <el-button type="primary" @click="handleSearch('document')">文档搜索</el-button>
+            <el-button type="primary" @click="handleSearch('contract')">合同搜索</el-button>
           </el-button-group>
         </el-col>
       </el-row>
@@ -40,7 +42,7 @@
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template v-slot="scope">
-            <el-button size="mini" type="text" icon="el-icon-download" @click="handleDetail(scope.row)"
+            <el-button size="mini" type="text" icon="el-icon-download" @click="handleDownload(scope.row)"
                        v-hasPermi="['warehouse:material:delete']">下载</el-button>
           </template>
         </el-table-column>
@@ -58,6 +60,11 @@ import {
   exportMaterialExcel
 } from '@/api/warehouse/material'
 
+import {
+  getContractPage,
+  getDocumentPage
+} from '@/api/operations/overview'
+
 export default {
   name: "Search",
   data() {
@@ -74,41 +81,73 @@ export default {
       list: [],
       // 查询参数
       queryParams: {
+        name: null,
         pageNo: 1,
         pageSize: 10
       }
     };
   },
-  created() {
-    this.getList();
+  watch: {
+    '$route': {
+      handler(val) {
+        const {name} = val.query;
+        this.queryParams.name = name;
+        this.queryParams.pageNo = 1;
+        this.getList();
+      },
+      deep: true,
+      immediate: true
+    }
   },
   methods: {
     /** 查询列表 */
     getList() {
       this.loading = true;
       // 执行查询
-      getMaterialPage(this.queryParams).then(response => {
+      if (this.$route.query.type === 'contract') {
+        this.getContractList();
+      } else if (this.$route.query.type === 'document') {
+        this.getDocumentList();
+      }
+    },
+    /** 查询合同列表 */
+    getContractList() {
+      this.loading = true;
+      // 执行查询
+      getContractPage(this.queryParams).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
         this.loading = false;
       });
     },
+    /** 查询文档列表 */
+    getDocumentList() {
+      this.loading = true;
+      // 执行查询
+      getDocumentPage(this.queryParams).then(response => {
+        this.list = response.data.list;
+        this.total = response.data.total;
+        this.loading = false;
+      });
+    },
+    /** 返回项目 */
+    bindBack() {
+      this.$router.push({
+        path: '/operations/overview'
+      });
+    },
     /** 文档/合同搜索 */
-    handleSearch() {
-
-    },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNo = 1;
-      this.getList();
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+    handleSearch(type) {
+      this.$router.push({
+        path: '/operations/search',
+        query: {
+          name: this.queryParams.name,
+          type
+        }
+      });
     },
     /** 详情按钮操作 */
-    handleDetail(row) {
+    handleDownload(row) {
       console.log(row)
     },
     /** 导出按钮操作 */

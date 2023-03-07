@@ -72,7 +72,9 @@ export const DICT_TYPE = {
   // ========== CONFIG 模块 ==========
   CONFIG_STORE_TYPE: 'config_store_type', // 配置仓库类型
   // ========== OPERATIONS 模块 ==========
-  OPERATIONS_PROJECT_TYPE: 'operations_project_type' // 项目类型
+  OPERATIONS_PROJECT_TYPE: 'operations_project_type', // 项目类型
+  OPERATIONS_PROJECT_STATUS: 'operations_project_status', // 项目状态
+  OPERATIONS_PROJECT_FILE_BIZ_TYPE: 'operations_project_file_biz_type' // 项目文件业务类型
 }
 
 /**

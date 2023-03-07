@@ -3,12 +3,12 @@
     <div class="search">
       <el-row type="flex" justify="end">
         <el-col :xs="12" :sm="12" :md="12" :lg="16" :xl="16">
-          <el-input placeholder="请输入" class="search-input"/>
+          <el-input placeholder="请输入" v-model="searchName" class="search-input"/>
         </el-col>
         <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="4">
           <el-button-group>
-            <el-button type="primary" @click="handleSearch">文档搜索</el-button>
-            <el-button type="primary" @click="handleSearch">合同搜索</el-button>
+            <el-button type="primary" @click="handleSearch('document')">文档搜索</el-button>
+            <el-button type="primary" @click="handleSearch('contract')">合同搜索</el-button>
           </el-button-group>
         </el-col>
       </el-row>
@@ -17,17 +17,15 @@
       <!-- 搜索工作栏 -->
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
         <el-form-item prop="status">
-          <el-radio-group v-model="queryParams.status">
-            <el-radio-button :label="1">全部</el-radio-button>
-            <el-radio-button :label="2">进行中</el-radio-button>
-            <el-radio-button :label="3">已完成</el-radio-button>
+          <el-radio-group v-model="queryParams.status" @change="handleQuery">
+            <el-radio-button :label="null">全部</el-radio-button>
+            <el-radio-button :label="item.value" v-for="(item, index) in this.getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_STATUS)" :key="index">{{item.label}}</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item prop="createTime">
           <el-date-picker v-model="queryParams.createTime" style="width: 240px" value-format="yyyy-MM-dd HH:mm:ss"
                           type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
-                          :default-time="['00:00:00', '23:59:59']"
-          />
+                          :default-time="['00:00:00', '23:59:59']"/>
         </el-form-item>
         <el-form-item prop="fieldType">
           <el-select v-model="queryParams.fieldType" placeholder="选择类型" @change="bindFieldChange">
@@ -36,14 +34,11 @@
         </el-form-item>
         <el-form-item prop="name">
           <el-input v-if="queryParams.fieldType === 1" v-model="queryParams.name" placeholder="请输入项目名称" clearable
-                    @keyup.enter.native="handleQuery"
-          />
+                    @keyup.enter.native="handleQuery"/>
           <el-select v-if="queryParams.fieldType === 2" v-model="queryParams.blameId" placeholder="选择责任人"
-                     clearable
-          >
+                     clearable>
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"
-            />
+                       :value="parseInt(item.id)"/>
           </el-select>
           <el-select v-if="queryParams.fieldType === 3" v-model="queryParams.type" placeholder="选择项目类型" clearable>
             <el-option v-for="item in typeList" :key="item.value" :label="item.label" :value="parseInt(item.value)"/>
@@ -57,25 +52,20 @@
       <el-row :gutter="10" class="mb8">
         <el-col :span="1.5">
           <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                     v-hasPermi="['operations:overview:create']"
-          >新增
-          </el-button>
+                     v-hasPermi="['operations:project:create']">新增</el-button>
         </el-col>
         <el-col :span="1.5">
           <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport"
-                     :loading="exportLoading"
-                     v-hasPermi="['warehouse:material:export']"
-          >导出
-          </el-button>
+                     :loading="exportLoading" v-hasPermi="['warehouse:material:export']">导出</el-button>
         </el-col>
         <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
       </el-row>
 
       <!-- 列表 -->
       <el-table v-loading="loading" :data="list">
-        <el-table-column label="项目名称" prop="name" show-overflow-tooltip>
+        <el-table-column label="项目名称" prop="name">
           <template v-slot="scope">
-            <div class="project-name">{{ scope.row.name }}</div>
+            <div class="project-name" @click.stop="bindProject(scope.row)">{{ scope.row.name }}</div>
             <span>{{ scope.row.description }}</span>
           </template>
         </el-table-column>
@@ -85,27 +75,20 @@
         <el-table-column label="结束时间" align="center" prop="endTime"/>
         <el-table-column label="项目进度" align="center" prop="progress">
           <template v-slot="{row}">
-            <el-progress :percentage="row.progress > 100 ? 100 : row.progress" :format="progressFormat(row.progress)"
-            ></el-progress>
+            <el-progress :percentage="row.progress > 100 ? 100 : row.progress" :color="row.progressColor" :format="progressFormat(row.progress)"></el-progress>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template v-slot="scope">
             <el-button size="mini" type="text" icon="el-icon-view" @click="handleUpdate(scope.row)"
-                       v-hasPermi="['warehouse:material:delete']"
-            >详情
-            </el-button>
+                       v-hasPermi="['warehouse:material:delete']">详情</el-button>
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-                       v-hasPermi="['operations:overview:delete']"
-            >删除
-            </el-button>
+                       v-hasPermi="['operations:project:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
       <!-- 分页组件 -->
-      <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
-                  @pagination="getList"
-      />
+      <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize" @pagination="getList"/>
     </el-card>
 
     <!-- 对话框(添加 / 修改) -->
@@ -119,8 +102,7 @@
         <!--设备维保类型-->
         <el-form-item v-if="form.type === 2" label="设备名称" prop="device">
           <el-select v-model="form.device" style="width: 100%" filterable placeholder="请选择"
-                     @change="bindDeviceChange"
-          >
+                     @change="bindDeviceChange">
             <el-option v-for="(item, index) in deviceList" :key="index" :label="item.name" :value="item.id"/>
           </el-select>
         </el-form-item>
@@ -138,28 +120,21 @@
         <el-form-item label="标题" prop="name">
           <el-input v-model="form.name" placeholder="给目标起个名字"/>
         </el-form-item>
-        <el-form-item label="部门" prop="deptId">
-          <tree-select v-model="form.deptId" :options="deptOptions" :show-count="true" :clearable="false"
-                      placeholder="请选择部门" :normalizer="normalizer" />
-        </el-form-item>
         <el-form-item label="负责人" prop="blameId">
           <el-select v-model="form.blameId" style="width: 100%" filterable placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"
-            />
+                       :value="parseInt(item.id)"/>
           </el-select>
         </el-form-item>
         <el-form-item label="内部关注人" prop="followerIds">
-          <el-select v-model="form.followerIds" style="width: 100%" filterable multiple placeholder="请选择">
+          <el-select v-model="form.followerIds" style="width: 100%" :multiple-limit="10" filterable multiple placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"
-            />
+                       :value="parseInt(item.id)"/>
           </el-select>
         </el-form-item>
         <el-form-item label="开始时间" prop="beginTime">
           <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
-                          value-format="timestamp" placeholder="选择开始时间"
-          />
+                          value-format="timestamp" placeholder="选择开始时间"/>
         </el-form-item>
         <el-form-item label="任务周期" prop="period">
           <el-select v-model="form.period" placeholder="选择任务周期" clearable style="width: 100%">
@@ -167,9 +142,8 @@
           </el-select>
         </el-form-item>
         <el-form-item label="结束时间" prop="endTime">
-          <el-date-picker clearable size="small" style="width: 100%" v-model="form.endTime" type="date"
-                          value-format="timestamp" placeholder="选择结束时间"
-          />
+          <el-date-picker clearable :disabled="isEndTime" size="small" style="width: 100%" v-model="form.endTime" type="date"
+                          value-format="timestamp" placeholder="选择结束时间"/>
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input type="textarea" :rows="3" v-model="form.description" placeholder="请输入项目描述"/>
@@ -184,29 +158,23 @@
 </template>
 
 <script>
-import {
-  getDevicePage
-} from '@/api/config/device'
+import { getDevicePage } from '@/api/config/device'
 import {
   createOverview,
-  updateOverview,
   deleteOverview,
+  exportOverviewExcel,
   getOverview,
   getOverviewPage,
-  exportOverviewExcel
+  updateOverview
 } from '@/api/operations/overview'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 import { listSimpleUsers } from '@/api/system/user'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
-import TreeSelect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { listSimpleDepts } from '@/api/system/dept'
 
 export default {
   name: 'Overview',
   components: {
-    DrawerPlus,
-    TreeSelect
+    DrawerPlus
   },
   data() {
     return {
@@ -222,12 +190,12 @@ export default {
       total: 0,
       // 项目列表
       list: [],
-      // 部门树选项
-      deptOptions: undefined,
       // 弹出层标题
       title: '',
       // 是否显示弹出层
       open: false,
+      // 搜索名称
+      searchName: '',
       // 字段类型列表
       fieldTypeList: [
         { label: '项目名称', value: 1 },
@@ -236,6 +204,8 @@ export default {
       ],
       // 项目类型列表
       typeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_TYPE),
+      // 结束时间是否禁用
+      isEndTime: false,
       // 设备列表
       deviceList: [],
       // 任务周期列表
@@ -252,7 +222,7 @@ export default {
         pageSize: 10,
         createTime: [],
         fieldType: 1, // 字段类型
-        status: 1, // 状态
+        status: null, // 状态
         blameId: null, // 责任人
         name: null, // 项目名称 当类型是设备维保时，为设备编码
         type: null
@@ -260,7 +230,6 @@ export default {
       // 表单参数
       form: {
         id: undefined,
-        deptId: undefined, // 部门id
         type: undefined,
         name: undefined, // 项目名称
         device: undefined,
@@ -268,7 +237,7 @@ export default {
         blameId: undefined, // 责任人
         followerIds: [], // 内部关注人
         beginTime: undefined,
-        period: undefined, // 任务周期
+        period: 0, // 任务周期
         endTime: undefined,
         description: undefined
       },
@@ -276,13 +245,15 @@ export default {
       rules: {
         type: [{ required: true, message: '项目类型不能为空', trigger: 'change' }],
         device: [{ required: true, message: '设备不能为空', trigger: 'change' }],
-        name: [{ required: true, message: '项目标题不能为空', trigger: 'blur' }],
-        deptId: [{ required: true, message: '部门不能为空', trigger: 'change' }],
+        name: [
+          { required: true, message: '项目标题不能为空', trigger: 'blur' },
+          { max: 30, message: '项目标题不能超过30个字符', trigger: 'blur' }
+        ],
         blameId: [{ required: true, message: '负责人不能为空', trigger: 'change' }],
         followerIds: [{ required: true, message: '内部关注人不能为空', trigger: 'change' }],
         beginTime: [{ type: 'date', required: true, message: '请选择开始时间', trigger: 'change' }],
         period: [{ required: true, message: '请选择任务周期', trigger: 'change' }],
-        endTime: [{ type: 'date', required: true, message: '请选择endTime', trigger: 'change' }]
+        endTime: [{ type: 'date', required: true, message: '请选择结束时间', trigger: 'change' }]
       }
     }
   },
@@ -290,42 +261,14 @@ export default {
     this.getList()
     this.getUserList()
     this.getDeviceList()
-    this.getTreeSelect()
   },
   watch: {
-    // 监听选择开始时间、结束时间和任务周期
-    // 如果form有id，说明是编辑，则根据开始时间(时间戳):beginTime和结束时间(时间戳):endTime计算任务周期(天数):period
-    // 如果form没有id，说明是新增，则根据开始时间(时间戳):beginTime和任务周期(天数):period计算结束时间(时间戳):endTime
-    'form.beginTime'() {
-      const {id, beginTime, endTime, period} = this.form
-      if (id) {
-        this.form.period = Math.round((endTime - beginTime) / (24 * 60 * 60 * 1000));
-      } else {
-        this.form.endTime = new Date(beginTime + (period * 24 * 60 * 60 * 1000)).getTime();
-      }
+    'form.period'(val) {
+      this.form.endTime = this.form.beginTime + val * 24 * 60 * 60 * 1000;
+      this.isEndTime = val !== 0;
     },
-    'form.endTime'() {
-      const {id, beginTime, endTime} = this.form
-      if (id) {
-        this.form.period = Math.round((endTime - beginTime) / (24 * 60 * 60 * 1000));
-      }
-    },
-    'form.period'() {
-      const {id, beginTime, period} = this.form
-      if (!id) {
-        this.form.endTime = new Date(beginTime + (period * 24 * 60 * 60 * 1000)).getTime();
-      }
-    }
   },
   methods: {
-    /** 查询部门下拉树结构 + 岗位下拉 */
-    getTreeSelect() {
-      listSimpleDepts().then(response => {
-        // 处理 deptOptions 参数
-        this.deptOptions = [];
-        this.deptOptions.push(...this.handleTree(response.data, "id"));
-      });
-    },
     /** 获取设备列表 */
     getDeviceList() {
       getDevicePage({ pageNo: 1, pageSize: 100 }).then(response => {
@@ -359,11 +302,31 @@ export default {
           item.endTime = this.parseTime(item.endTime, '{y}-{m}-{d}')
           item.header = item.blame.nickname
           item.type = this.typeList.find(type => parseInt(type.value) === item.type).label
-          item.progress = parseFloat(((item.rate.current / item.rate.total) * 100).toFixed(2))
+          item.progress = Math.floor((item.rate.current / item.rate.total) * 100)
+          if (item.progress < 100) {
+            if (item.endTime > new Date().getTime()) {
+              item.progressColor = '#409EFF'
+            } else {
+              item.progressColor = '#F56C6C'
+            }
+          } else {
+            if (item.endTime > new Date().getTime()) {
+              item.progressColor = '#67C23A'
+            } else {
+              item.progressColor = '#909399'
+            }
+          }
         })
         this.list = list
         this.total = total
         this.loading = false
+      })
+    },
+    /** 项目详情 */
+    bindProject(row) {
+      console.log(row)
+      this.$router.push({
+        path: '/operations/details'
       })
     },
     /** 选择字段类型 */
@@ -381,7 +344,6 @@ export default {
     reset() {
       this.form = {
         id: undefined,
-        deptId: undefined, // 部门id
         type: undefined,
         device: undefined,
         code: undefined,
@@ -390,15 +352,19 @@ export default {
         followerIds: [], // 内部关注人
         beginTime: undefined,
         endTime: undefined,
-        period: undefined, // 任务周期
+        period: 0, // 任务周期
         description: undefined
       }
       this.resetForm('form')
     },
     /** 文档/合同搜索 */
-    handleSearch() {
+    handleSearch(type) {
       this.$router.push({
-        path: '/operations/search'
+        path: '/operations/search',
+        query: {
+          name: this.searchName,
+          type
+        }
       })
     },
     /** 搜索按钮操作 */
@@ -420,9 +386,23 @@ export default {
         const { data } = response
         data.blameId = data.blame.id
         data.followerIds = data.followers.map(item => item.id)
-        data.deptId = data.dept.id
-        this.form = data
-        console.log(this.form)
+        data.period = this.periodList.find(item => item.value === (data.endTime - data.beginTime))?.value || 0;
+        this.isEndTime = data.period !== 0;
+        this.form = {
+          id: data.id,
+          type: data.type,
+          name: data.name, // 项目名称
+          blameId: data.blame.id,
+          followerIds: data.followers.map(item => item.id), // 内部关注人
+          beginTime: data.beginTime,
+          period: data.period, // 任务周期
+          endTime: data.endTime,
+          description: data.description
+        }
+        if (data.device) {
+          this.form.device = data.device.id
+          this.form.code = data.device.code
+        }
         this.open = true
         this.title = '修改项目'
       })
@@ -475,14 +455,6 @@ export default {
         this.exportLoading = false
       }).catch(() => {
       })
-    },
-    /** 格式化部门的下拉框 */
-    normalizer(node) {
-      return {
-        id: node.id,
-        label: node.name,
-        children: node.children
-      }
     }
   }
 }
@@ -508,6 +480,7 @@ export default {
 
 /*项目名称*/
 .project-name {
+  cursor: pointer;
   font-size: 14px;
   font-weight: 600;
 }
