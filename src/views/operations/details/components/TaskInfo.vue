@@ -1,17 +1,14 @@
 <template>
-  <div class="app-container">
-    <!-- 搜索工作栏 -->
-    <el-form v-show="showSearch" :model="queryParams" ref="queryForm" size="small" :inline="true">
-      <el-form-item>
-        <el-input v-model="queryParams.name" placeholder="请输入任务名称" clearable
-                  @keyup.enter.native="handleQuery"/>
-      </el-form-item>
-    </el-form>
+  <div>
     <!-- 操作工具栏 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
                    v-hasPermi="['config:factory-area:create']">新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入任务名称" clearable
+                  @keyup.enter.native="handleQuery"/>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -22,48 +19,103 @@
     </el-tabs>
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list">
-      <el-table-column label="子任务名称" prop="name" />
-      <el-table-column label="执行人" prop="name" />
-      <el-table-column label="内部关注人" prop="name" />
-      <el-table-column label="外部关注人" prop="name" />
-      <el-table-column label="预估工时" prop="name" />
-      <el-table-column label="消耗工时" prop="name" />
-      <el-table-column label="委外费用($)" prop="name" />
-      <el-table-column label="状态" prop="name" />
-      <el-table-column label="开始时间" align="center" prop="updateTime" width="180">
-        <template v-slot="scope">
-          <span>{{ parseTime(scope.row.updateTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="完成时间" align="center" prop="updateTime" width="180">
-        <template v-slot="scope">
-          <span>{{ parseTime(scope.row.updateTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template v-slot="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-                     v-hasPermi="['config:factory-area:update']">编辑</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-                     v-hasPermi="['config:factory-area:delete']">删除</el-button>
+      <el-table-column
+        v-for="(item, index) in tableHeader"
+        :key="index"
+        :prop="item.prop"
+        :width="item.width"
+        :fixed="item.fixed"
+        :label="item.label">
+        <template v-slot="{row}">
+          <template v-if="item.prop === 'operation'">
+            <template v-if="taskType === 1">
+              <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
+                         v-hasPermi="['config:factory-area:update']">编辑</el-button>
+              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                         v-hasPermi="['config:factory-area:delete']">删除</el-button>
+            </template>
+            <template v-else>
+              <el-button size="mini" type="text" icon="el-icon-upload2" @click="handleTop(row)"
+                         v-hasPermi="['config:factory-area:update']">置顶</el-button>
+              <el-tooltip content="上移一行">
+                <i class="el-icon-top operate" style="color: #E6A23C"></i>
+              </el-tooltip>
+              <el-tooltip content="下移一行">
+                <i class="el-icon-bottom operate" style="color: #409EFF"></i>
+              </el-tooltip>
+            </template>
+          </template>
+          <template v-else-if="item.prop === 'createTime'">
+            <span>{{ parseTime(row[item.prop]) }}</span>
+          </template>
+          <template v-else-if="item.prop === 'updateTime'">
+            <span>{{ parseTime(row[item.prop]) }}</span>
+          </template>
+          <span v-else>{{ row[item.prop] }}</span>
         </template>
       </el-table-column>
     </el-table>
-    <!-- 分页组件 -->
-    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
-                @pagination="getList"/>
     <!-- 对话框(添加 / 修改) -->
-    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="名称" prop="name">
+    <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="130px">
+        <el-form-item label="子任务名称" prop="name">
           <el-input v-model="form.name" placeholder="给目标起个名字"/>
         </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input type="textarea" :rows="2" v-model="form.description" placeholder="填写简短说明"/>
+        <el-form-item label="执行人">
+          <el-select v-model="form.executorId" style="width: 100%" filterable placeholder="请选择">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
         </el-form-item>
-        <el-form-item label="上级" prop="parentId">
-          <tree-select v-model="form.parentId" :defaultExpandLevel="2" :options="menuOptions" :normalizer="normalizer"
-                       :show-count="true" placeholder="选择上级"/>
+        <el-form-item label="计划数量" prop="planQuantity" v-if="taskType === 2">
+          <el-input-number v-model="form.planQuantity" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="预估工时(h)" prop="hours" v-if="taskType === 1">
+          <el-input-number v-model="form.hours" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="内部关注人">
+          <el-select v-model="form.internalIds" style="width: 100%" :multiple-limit="10" filterable multiple placeholder="请选择">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="外部关注人">
+          <el-select v-model="form.externalIds" style="width: 100%" :multiple-limit="10" filterable multiple placeholder="请选择">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="首任务开始时间" prop="firstBeginTime" v-if="taskType === 2">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.firstBeginTime" type="date"
+                          value-format="timestamp" placeholder="选择首任务开始时间"/>
+        </el-form-item>
+        <el-form-item label="生效方式" prop="mode" v-if="taskType === 1">
+          <el-select v-model="form.mode" placeholder="生效方式" style="width: 100%">
+            <el-option v-for="(item, index) in modeOptions" :key="index" :label="item.label" :value="item.type" />
+          </el-select>
+        </el-form-item>
+        <template v-if="taskType === 1">
+          <template  v-if="form.mode === 1">
+            <el-form-item label="计划开始时间" prop="beginTime">
+              <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
+                              value-format="timestamp" placeholder="选择开始时间"/>
+            </el-form-item>
+            <el-form-item label="计划结束时间" prop="endTime">
+              <el-date-picker clearable size="small" style="width: 100%" v-model="form.endTime" type="date"
+                              value-format="timestamp" placeholder="选择结束时间"/>
+            </el-form-item>
+          </template>
+          <el-form-item label="选择任务触发" prop="taskId" v-else>
+            <el-select v-model="form.taskId" placeholder="选择任务触发" style="width: 100%">
+              <el-option v-for="(item, index) in taskOptions" :key="index" :label="item.name" :value="item.id" />
+            </el-select>
+          </el-form-item>
+        </template>
+        <el-form-item label="是否紧急">
+          <el-switch v-model="form.emergency"></el-switch>
+        </el-form-item>
+        <el-form-item label="委外费用(¥)">
+          <el-input-number v-model="form.outsourceCost" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -79,17 +131,18 @@ import {
   createFactoryArea,
   deleteFactoryArea,
   getFactoryArea,
-  getSimpleFactoryArea,
   updateFactoryArea
 } from '@/api/config/factoryArea'
 import { getCustomerPage } from "@/api/config/customer";
 import TreeSelect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { listSimpleUsers } from '@/api/system/user'
+import Template from '@/views/operations/template/index.vue'
 
 export default {
   name: 'TaskInfo',
-  components: { DrawerPlus, TreeSelect },
+  components: { Template, DrawerPlus, TreeSelect },
   data() {
     return {
       // 遮罩层
@@ -98,11 +151,22 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
+      // 用户列表
+      userList: [],
+      // 子任务列表
+      taskOptions: [],
+      // 任务详情类型(项目管理/生产管理)
+      taskType: 1, // 1:项目管理 2:生产管理
       // tabs列表
       tabList: [
         { name: '1', title: '全部任务' },
         { name: '2', title: '已完成' },
         { name: '3', title: '延期未完成' }
+      ],
+      // 生效方式Options
+      modeOptions: [
+        { type: 1, label: '选择开始时间' },
+        { type: 2, label: '选择任务触发' }
       ],
       // 当前tab
       curTab: '1',
@@ -118,12 +182,29 @@ export default {
         pageNo: 1,
         pageSize: 10
       },
+      // 基础表头
+      tableHeader: [
+        { prop: 'name', label: '子任务名称', width: '200' },
+        { prop: 'executorName', label: '执行人' },
+        { prop: 'internalNames', label: '内部关注人' },
+        { prop: 'externalNames', label: '外部关注人' }
+      ],
       // 表单参数
       form: {
         id: undefined,
         name: undefined,
-        description: undefined,
-        parentId: undefined
+        executorId: undefined, // 执行人
+        planQuantity: undefined, // 计划数量(生产管理)
+        hours: undefined, // 预计工时
+        internalIds: [],
+        externalIds: [],
+        firstBeginTime: undefined, // 首任务开始时间(生产管理)
+        mode: undefined,
+        beginTime: undefined,
+        endTime: undefined,
+        taskId: undefined,
+        emergency: false,
+        outsourceCost: 0
       },
       // 表单校验
       rules: {
@@ -131,23 +212,53 @@ export default {
           { required: true, message: '名称不能为空', trigger: 'blur' },
           { max: 30, message: '名称不能超过30个字', trigger: 'blur' }
         ],
-        description: [
-          { required: true, message: '描述不能为空', trigger: 'blur' },
-          { max: 100, message: '描述不能超过100个字', trigger: 'blur' }
-        ],
-        parentId: [
-          { required: true, message: '上级不能为空', trigger: 'blur' }
-        ]
-      },
-      // 菜单树选项
-      menuOptions: []
+        planQuantity: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' },
+        hours: { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
+        firstBeginTime: { required: true, type: 'date', message: '首任务开始时间不能为空', trigger: 'change' },
+        mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
+        beginTime: { required: true, type: 'date', message: '计划开始时间不能为空', trigger: 'change' },
+        endTime: { required: true, type: 'date', message: '计划结束时间不能为空', trigger: 'change' },
+        taskId: { required: true, message: '选择任务触发不能为空', trigger: 'change' }
+      }
     }
   },
   created() {
     this.getList()
-    this.getSimpleFactoryArea()
+    this.getUserList()
+  },
+  mounted() {
+    // 根据任务详情类型设置表头
+    let secondHead = []
+    if (this.taskType === 1) {
+      secondHead = [
+        { prop: 'hours', label: '预计工时' },
+        { prop: 'hours', label: '消耗工时' },
+        { prop: 'outsourceCost', label: '委外费用(¥)' },
+        { prop: 'status', label: '状态' },
+        { prop: 'createTime', label: '开始时间', width: '160' },
+        { prop: 'updateTime', label: '完成时间', width: '160' },
+        { prop: 'operation', label: '操作' }
+      ]
+    } else {
+      secondHead = [
+        { prop: 'hours', label: '计划数量' },
+        { prop: 'hours', label: '已完成数量' },
+        { prop: 'outsourceCost', label: '不合格数量' },
+        { prop: 'status', label: '状态' },
+        { prop: 'createTime', label: '开始时间', width: '160' },
+        { prop: 'updateTime', label: '完成时间', width: '160' },
+        { prop: 'operation', label: '操作' }
+      ]
+    }
+    this.tableHeader = this.tableHeader.concat(secondHead)
   },
   methods: {
+    /** 用户列表 */
+    getUserList() {
+      listSimpleUsers().then(response => {
+        this.userList = response.data
+      })
+    },
     /** 查询列表 */
     getList() {
       this.loading = true;
@@ -157,26 +268,6 @@ export default {
         this.total = response.data.total;
         this.loading = false;
       });
-    },
-    /** 获取厂区精简信息列表 */
-    getSimpleFactoryArea() {
-      getSimpleFactoryArea().then(response => {
-        this.menuOptions = []
-        const menu = { id: 0, name: '顶级', children: [] }
-        menu.children = this.handleTree(response.data)
-        this.menuOptions.push(menu)
-      })
-    },
-    /** 转换菜单数据结构 */
-    normalizer(node) {
-      if (node.children && !node.children.length) {
-        delete node.children
-      }
-      return {
-        id: node.id,
-        label: node.name,
-        children: node.children
-      }
     },
     /** 取消按钮 */
     cancel() {
@@ -188,8 +279,16 @@ export default {
       this.form = {
         id: undefined,
         name: undefined,
-        description: undefined,
-        parentId: undefined
+        executorId: undefined, // 执行人
+        hours: undefined, // 预计工时
+        internalIds: [],
+        externalIds: [],
+        mode: undefined,
+        beginTime: undefined,
+        endTime: undefined,
+        taskId: undefined,
+        emergency: false,
+        outsourceCost: 0
       }
       this.resetForm('form')
     },
@@ -214,6 +313,11 @@ export default {
         this.title = '修改'
       })
     },
+    /** 置顶按钮操作 */
+    handleTop(row) {
+      const id = row.id
+      console.log(id)
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs['form'].validate(valid => {
@@ -226,7 +330,6 @@ export default {
             this.$modal.msgSuccess('修改成功')
             this.open = false
             this.getList()
-            this.getSimpleFactoryArea()
           })
           return
         }
@@ -235,20 +338,17 @@ export default {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
-          this.getSimpleFactoryArea()
         })
       })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      console.log(row)
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
         return deleteFactoryArea(id)
       }).then(() => {
         this.getList()
-        this.getSimpleFactoryArea()
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })
@@ -256,3 +356,9 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+.operate {
+  padding-left: 10px;
+  cursor: pointer;
+}
+</style>

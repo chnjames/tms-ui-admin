@@ -33,28 +33,23 @@
         </el-form>
       </el-col>
       <el-col :span="8">
-        ffff
+        <div>
+          <div>当前进展</div>
+          <div>31%</div>
+        </div>
+        <div>
+          <div>已消耗工时(h)</div>
+          <div>311</div>
+        </div>
+        <div>
+          <div>预估工时(h)</div>
+          <div>805</div>
+        </div>
       </el-col>
     </el-row>
-    <el-tabs>
-      <el-tab-pane label="任务描述" name="1">
-        <!--<tinymce id="description" :height="300" placeholder="在这里输入文字" />-->
-        <TinymceEditor placeholder="在这里输入文字" value="" :height="300" />
-      </el-tab-pane>
-      <el-tab-pane label="任务详情" name="2">
-        <task-info />
-      </el-tab-pane>
-      <el-tab-pane label="文档附件" name="3">
-        <doc-appendix />
-      </el-tab-pane>
-      <el-tab-pane label="BOM清单" name="4">
-        <bom-list />
-      </el-tab-pane>
-      <el-tab-pane label="合同管理" name="5">
-        <contract-manage />
-      </el-tab-pane>
-      <el-tab-pane label="收款管理" name="6">
-        <pay-manage />
+    <el-tabs v-model="activeTab">
+      <el-tab-pane v-for="(tab, i) in tabList" :key="`tab${i}`" :label="tab.label" :name="tab.name">
+        <component v-if="activeTab === tab.name" v-bind:is="tab.component" :ref="tab.component" :value="tab.value" />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -69,6 +64,9 @@ import DocAppendix from '@/views/operations/details/components/DocAppendix.vue'
 import BomList from '@/views/operations/details/components/BomList.vue'
 import ContractManage from '@/views/operations/details/components/ContractManage.vue'
 import PayManage from '@/views/operations/details/components/PayManage.vue'
+import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
+import ExecuteRecord from '@/views/operations/details/components/ExecuteRecord.vue'
+import DocMaterial from '@/views/operations/details/components/DocMaterial.vue'
 
 export default {
   name: 'Details',
@@ -78,10 +76,27 @@ export default {
     BomList,
     DocAppendix,
     TaskInfo,
-    TinymceEditor
+    TinymceEditor,
+    TaskPlan,
+    ExecuteRecord,
+    DocMaterial
   },
   data() {
     return {
+      // 当前激活的tab
+      activeTab: '1',
+      // tab列表 tabsType: 1: 设备维保 2: 项目管理 & 生产管理
+      tabList: [
+        { label: '任务描述', name: '1', component: 'TinymceEditor', value: '任务11111111111111描述' },
+        { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 1 },
+        { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 1 },
+        { label: '文档资料', name: '9', component: 'DocMaterial', tabsType: 1 },
+        { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 2 },
+        { label: '文档附件', name: '3', component: 'DocAppendix', tabsType: 2 },
+        { label: 'BOM清单', name: '4', component: 'BomList', tabsType: 2 },
+        { label: '合同管理', name: '5', component: 'ContractManage', tabsType: 2 },
+        { label: '收款管理', name: '6', component: 'PayManage', tabsType: 2 }
+      ],
       // 用户列表
       userList: [],
       form: {
@@ -89,7 +104,7 @@ export default {
         username: '刘能',
         createTime: ['2019-01-01', '2022-10-01'],
         type: '项目管理',
-        followerIds: [1, 2, 3]
+        followerIds: [1]
       }
     }
   },
