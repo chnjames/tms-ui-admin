@@ -314,3 +314,16 @@ export const PromotionActivityStatusEnum = {
     name: '已关闭'
   }
 }
+
+/**
+ * 周期类型数组 1:每天 2:每周 3:双周 4:每月 5:季度 6:半年 7:年度
+ */
+export const PeriodTypeOptions = [
+  {label: '每天', value: 1},
+  {label: '每周', value: 2},
+  {label: '双周', value: 3},
+  {label: '每月', value: 4},
+  {label: '季度', value: 5},
+  {label: '半年', value: 6},
+  {label: '年度', value: 7}
+]

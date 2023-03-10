@@ -49,7 +49,7 @@
     </el-row>
     <el-tabs v-model="activeTab">
       <el-tab-pane v-for="(tab, i) in tabList" :key="`tab${i}`" :label="tab.label" :name="tab.name">
-        <component v-if="activeTab === tab.name" v-bind:is="tab.component" :ref="tab.component" :value="tab.value" />
+        <component v-if="activeTab === tab.name" v-bind:is="tab.component" :ref="tab.component" :content="tab.content" />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -58,7 +58,7 @@
 <script>
 
 import { listSimpleUsers } from '@/api/system/user'
-import TinymceEditor from '@/components/TinymceEditor/index.vue'
+import ComTinymceEditor from '@/views/operations/details/components/ComTinymceEditor.vue'
 import TaskInfo from '@/views/operations/details/components/TaskInfo.vue'
 import DocAppendix from '@/views/operations/details/components/DocAppendix.vue'
 import BomList from '@/views/operations/details/components/BomList.vue'
@@ -66,20 +66,18 @@ import ContractManage from '@/views/operations/details/components/ContractManage
 import PayManage from '@/views/operations/details/components/PayManage.vue'
 import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
 import ExecuteRecord from '@/views/operations/details/components/ExecuteRecord.vue'
-import DocMaterial from '@/views/operations/details/components/DocMaterial.vue'
 
 export default {
   name: 'Details',
   components: {
+    ComTinymceEditor,
     PayManage,
     ContractManage,
     BomList,
     DocAppendix,
     TaskInfo,
-    TinymceEditor,
     TaskPlan,
-    ExecuteRecord,
-    DocMaterial
+    ExecuteRecord
   },
   data() {
     return {
@@ -87,12 +85,11 @@ export default {
       activeTab: '1',
       // tab列表 tabsType: 1: 设备维保 2: 项目管理 & 生产管理
       tabList: [
-        { label: '任务描述', name: '1', component: 'TinymceEditor', value: '任务11111111111111描述' },
+        { label: '任务描述', name: '1', component: 'ComTinymceEditor', content: '任务11111111111111描述' },
         { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 1 },
         { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 1 },
-        { label: '文档资料', name: '9', component: 'DocMaterial', tabsType: 1 },
         { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 2 },
-        { label: '文档附件', name: '3', component: 'DocAppendix', tabsType: 2 },
+        { label: '文档附件', name: '3', component: 'DocAppendix' },
         { label: 'BOM清单', name: '4', component: 'BomList', tabsType: 2 },
         { label: '合同管理', name: '5', component: 'ContractManage', tabsType: 2 },
         { label: '收款管理', name: '6', component: 'PayManage', tabsType: 2 }

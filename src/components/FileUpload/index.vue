@@ -6,6 +6,7 @@
         :before-upload="handleBeforeUpload"
         :file-list="fileList"
         :limit="limit"
+        :drag="drag"
         :on-error="handleUploadError"
         :on-exceed="handleExceed"
         :on-success="handleUploadSuccess"
@@ -14,8 +15,13 @@
         class="upload-file-uploader"
         ref="fileUpload"
     >
+      <!-- 拖拽上传 -->
+      <template v-if="drag">
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+      </template>
       <!-- 上传按钮 -->
-      <el-button size="mini" type="primary">选取文件</el-button>
+      <el-button v-else size="mini" type="primary">选取文件</el-button>
       <!-- 上传提示 -->
       <div class="el-upload__tip" slot="tip" v-if="showTip">
         请上传
@@ -51,6 +57,11 @@ export default {
     limit: {
       type: Number,
       default: 5,
+    },
+    // 是否可拖拽
+    drag: {
+      type: Boolean,
+      default: false
     },
     // 大小限制(MB)
     fileSize: {

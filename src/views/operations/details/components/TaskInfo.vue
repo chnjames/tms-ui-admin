@@ -134,15 +134,12 @@ import {
   updateFactoryArea
 } from '@/api/config/factoryArea'
 import { getCustomerPage } from "@/api/config/customer";
-import TreeSelect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
-import Template from '@/views/operations/template/index.vue'
 
 export default {
   name: 'TaskInfo',
-  components: { Template, DrawerPlus, TreeSelect },
+  components: { DrawerPlus },
   data() {
     return {
       // 遮罩层

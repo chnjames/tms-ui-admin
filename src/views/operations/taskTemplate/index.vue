@@ -165,7 +165,7 @@ import {
 import ImageUpload from '@/components/ImageUpload/index.vue'
 
 export default {
-  name: 'Template',
+  name: 'TaskTemplate',
   components: {
     ImageUpload
   },
@@ -336,7 +336,6 @@ export default {
     },
     /** 添加任务项操作 */
     addInterItems(item, index) {
-      console.log(item, index)
       item.taskList.push({
         taskName: undefined, // 任务名称
         outcome: undefined, // 执行结果
@@ -408,7 +407,6 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      console.log(row)
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {

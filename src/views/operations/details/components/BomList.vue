@@ -1,13 +1,364 @@
 <template>
-  <div>BOM清单</div>
+  <div>
+    <!-- 操作工具栏 -->
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                   v-hasPermi="['config:factory-area:create']">新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入任务名称" clearable
+                  @keyup.enter.native="handleQuery"/>
+      </el-col>
+      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+    </el-row>
+
+    <!--切换状态-->
+    <el-tabs v-model="curTab">
+      <el-tab-pane v-for="item in tabList" :key="item.name" :label="item.title" :name="item.name" />
+    </el-tabs>
+    <!-- 列表 -->
+    <el-table v-loading="loading" :data="list">
+      <el-table-column type="selection" :width="55" align="center" />
+      <el-table-column
+        v-for="(item, index) in tableHeader"
+        :key="index"
+        :prop="item.prop"
+        :width="item.width"
+        :fixed="item.fixed"
+        :label="item.label">
+        <template v-slot="{row}">
+          <template v-if="item.prop === 'operation'">
+            <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
+                       v-hasPermi="['config:factory-area:update']">编辑</el-button>
+            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                       v-hasPermi="['config:factory-area:delete']">删除</el-button>
+          </template>
+          <template v-else-if="item.prop === 'updateTime'">
+            <span>{{ parseTime(row[item.prop]) }}</span>
+          </template>
+          <span v-else>{{ row[item.prop] }}</span>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- 对话框BOM(添加 / 修改) -->
+    <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="模糊查询" prop="search">
+          <el-input v-model="form.search" placeholder="输入物料名称"/>
+        </el-form-item>
+        <el-form-item label="物料名称" prop="name">
+          <el-table ref="selectList" :height="300" v-loading="loading" :data="list" :show-header="false" @selection-change="selectedChange">
+            <el-table-column
+              v-for="(item, index) in materialHeader"
+              :key="index"
+              :prop="item.prop"
+              :width="item.width"
+              :fixed="item.fixed"
+              :label="item.label">
+              <template v-slot="{row}">{{ row[item.prop] }}</template>
+            </el-table-column>
+            <el-table-column type="selection" :width="55" align="center" />
+          </el-table>
+        </el-form-item>
+        <el-form-item label="需求数量" prop="demandQuantity">
+          <el-input-number v-model="form.demandQuantity" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        </el-form-item>
+      </el-form>
+      <template slot="footer">
+        <el-button @click="cancel">取 消</el-button>
+        <el-button type="primary" @click="bindPurchase">发起采购</el-button>
+        <el-button type="primary" @click="bindContinueAdd">继续添加</el-button>
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+      </template>
+    </drawer-plus>
+    <!-- 对话框发起采购(添加 / 修改) -->
+    <drawer-plus :title="purchaseTitle" :visible.sync="purchaseOpen" :size="550" append-to-body>
+      <el-form ref="form" :model="purchaseForm" :rules="purchaseRules" label-width="100px">
+        <el-form-item label="物料编码" prop="name">
+          <div>M2348536</div>
+        </el-form-item>
+        <el-form-item label="物料名称" prop="name">
+          <div>3相4线驱动电机</div>
+        </el-form-item>
+        <el-form-item label="物料类型" prop="name">
+          <div>驱动类</div>
+        </el-form-item>
+        <el-form-item label="需求数量" prop="demandQuantity">
+          <el-input-number v-model="purchaseForm.demandQuantity" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="计划开始时间" prop="beginTime">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
+                          value-format="timestamp" placeholder="选择开始时间"/>
+        </el-form-item>
+        <el-form-item label="采购单价" prop="purchasePrice">
+          <el-input-number v-model="form.purchasePrice" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="采购金额" prop="purchaseAmount">
+          <el-input-number v-model="form.purchaseAmount" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="采购人" prop="purchaseUserId">
+          <el-select v-model="form.purchaseUserId" placeholder="请选择采购人">
+            <el-option
+              v-for="item in userList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="采购时间" prop="purchaseTime">
+          <el-date-picker
+            v-model="form.purchaseTime"
+            type="datetime"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            placeholder="选择日期时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="采购备注" prop="purchaseRemark">
+          <el-input v-model="form.purchaseRemark" placeholder="输入采购备注"/>
+        </el-form-item>
+      </el-form>
+      <template slot="footer">
+        <el-button @click="cancel">取 消</el-button>
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+      </template>
+    </drawer-plus>
+  </div>
 </template>
 
 <script>
+import {
+  createFactoryArea,
+  deleteFactoryArea,
+  getFactoryArea,
+  updateFactoryArea
+} from '@/api/config/factoryArea'
+import { getCustomerPage } from "@/api/config/customer";
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { listSimpleUsers } from '@/api/system/user'
+
 export default {
-  name: 'BomList'
+  name: 'BomList',
+  components: { DrawerPlus },
+  data() {
+    return {
+      // 遮罩层
+      loading: true,
+      // 显示搜索条件
+      showSearch: true,
+      // 总条数
+      total: 0,
+      // 用户列表
+      userList: [],
+      // 子任务列表
+      taskOptions: [],
+      // 任务详情类型(项目管理/生产管理)
+      taskType: 1, // 1:项目管理 2:生产管理
+      // tabs列表
+      tabList: [
+        { name: '1', title: '全部任务' },
+        { name: '2', title: '已完成' },
+        { name: '3', title: '延期未完成' }
+      ],
+      // 生效方式Options
+      modeOptions: [
+        { type: 1, label: '选择开始时间' },
+        { type: 2, label: '选择任务触发' }
+      ],
+      // 当前tab
+      curTab: '1',
+      // 任务详情列表
+      list: [],
+      // 弹出层标题
+      title: '',
+      // 是否显示弹出层
+      open: false,
+      // 查询参数
+      queryParams: {
+        name: null,
+        pageNo: 1,
+        pageSize: 10
+      },
+      // 基础表头
+      tableHeader: [
+        { prop: 'name', label: '物料编号' },
+        { prop: 'name', label: '物料名称' },
+        { prop: 'name', label: '规格型号' },
+        { prop: 'name', label: '需求数量' },
+        { prop: 'name', label: '状态' },
+        { prop: 'name', label: '所在库区' },
+        { prop: 'name', label: '所在库位(排*层*列)' },
+        { prop: 'updateTime', label: '添加时间' },
+        { prop: 'operation', label: '操作' }
+      ],
+      // 物料表头
+      materialHeader: [
+        { prop: 'name', label: '物料编码' },
+        { prop: 'name', label: '物料名称' },
+        { prop: 'name', label: '所在库区及所在库位(排*层*列)' },
+        { prop: 'quantity', label: '数量' },
+      ],
+      selectList: [], // 选中的物料列表
+      // 表单参数
+      form: {
+        id: undefined,
+        search: undefined,
+        name: undefined,
+        demandQuantity: undefined // 需求数量
+      },
+      // 表单校验
+      rules: {
+        search: { required: true, message: '模糊查询不能为空', trigger: 'blur' },
+        name: { required: true, message: '物料名称不能为空', trigger: 'blur' },
+        demandQuantity: { required: true, type: 'number', message: '需求数量不能为空', trigger: 'blur' }
+      },
+      // 采购弹出层参数
+      // 弹出层标题
+      purchaseTitle: '',
+      // 是否显示弹出层
+      purchaseOpen: false,
+      // 表单参数
+      purchaseForm: {
+        id: undefined,
+        demandQuantity: undefined, // 需求数量
+        purchaseUserId: undefined, // 采购人
+        purchaseTime: undefined, // 采购时间
+        purchaseRemark: undefined // 采购备注
+      },
+      // 表单校验
+      purchaseRules: {
+        purchaseAmount: { required: true, type: 'number', message: '采购金额不能为空', trigger: 'blur' },
+        purchaseUserId: { required: true, message: '采购人不能为空', trigger: 'blur' },
+        purchaseTime: { required: true, message: '采购时间不能为空', trigger: 'blur' },
+        purchaseRemark: { required: true, message: '采购备注不能为空', trigger: 'blur' }
+      }
+    }
+  },
+  created() {
+    this.getList()
+    this.getUserList()
+  },
+  methods: {
+    /** 用户列表 */
+    getUserList() {
+      listSimpleUsers().then(response => {
+        this.userList = response.data
+      })
+    },
+    /** 查询列表 */
+    getList() {
+      this.loading = true;
+      // 执行查询
+      getCustomerPage(this.queryParams).then(response => {
+        this.list = response.data.list;
+        this.list.forEach(item => {
+          item.checked = false
+        })
+        this.total = response.data.total;
+        this.loading = false;
+      });
+    },
+    /** 取消按钮 */
+    cancel() {
+      this.open = false
+      this.reset()
+    },
+    /** 发起采购 */
+    bindPurchase() {
+      this.$message.success('发起采购成功')
+      this.open = false
+      this.reset()
+    },
+    /** 继续添加 */
+    bindContinueAdd() {
+      this.$message.success('继续添加成功')
+      this.open = false
+      this.reset()
+    },
+    /** 表单重置 */
+    reset() {
+      this.form = {
+        id: undefined,
+        search: undefined,
+        name: undefined,
+        demandQuantity: undefined // 需求数量
+      }
+      this.resetForm('form')
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNo = 1
+      this.getList()
+    },
+    /** 新增按钮操作 */
+    handleAdd() {
+      this.reset()
+      this.open = true
+      this.title = '添加'
+    },
+    /** 修改按钮操作 */
+    handleUpdate(row) {
+      this.reset()
+      const id = row.id
+      getFactoryArea(id).then(response => {
+        this.form = response.data
+        this.open = true
+        this.title = '修改'
+      })
+    },
+    /** 单选物料名称 */
+    selectedChange(selection) {
+      this.selectList = []
+      if (selection.length > 1) {
+        this.$refs.selectList.clearSelection();
+        this.$refs.selectList.toggleRowSelection(selection[selection.length - 1]);
+      }
+      this.selectList = [selection[selection.length - 1]]
+      console.log(this.selectList)
+      this.form.name = this.selectList.length > 0 ? this.selectList[0].name : ''
+    },
+    /** 提交按钮 */
+    submitForm() {
+      this.$refs['form'].validate(valid => {
+        if (!valid) {
+          return
+        }
+        // 修改的提交
+        if (this.form.id != null) {
+          updateFactoryArea(this.form).then(response => {
+            this.$modal.msgSuccess('修改成功')
+            this.open = false
+            this.getList()
+          })
+          return
+        }
+        // 添加的提交
+        createFactoryArea(this.form).then(response => {
+          this.$modal.msgSuccess('新增成功')
+          this.open = false
+          this.getList()
+        })
+      })
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const name = row.name
+      const id = row.id
+      this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
+        return deleteFactoryArea(id)
+      }).then(() => {
+        this.getList()
+        this.$modal.msgSuccess('删除成功')
+      }).catch(() => {
+      })
+    }
+  }
 }
 </script>
-
-<style scoped>
-
+<style lang="scss" scoped>
+// 隐藏表头的复选框
+:deep(.el-table__header-wrapper .el-checkbox) {
+  display: none;
+}
 </style>
