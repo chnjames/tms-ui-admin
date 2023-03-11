@@ -59,7 +59,7 @@
     <el-dialog custom-class="material" :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
         <el-form-item>
-          <file-upload ref="fileUpload" v-model="fileList" :auto-upload="false" :is-show-tip="false" drag />
+          <file-upload ref="fileUpload" :auto-upload="false" :is-show-tip="false" drag />
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -114,7 +114,6 @@ export default {
         id: undefined,
         name: undefined
       },
-      fileList: [],
       // 表单校验
       rules: {
         name: [
@@ -170,24 +169,22 @@ export default {
           return
         }
         const formData = new FormData()
-        this.fileList.forEach(item => {
+        // 获取上传的文件
+        const fileList = this.$refs.fileUpload.fileList
+        console.log(fileList)
+        fileList.forEach(item => {
           formData.append('file', item.raw)
         })
         formData.append('projectId', this.$route.query.id)
+        console.log(formData)
+        // 使用createContract上传文件
         createContract(formData).then(res => {
           console.log(res)
           //手动上传无法触发成功或失败的钩子函数，因此这里手动调用
           this.$refs.fileUpload.handleSuccess(res.data)
         }, (err) => {
-          console.log(err)
+
         })
-        // createContract(formData).then(res => {
-        //   console.log(res)
-        //   //手动上传无法触发成功或失败的钩子函数，因此这里手动调用
-        //   this.$refs.fileUpload.handleSuccess(res.data)
-        // }, (err) => {
-        //
-        // })
         // 修改的提交
         // if (this.form.id != null) {
         //   updateFactoryArea(this.form).then(response => {

@@ -107,7 +107,7 @@
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.type === 2 && form.device" label="设备编号">
-          <div>{{ form.code }}</div>
+          <div>{{ form.extra.code }}</div>
         </el-form-item>
         <!--项目管理类型-->
         <el-form-item v-if="form.type === 0" label="项目类型">
@@ -236,6 +236,9 @@ export default {
         code: undefined, // 设备编号
         blameId: undefined, // 责任人
         followerIds: [], // 内部关注人
+        extra: {
+          code: undefined // 设备编号
+        },
         beginTime: undefined,
         period: 0, // 任务周期
         endTime: undefined,
@@ -283,7 +286,7 @@ export default {
     },
     /** 选择设备 */
     bindDeviceChange(val) {
-      this.form.code = this.deviceList.find(item => item.id === val).code
+      this.form.extra.code = this.deviceList.find(item => item.id === val).code
     },
     /** 用户列表 */
     getUserList() {
@@ -353,6 +356,9 @@ export default {
         name: undefined,
         blameId: undefined,
         followerIds: [], // 内部关注人
+        extra: {
+          code: undefined // 设备编号
+        },
         beginTime: undefined,
         endTime: undefined,
         period: 0, // 任务周期
@@ -397,6 +403,9 @@ export default {
           name: data.name, // 项目名称
           blameId: data.blame.id,
           followerIds: data.followers.map(item => item.id), // 内部关注人
+          extra: {
+            code: undefined // 设备编号
+          },
           beginTime: data.beginTime,
           period: data.period, // 任务周期
           endTime: data.endTime,

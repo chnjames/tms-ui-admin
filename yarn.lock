@@ -1152,12 +1152,10 @@
   resolved "https://registry.npmmirror.com/@soda/get-current-script/-/get-current-script-1.0.2.tgz"
   integrity sha512-T7VNNlYVM1SgQ+VsMYhnDkcGmWhQdL0bDyGm5TlQ3GBXnJscEClUUOKduWTmm2zCnvNLC1hc3JpuXjs/nFOc5w==
 
-"@tinymce/tinymce-vue@^5.0.1":
-  version "5.0.1"
-  resolved "https://registry.npmmirror.com/@tinymce/tinymce-vue/-/tinymce-vue-5.0.1.tgz#7092fb7f5ce9b407796dde791857a69b1deac719"
-  integrity sha512-RzJflpf06VimGQNgCYMasS5+gEKTOs5ddOgrBuTGOMsHOeKBhMTim9ePjiwYpCpilyZgR5ZDyo5NfZgrKOHHEA==
-  dependencies:
-    tinymce "^6.0.0 || ^5.5.1"
+"@tinymce/tinymce-vue@^3.0.1":
+  version "3.2.8"
+  resolved "https://registry.npmmirror.com/@tinymce/tinymce-vue/-/tinymce-vue-3.2.8.tgz#014571b52ec8fa83665a7fa887bf65140207de71"
+  integrity sha512-jEz+NZ0g+FZFz273OEUWz9QkwPMyjc5AJYyxOgu51O1Y5UaJ/6IUddXTX6A20mwCleEv5ebwNYdalviafx4fnA==
 
 "@types/body-parser@*":
   version "1.19.2"
@@ -9506,10 +9504,10 @@ tiny-svg@^2.2.2:
   resolved "https://registry.npmmirror.com/tiny-svg/-/tiny-svg-2.2.4.tgz"
   integrity sha512-NOi39lBknf4UdDEahNkbEAJnzhu1ZcN2j75IS2vLRmIhsfxdZpTChfLKBcN1ShplVmPIXJAIafk6YY5/Aa80lQ==
 
-"tinymce@^6.0.0 || ^5.5.1":
-  version "6.3.2"
-  resolved "https://registry.npmmirror.com/tinymce/-/tinymce-6.3.2.tgz#aecee6273dc7556664a0d1664b5fe7ec818cfbb1"
-  integrity sha512-nOVHk4FhHKQj48hi7fEptS1Se6CNzPtfIcDzTO70KoTcSiQIFzhhZjS5bPotSzFnQ4dIQJ4QPOd7sqNs6fXUrA==
+tinymce@^5.6.2:
+  version "5.10.7"
+  resolved "https://registry.npmmirror.com/tinymce/-/tinymce-5.10.7.tgz#d89d446f1962f2a1df6b2b70018ce475ec7ffb80"
+  integrity sha512-9UUjaO0R7FxcFo0oxnd1lMs7H+D0Eh+dDVo5hKbVe1a+VB0nit97vOqlinj+YwgoBDt6/DSCUoWqAYlLI8BLYA==
 
 tmp@^0.0.33:
   version "0.0.33"
