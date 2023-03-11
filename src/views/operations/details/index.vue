@@ -107,6 +107,7 @@ export default {
   },
   created() {
     this.getUserList()
+    console.log(this.$route.query)
   },
   methods: {
     /** 用户列表 */

@@ -70,7 +70,7 @@
           </template>
         </el-table-column>
         <el-table-column label="负责人" align="center" prop="header"/>
-        <el-table-column label="项目类型" align="center" prop="type"/>
+        <el-table-column label="项目类型" align="center" prop="typeDesc"/>
         <el-table-column label="开始时间" align="center" prop="beginTime"/>
         <el-table-column label="结束时间" align="center" prop="endTime"/>
         <el-table-column label="项目进度" align="center" prop="progress">
@@ -301,7 +301,7 @@ export default {
           item.beginTime = this.parseTime(item.beginTime, '{y}-{m}-{d}')
           item.endTime = this.parseTime(item.endTime, '{y}-{m}-{d}')
           item.header = item.blame.nickname
-          item.type = this.typeList.find(type => parseInt(type.value) === item.type).label
+          item.typeDesc = this.typeList.find(type => parseInt(type.value) === item.type).label
           item.progress = Math.floor((item.rate.current / item.rate.total) * 100)
           if (item.progress < 100) {
             if (item.endTime > new Date().getTime()) {
@@ -324,9 +324,12 @@ export default {
     },
     /** 项目详情 */
     bindProject(row) {
-      console.log(row)
       this.$router.push({
-        path: '/operations/details'
+        path: '/operations/details',
+        query: {
+          id: row.id,
+          type: row.type
+        }
       })
     },
     /** 选择字段类型 */

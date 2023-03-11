@@ -1,20 +1,23 @@
 <template>
   <div class="upload-file">
     <el-upload
-        multiple
+        :multiple="multiple"
         :action="uploadFileUrl"
-        :before-upload="handleBeforeUpload"
         :file-list="fileList"
         :limit="limit"
         :drag="drag"
+        :auto-upload="autoUpload"
+        :disabled="disabled"
+        :show-file-list="true"
+        :headers="headers"
+        :data="fileData"
+        :before-upload="handleBeforeUpload"
         :on-error="handleUploadError"
+        :on-change="handleUploadChange"
         :on-exceed="handleExceed"
         :on-success="handleUploadSuccess"
-        :show-file-list="false"
-        :headers="headers"
         class="upload-file-uploader"
-        ref="fileUpload"
-    >
+        ref="fileUpload">
       <!-- 拖拽上传 -->
       <template v-if="drag">
         <i class="el-icon-upload"></i>
@@ -53,6 +56,26 @@ export default {
   props: {
     // 值
     value: [String, Object, Array],
+    // 是否多选
+    multiple: {
+      type: Boolean,
+      default: false
+    },
+    // 是否自动上传
+    autoUpload: {
+      type: Boolean,
+      default: true
+    },
+    // 是否禁用
+    disabled: {
+      type: Boolean,
+      default: false
+    },
+    // 上传参数
+    fileData: {
+      type: Object,
+      default: () => ({})
+    },
     // 数量限制
     limit: {
       type: Number,
@@ -68,7 +91,7 @@ export default {
       type: Number,
       default: 5,
     },
-    // 文件类型, 例如['png', 'jpg', 'jpeg']
+    // 文件类型
     fileType: {
       type: Array,
       default: () => ["doc", "xls", "ppt", "txt", "pdf"],
@@ -77,16 +100,22 @@ export default {
     isShowTip: {
       type: Boolean,
       default: true
-    }
+    },
+    // 上传请求头部
+    headers: {
+      type: Object,
+      default: () => ({
+        Authorization: "Bearer " + getAccessToken(),
+        "Content-Type": "multipart/form-data"
+      })
+    },
   },
   data() {
     return {
       number: 0,
-      uploadList: [],
-      baseUrl: process.env.VUE_APP_BASE_API,
-      uploadFileUrl: process.env.VUE_APP_BASE_API + "/admin-api/infra/file/upload", // 请求地址
-      headers: { Authorization: "Bearer " + getAccessToken() }, // 设置上传的请求头部
       fileList: [],
+      uploadList: [],
+      uploadFileUrl: process.env.VUE_APP_BASE_API + "/admin-api/operations/contract/create", // 请求地址
     };
   },
   watch: {
@@ -158,6 +187,15 @@ export default {
     handleUploadError(err) {
       this.$modal.msgError("上传图片失败，请重试");
       this.$modal.closeLoading()
+    },
+    // 监控上传文件列表
+    handleUploadChange(file, fileList) {
+      let existFile = fileList.slice(0, fileList.length - 1).find(f => f.name === file.name);
+      if (existFile) {
+        this.$message.error('请勿重复上传文件!');
+        fileList.pop();
+      }
+      this.fileList = fileList;
     },
     // 上传成功回调
     handleUploadSuccess(res, file) {

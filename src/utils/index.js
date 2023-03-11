@@ -464,4 +464,21 @@ export function timeFormat(time) {
   }
 }
 
+/**
+ * 文件大小格式化
+ * @param {Number} size 文件大小
+ * @param {Number} pointLength 保留的小数点长度
+ * @returns {String} 格式化后的文件大小
+ * @example
+ * formatFileSize(1024) // => 1KB
+ * formatFileSize(1024 * 1024) // => 1MB
+ * formatFileSize(1024 * 1024 * 1024) // => 1GB
+ * formatFileSize(1024 * 1024 * 1024 * 1024) // => 1TB
+ */
+export function formatFileSize(size, pointLength = 2, unitArr = ['B', 'KB', 'MB', 'GB', 'TB']) {
+  const index = Math.floor(Math.log(size) / Math.log(1024));
+  const sizeStr = (size / Math.pow(1024, index)).toFixed(pointLength);
+  return `${sizeStr} ${unitArr[index]}`;
+}
+
 

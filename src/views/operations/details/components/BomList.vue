@@ -7,6 +7,10 @@
                    v-hasPermi="['config:factory-area:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="bindInitiate"
+                   v-hasPermi="['config:factory-area:create']">发起出库</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入任务名称" clearable
                   @keyup.enter.native="handleQuery"/>
       </el-col>
@@ -74,7 +78,7 @@
     </drawer-plus>
     <!-- 对话框发起采购(添加 / 修改) -->
     <drawer-plus :title="purchaseTitle" :visible.sync="purchaseOpen" :size="550" append-to-body>
-      <el-form ref="form" :model="purchaseForm" :rules="purchaseRules" label-width="100px">
+      <el-form ref="purchaseForm" :model="purchaseForm" :rules="purchaseRules" label-width="100px">
         <el-form-item label="物料编码" prop="name">
           <div>M2348536</div>
         </el-form-item>
@@ -87,41 +91,57 @@
         <el-form-item label="需求数量" prop="demandQuantity">
           <el-input-number v-model="purchaseForm.demandQuantity" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
-        <el-form-item label="计划开始时间" prop="beginTime">
-          <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
-                          value-format="timestamp" placeholder="选择开始时间"/>
+        <el-form-item label="期望到货日期" prop="expectedDate">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.expectedDate" type="date"
+                          value-format="timestamp" placeholder="选择期望到货日期"/>
         </el-form-item>
-        <el-form-item label="采购单价" prop="purchasePrice">
-          <el-input-number v-model="form.purchasePrice" controls-position="right" :min="0" style="width: 100%"></el-input-number>
-        </el-form-item>
-        <el-form-item label="采购金额" prop="purchaseAmount">
-          <el-input-number v-model="form.purchaseAmount" controls-position="right" :min="0" style="width: 100%"></el-input-number>
-        </el-form-item>
-        <el-form-item label="采购人" prop="purchaseUserId">
-          <el-select v-model="form.purchaseUserId" placeholder="请选择采购人">
-            <el-option
-              v-for="item in userList"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id">
-            </el-option>
+        <el-form-item label="任务指派" prop="taskAssign">
+          <el-select v-model="form.taskAssign" style="width: 100%" placeholder="请选择任务指派">
+            <el-option v-for="item in taskAssignList" :key="item.type" :label="item.label" :value="item.type" />
           </el-select>
         </el-form-item>
-        <el-form-item label="采购时间" prop="purchaseTime">
-          <el-date-picker
-            v-model="form.purchaseTime"
-            type="datetime"
-            value-format="yyyy-MM-dd HH:mm:ss"
-            placeholder="选择日期时间">
-          </el-date-picker>
+        <el-form-item label="指定部门" prop="departmentId" v-if="form.taskAssign === 1">
+          <el-select v-model="form.departmentId" style="width: 100%" placeholder="请选择指定部门">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
         </el-form-item>
-        <el-form-item label="采购备注" prop="purchaseRemark">
-          <el-input v-model="form.purchaseRemark" placeholder="输入采购备注"/>
+        <el-form-item label="指定负责人" prop="principalId" v-if="form.taskAssign === 2">
+          <el-select v-model="form.principalId" style="width: 100%" placeholder="请选择指定负责人">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
         </el-form-item>
       </el-form>
       <template slot="footer">
-        <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancelPurchase">取 消</el-button>
+        <el-button type="primary" @click="submitPurchase">确 定</el-button>
+      </template>
+    </drawer-plus>
+    <!-- 对话框发起出库(添加 / 修改) -->
+    <drawer-plus :title="initiateTitle" :visible.sync="initiateOpen" :size="550" append-to-body>
+      <el-form ref="initiateForm" :model="initiateForm" :rules="initiateRules" label-width="100px">
+        <el-form-item label="任务指派" prop="taskAssign">
+          <el-select v-model="initiateForm.taskAssign" style="width: 100%" placeholder="请选择任务指派">
+            <el-option v-for="item in taskAssignList" :key="item.type" :label="item.label" :value="item.type" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="指定部门" prop="departmentId" v-if="initiateForm.taskAssign === 1">
+          <el-select v-model="initiateForm.departmentId" style="width: 100%" placeholder="请选择指定部门">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="指定负责人" prop="principalId" v-if="initiateForm.taskAssign === 2">
+          <el-select v-model="initiateForm.principalId" style="width: 100%" placeholder="请选择指定负责人">
+            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                       :value="parseInt(item.id)"/>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template slot="footer">
+        <el-button @click="cancelInitiate">取 消</el-button>
+        <el-button type="primary" @click="submitInitiate">确 定</el-button>
       </template>
     </drawer-plus>
   </div>
@@ -218,20 +238,45 @@ export default {
       purchaseTitle: '',
       // 是否显示弹出层
       purchaseOpen: false,
+      // 任务指派列表
+      taskAssignList: [
+        { type: 1, label: '选择部门' },
+        { type: 2, label: '选择人员' }
+      ],
       // 表单参数
       purchaseForm: {
         id: undefined,
         demandQuantity: undefined, // 需求数量
-        purchaseUserId: undefined, // 采购人
-        purchaseTime: undefined, // 采购时间
-        purchaseRemark: undefined // 采购备注
+        expectedDate: undefined, // 期望到货日期
+        taskAssign: undefined, // 任务指派
+        departmentId: undefined, // 指定部门
+        principalId: undefined // 指定负责人
       },
       // 表单校验
       purchaseRules: {
-        purchaseAmount: { required: true, type: 'number', message: '采购金额不能为空', trigger: 'blur' },
-        purchaseUserId: { required: true, message: '采购人不能为空', trigger: 'blur' },
-        purchaseTime: { required: true, message: '采购时间不能为空', trigger: 'blur' },
-        purchaseRemark: { required: true, message: '采购备注不能为空', trigger: 'blur' }
+        demandQuantity: { required: true, type: 'number', message: '需求数量不能为空', trigger: 'blur' },
+        expectedDate: { required: true, type: 'date', message: '期望到货日期不能为空', trigger: 'change' },
+        taskAssign: { required: true, message: '任务指派不能为空', trigger: 'change' },
+        departmentId: { required: true, message: '指定部门不能为空', trigger: 'change' },
+        principalId: { required: true, message: '指定负责人不能为空', trigger: 'change' }
+      },
+      // 发起出库弹出层参数
+      // 弹出层标题
+      initiateTitle: '',
+      // 是否显示弹出层
+      initiateOpen: false,
+      // 表单参数
+      initiateForm: {
+        id: undefined,
+        taskAssign: undefined, // 任务指派
+        departmentId: undefined, // 指定部门
+        principalId: undefined // 指定负责人
+      },
+      // 表单校验
+      initiateRules: {
+        taskAssign: { required: true, message: '任务指派不能为空', trigger: 'change' },
+        departmentId: { required: true, message: '指定部门不能为空', trigger: 'change' },
+        principalId: { required: true, message: '指定负责人不能为空', trigger: 'change' }
       }
     }
   },
@@ -264,11 +309,39 @@ export default {
       this.open = false
       this.reset()
     },
+    /** 重置采购表单 */
+    resetPurchaseForm() {
+      this.purchaseForm = {
+        id: undefined,
+        demandQuantity: undefined, // 需求数量
+        expectedDate: undefined, // 期望到货日期
+        taskAssign: undefined, // 任务指派
+        departmentId: undefined, // 指定部门
+        principalId: undefined // 指定负责人
+      }
+      this.resetForm('purchaseForm')
+    },
     /** 发起采购 */
     bindPurchase() {
       this.$message.success('发起采购成功')
-      this.open = false
-      this.reset()
+      this.purchaseTitle = '发起采购'
+      this.purchaseOpen = true
+      this.resetPurchaseForm()
+    },
+    /** 取消采购 */
+    cancelPurchase() {
+      this.purchaseOpen = false
+      this.resetPurchaseForm()
+    },
+    /** 提交采购 */
+    submitPurchase() {
+      this.$refs.purchaseForm.validate((valid) => {
+        if (valid) {
+          this.$message.success('提交采购成功')
+          this.purchaseOpen = false
+          this.resetPurchaseForm()
+        }
+      })
     },
     /** 继续添加 */
     bindContinueAdd() {
@@ -296,6 +369,38 @@ export default {
       this.reset()
       this.open = true
       this.title = '添加'
+    },
+    /** 发起出库按钮操作 */
+    bindInitiate() {
+      this.$message.success('发起出库成功')
+      this.initiateTitle = '发起出库'
+      this.initiateOpen = true
+      this.resetInitiateForm()
+    },
+    /** 删除按钮操作 */
+    resetInitiateForm() {
+      this.initiateForm = {
+        id: undefined,
+        taskAssign: undefined, // 任务指派
+        departmentId: undefined, // 指定部门
+        principalId: undefined // 指定负责人
+      }
+      this.resetForm('initiateForm')
+    },
+    /** 取消出库按钮操作 */
+    cancelInitiate() {
+      this.initiateOpen = false
+      this.resetInitiateForm()
+    },
+    /** 提交出库按钮操作 */
+    submitInitiate() {
+      this.$refs.initiateForm.validate((valid) => {
+        if (valid) {
+          this.$message.success('提交出库成功')
+          this.initiateOpen = false
+          this.resetInitiateForm()
+        }
+      })
     },
     /** 修改按钮操作 */
     handleUpdate(row) {

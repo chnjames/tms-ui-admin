@@ -42,7 +42,13 @@
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['config:factory-area:delete']">删除</el-button>
           </template>
-          <template v-else-if="item.prop === 'updateTime'">
+          <template v-else-if="item.prop === 'executorName'">
+            <span>{{ row.creator.nickname || '-' }}</span>
+          </template>
+          <template v-else-if="item.prop === 'size'">
+            <span>{{ formatFileSize(row[item.prop]) }}</span>
+          </template>
+          <template v-else-if="item.prop === 'createTime'">
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
@@ -52,8 +58,8 @@
     <!-- 上传附件 -->
     <el-dialog custom-class="material" :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
-        <el-form-item prop="name">
-          <file-upload v-model="form.file" :is-show-tip="false" :fileList="form.fileList" drag />
+        <el-form-item>
+          <file-upload ref="fileUpload" v-model="fileList" :auto-upload="false" :is-show-tip="false" drag />
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -65,12 +71,8 @@
 </template>
 
 <script>
-import {
-  createFactoryArea,
-  deleteFactoryArea,
-  updateFactoryArea
-} from '@/api/config/factoryArea'
-import { getCustomerPage } from "@/api/config/customer";
+import { getContractPage, deleteContract, createContract } from '@/api/operations/overview'
+import { formatFileSize } from '@/utils'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
 
@@ -79,6 +81,7 @@ export default {
   components: { FileUpload, DrawerPlus },
   data() {
     return {
+      formatFileSize,
       // 遮罩层
       loading: true,
       // 显示搜索条件
@@ -100,33 +103,29 @@ export default {
       // 基础表头
       tableHeader: [
         { prop: 'name', label: '文件名称' },
-        { prop: 'name', label: '格式' },
-        { prop: 'name', label: '大小' },
+        { prop: 'type', label: '格式' },
+        { prop: 'size', label: '大小' },
         { prop: 'executorName', label: '上传者' },
-        { prop: 'updateTime', label: '上传时间' },
+        { prop: 'createTime', label: '上传时间' },
         { prop: 'operation', label: '操作' }
       ],
       // 表单参数
       form: {
-        id: undefined
+        id: undefined,
+        name: undefined
       },
+      fileList: [],
       // 表单校验
       rules: {
         name: [
           { required: true, message: '名称不能为空', trigger: 'blur' },
           { max: 30, message: '名称不能超过30个字', trigger: 'blur' }
-        ],
-        planQuantity: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' },
-        hours: { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
-        firstBeginTime: { required: true, type: 'date', message: '首任务开始时间不能为空', trigger: 'change' },
-        mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
-        beginTime: { required: true, type: 'date', message: '计划开始时间不能为空', trigger: 'change' },
-        endTime: { required: true, type: 'date', message: '计划结束时间不能为空', trigger: 'change' },
-        taskId: { required: true, message: '选择任务触发不能为空', trigger: 'change' }
+        ]
       }
     }
   },
   created() {
+    console.log(this.$route.query)
     this.getList()
   },
   methods: {
@@ -134,7 +133,7 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
-      getCustomerPage(this.queryParams).then(response => {
+      getContractPage(this.queryParams).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
         this.loading = false;
@@ -149,17 +148,7 @@ export default {
     reset() {
       this.form = {
         id: undefined,
-        name: undefined,
-        executorId: undefined, // 执行人
-        hours: undefined, // 预计工时
-        internalIds: [],
-        externalIds: [],
-        mode: undefined,
-        beginTime: undefined,
-        endTime: undefined,
-        taskId: undefined,
-        emergency: false,
-        outsourceCost: 0
+        name: undefined
       }
       this.resetForm('form')
     },
@@ -180,21 +169,40 @@ export default {
         if (!valid) {
           return
         }
-        // 修改的提交
-        if (this.form.id != null) {
-          updateFactoryArea(this.form).then(response => {
-            this.$modal.msgSuccess('修改成功')
-            this.open = false
-            this.getList()
-          })
-          return
-        }
-        // 添加的提交
-        createFactoryArea(this.form).then(response => {
-          this.$modal.msgSuccess('新增成功')
-          this.open = false
-          this.getList()
+        const formData = new FormData()
+        this.fileList.forEach(item => {
+          formData.append('file', item.raw)
         })
+        formData.append('projectId', this.$route.query.id)
+        createContract(formData).then(res => {
+          console.log(res)
+          //手动上传无法触发成功或失败的钩子函数，因此这里手动调用
+          this.$refs.fileUpload.handleSuccess(res.data)
+        }, (err) => {
+          console.log(err)
+        })
+        // createContract(formData).then(res => {
+        //   console.log(res)
+        //   //手动上传无法触发成功或失败的钩子函数，因此这里手动调用
+        //   this.$refs.fileUpload.handleSuccess(res.data)
+        // }, (err) => {
+        //
+        // })
+        // 修改的提交
+        // if (this.form.id != null) {
+        //   updateFactoryArea(this.form).then(response => {
+        //     this.$modal.msgSuccess('修改成功')
+        //     this.open = false
+        //     this.getList()
+        //   })
+        //   return
+        // }
+        // // 添加的提交
+        // createFactoryArea(this.form).then(response => {
+        //   this.$modal.msgSuccess('新增成功')
+        //   this.open = false
+        //   this.getList()
+        // })
       })
     },
     /** 删除按钮操作 */
@@ -202,7 +210,7 @@ export default {
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteFactoryArea(id)
+        return deleteContract(id)
       }).then(() => {
         this.getList()
         this.$modal.msgSuccess('删除成功')

@@ -134,7 +134,7 @@
                       </el-col>
                     </el-row>
                   </el-col>
-                  <i class="inter el-icon-delete"  v-if="item.taskList.length > 1" @click="deleteInterItems(task, idx)"></i>
+                  <i class="inter el-icon-delete" v-if="item.taskList.length > 1" @click="deleteInterItems(task, idx)"></i>
                 </el-row>
               </el-card>
               <el-button type="primary" icon="el-icon-plus" @click="addInterItems(item, index)" plain style="margin-top: 10px;width: 100%">添加任务项</el-button>
