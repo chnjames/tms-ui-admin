@@ -59,11 +59,11 @@
     <el-dialog custom-class="material" :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
         <el-form-item>
-          <file-upload ref="fileUpload" :auto-upload="false" :is-show-tip="false" drag />
+          <file-upload multiple ref="fileUpload" :auto-upload="false" :is-show-tip="false" drag />
         </el-form-item>
       </el-form>
       <template slot="footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitForm" :loading="submitLoading">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </template>
     </el-dialog>
@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import { getContractPage, deleteContract, createContract } from '@/api/operations/overview'
+import { getDocumentPage, deleteDocument, createDocument } from '@/api/operations/overview'
 import { formatFileSize } from '@/utils'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
@@ -94,6 +94,8 @@ export default {
       title: '',
       // 是否显示弹出层
       open: false,
+      // 上传Loading
+      submitLoading: false,
       // 查询参数
       queryParams: {
         name: null,
@@ -124,7 +126,6 @@ export default {
     }
   },
   created() {
-    console.log(this.$route.query)
     this.getList()
   },
   methods: {
@@ -132,7 +133,7 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
-      getContractPage(this.queryParams).then(response => {
+      getDocumentPage(this.queryParams).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
         this.loading = false;
@@ -168,38 +169,28 @@ export default {
         if (!valid) {
           return
         }
-        const formData = new FormData()
-        // 获取上传的文件
+        this.submitLoading = true
         const fileList = this.$refs.fileUpload.fileList
-        console.log(fileList)
-        fileList.forEach(item => {
+        if (fileList.length === 0) {
+          this.$modal.msgError('请上传文件')
+          return
+        }
+        fileList.forEach((item, index) => {
+          const formData = new FormData()
           formData.append('file', item.raw)
+          formData.append('projectId', this.$route.query.id)
+          createDocument(formData).then(() => {
+            if (index === fileList.length - 1) {
+              this.submitLoading = false
+              this.open = false
+              this.getList()
+              this.$modal.msgSuccess('上传成功')
+            }
+          }).catch(() => {
+            this.submitLoading = false
+            this.$modal.msgError('上传失败')
+          })
         })
-        formData.append('projectId', this.$route.query.id)
-        console.log(formData)
-        // 使用createContract上传文件
-        createContract(formData).then(res => {
-          console.log(res)
-          //手动上传无法触发成功或失败的钩子函数，因此这里手动调用
-          this.$refs.fileUpload.handleSuccess(res.data)
-        }, (err) => {
-
-        })
-        // 修改的提交
-        // if (this.form.id != null) {
-        //   updateFactoryArea(this.form).then(response => {
-        //     this.$modal.msgSuccess('修改成功')
-        //     this.open = false
-        //     this.getList()
-        //   })
-        //   return
-        // }
-        // // 添加的提交
-        // createFactoryArea(this.form).then(response => {
-        //   this.$modal.msgSuccess('新增成功')
-        //   this.open = false
-        //   this.getList()
-        // })
       })
     },
     /** 删除按钮操作 */
@@ -207,7 +198,7 @@ export default {
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteContract(id)
+        return deleteDocument(id)
       }).then(() => {
         this.getList()
         this.$modal.msgSuccess('删除成功')

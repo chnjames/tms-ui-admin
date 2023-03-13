@@ -13,6 +13,14 @@ const install = function(Vue) {
   Vue.directive('dialogDrag', dialogDrag)
   Vue.directive('dialogDragWidth', dialogDragWidth)
   Vue.directive('dialogDragHeight', dialogDragHeight)
+  Vue.directive('auto-focus', {
+    inserted(el, binding) {
+      if (binding.value !== false) {
+        const inputEl = el.querySelector('input')
+        inputEl.focus()
+      }
+    }
+  })
 }
 
 if (window.Vue) {

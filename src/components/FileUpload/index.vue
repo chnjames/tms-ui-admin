@@ -33,18 +33,6 @@
         的文件
       </div>
     </el-upload>
-
-    <!-- 文件列表 -->
-    <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
-      <li :key="file.url" class="el-upload-list__item ele-upload-list__item-content" v-for="(file, index) in fileList">
-        <el-link :href="`${file.url}`" :underline="false" target="_blank">
-          <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-        </el-link>
-        <div class="ele-upload-list__item-content-action">
-          <el-link :underline="false" @click="handleDelete(index)" type="danger">删除</el-link>
-        </div>
-      </li>
-    </transition-group>
   </div>
 </template>
 
@@ -211,11 +199,6 @@ export default {
         this.uploadedSuccessfully();
       }
     },
-    // 删除文件
-    handleDelete(index) {
-      this.fileList.splice(index, 1);
-      this.$emit("input", this.listToString(this.fileList));
-    },
     // 上传结束处理
     uploadedSuccessfully() {
       if (this.number > 0 && this.uploadList.length === this.number) {
@@ -224,14 +207,6 @@ export default {
         this.number = 0;
         this.$emit("input", this.listToString(this.fileList));
         this.$modal.closeLoading();
-      }
-    },
-    // 获取文件名称
-    getFileName(name) {
-      if (name.lastIndexOf("/") > -1) {
-        return name.slice(name.lastIndexOf("/") + 1);
-      } else {
-        return "";
       }
     },
     // 对象转成指定字符串分隔
@@ -246,24 +221,3 @@ export default {
   }
 };
 </script>
-
-<style scoped lang="scss">
-.upload-file-uploader {
-  margin-bottom: 5px;
-}
-.upload-file-list .el-upload-list__item {
-  border: 1px solid #e4e7ed;
-  line-height: 2;
-  margin-bottom: 10px;
-  position: relative;
-}
-.upload-file-list .ele-upload-list__item-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: inherit;
-}
-.ele-upload-list__item-content-action .el-link {
-  margin-right: 10px;
-}
-</style>

@@ -28,7 +28,13 @@
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['config:factory-area:delete']">删除</el-button>
           </template>
-          <template v-else-if="item.prop === 'updateTime'">
+          <template v-else-if="item.prop === 'executorName'">
+            <span>{{ row.creator.nickname || '-' }}</span>
+          </template>
+          <template v-else-if="item.prop === 'size'">
+            <span>{{ formatFileSize(row[item.prop]) }}</span>
+          </template>
+          <template v-else-if="item.prop === 'createTime'">
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
@@ -38,12 +44,12 @@
     <!-- 上传附件 -->
     <el-dialog custom-class="material" :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
-        <el-form-item prop="name">
-          <file-upload v-model="form.file" :is-show-tip="false" :fileList="form.fileList" drag />
+        <el-form-item>
+          <file-upload multiple ref="fileUpload" :auto-upload="false" :is-show-tip="false" drag />
         </el-form-item>
       </el-form>
       <template slot="footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitForm" :loading="submitLoading">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </template>
     </el-dialog>
@@ -51,12 +57,8 @@
 </template>
 
 <script>
-import {
-  createFactoryArea,
-  deleteFactoryArea,
-  updateFactoryArea
-} from '@/api/config/factoryArea'
-import { getCustomerPage } from "@/api/config/customer";
+import { getContractPage, deleteContract, createContract } from '@/api/operations/overview'
+import { formatFileSize } from '@/utils'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
 
@@ -65,6 +67,7 @@ export default {
   components: { FileUpload, DrawerPlus },
   data() {
     return {
+      formatFileSize,
       // 遮罩层
       loading: true,
       // 总条数
@@ -75,6 +78,8 @@ export default {
       title: '',
       // 是否显示弹出层
       open: false,
+      // 上传Loading
+      submitLoading: false,
       // 查询参数
       queryParams: {
         name: null,
@@ -84,8 +89,8 @@ export default {
       // 基础表头
       tableHeader: [
         { prop: 'name', label: '名称' },
-        { prop: 'name', label: '格式' },
-        { prop: 'name', label: '大小' },
+        { prop: 'type', label: '格式' },
+        { prop: 'size', label: '大小' },
         { prop: 'executorName', label: '上传者' },
         { prop: 'updateTime', label: '上传时间' },
         { prop: 'operation', label: '操作' }
@@ -111,7 +116,7 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
-      getCustomerPage(this.queryParams).then(response => {
+      getContractPage(this.queryParams).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
         this.loading = false;
@@ -126,17 +131,7 @@ export default {
     reset() {
       this.form = {
         id: undefined,
-        name: undefined,
-        executorId: undefined, // 执行人
-        hours: undefined, // 预计工时
-        internalIds: [],
-        externalIds: [],
-        mode: undefined,
-        beginTime: undefined,
-        endTime: undefined,
-        taskId: undefined,
-        emergency: false,
-        outsourceCost: 0
+        name: undefined
       }
       this.resetForm('form')
     },
@@ -157,20 +152,27 @@ export default {
         if (!valid) {
           return
         }
-        // 修改的提交
-        if (this.form.id != null) {
-          updateFactoryArea(this.form).then(response => {
-            this.$modal.msgSuccess('修改成功')
-            this.open = false
-            this.getList()
-          })
+        this.submitLoading = true
+        const fileList = this.$refs.fileUpload.fileList
+        if (fileList.length === 0) {
+          this.$modal.msgError('请上传文件')
           return
         }
-        // 添加的提交
-        createFactoryArea(this.form).then(response => {
-          this.$modal.msgSuccess('新增成功')
-          this.open = false
-          this.getList()
+        fileList.forEach((item, index) => {
+          const formData = new FormData()
+          formData.append('file', item.raw)
+          formData.append('projectId', this.$route.query.id)
+          createContract(formData).then(() => {
+            if (index === fileList.length - 1) {
+              this.submitLoading = false
+              this.open = false
+              this.getList()
+              this.$modal.msgSuccess('上传成功')
+            }
+          }).catch(() => {
+            this.submitLoading = false
+            this.$modal.msgError('上传失败')
+          })
         })
       })
     },
@@ -179,7 +181,7 @@ export default {
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteFactoryArea(id)
+        return deleteContract(id)
       }).then(() => {
         this.getList()
         this.$modal.msgSuccess('删除成功')

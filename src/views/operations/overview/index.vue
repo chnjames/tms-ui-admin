@@ -107,7 +107,7 @@
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.type === 2 && form.device" label="设备编号">
-          <div>{{ form.extra.code }}</div>
+          <div>{{ form.deviceCode }}</div>
         </el-form-item>
         <!--项目管理类型-->
         <el-form-item v-if="form.type === 0" label="项目类型">
@@ -127,7 +127,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="内部关注人" prop="followerIds">
-          <el-select v-model="form.followerIds" style="width: 100%" :multiple-limit="10" filterable multiple placeholder="请选择">
+          <el-select v-model="form.followerIds" style="width: 100%" collapse-tags :multiple-limit="10" filterable multiple placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
           </el-select>
@@ -144,9 +144,6 @@
         <el-form-item label="结束时间" prop="endTime">
           <el-date-picker clearable :disabled="isEndTime" size="small" style="width: 100%" v-model="form.endTime" type="date"
                           value-format="timestamp" placeholder="选择结束时间"/>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input type="textarea" :rows="3" v-model="form.description" placeholder="请输入项目描述"/>
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -236,13 +233,10 @@ export default {
         code: undefined, // 设备编号
         blameId: undefined, // 责任人
         followerIds: [], // 内部关注人
-        extra: {
-          code: undefined // 设备编号
-        },
+        deviceCode: undefined, // 设备编号
         beginTime: undefined,
         period: 0, // 任务周期
-        endTime: undefined,
-        description: undefined
+        endTime: undefined
       },
       // 表单校验
       rules: {
@@ -286,7 +280,7 @@ export default {
     },
     /** 选择设备 */
     bindDeviceChange(val) {
-      this.form.extra.code = this.deviceList.find(item => item.id === val).code
+      this.form.deviceCode = this.deviceList.find(item => item.id === val).code
     },
     /** 用户列表 */
     getUserList() {
@@ -356,13 +350,10 @@ export default {
         name: undefined,
         blameId: undefined,
         followerIds: [], // 内部关注人
-        extra: {
-          code: undefined // 设备编号
-        },
+        deviceCode: undefined, // 设备编号
         beginTime: undefined,
         endTime: undefined,
-        period: 0, // 任务周期
-        description: undefined
+        period: 0 // 任务周期
       }
       this.resetForm('form')
     },
@@ -401,15 +392,12 @@ export default {
           id: data.id,
           type: data.type,
           name: data.name, // 项目名称
-          blameId: data.blame.id,
-          followerIds: data.followers.map(item => item.id), // 内部关注人
-          extra: {
-            code: undefined // 设备编号
-          },
+          blameId: data.blameId,
+          followerIds: data.followerIds, // 内部关注人
+          deviceCode: data.deviceCode, // 设备编号
           beginTime: data.beginTime,
           period: data.period, // 任务周期
-          endTime: data.endTime,
-          description: data.description
+          endTime: data.endTime
         }
         if (data.device) {
           this.form.device = data.device.id
