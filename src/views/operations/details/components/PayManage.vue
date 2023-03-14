@@ -6,7 +6,7 @@
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
                    v-hasPermi="['config:factory-area:create']">编辑</el-button>
       </el-col>
-      <right-toolbar @queryTable="getList"></right-toolbar>
+      <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>
     <!--基本/收款信息-->
     <el-row>
@@ -43,32 +43,32 @@
         <el-form-item label="合同总金额(¥)" prop="amount">
           <el-input-number placeholder="请输入" v-model="form.amount" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
-        <el-form-item label="收款负责人" prop="principalId">
-          <el-select v-model="form.principalId" style="width: 100%" filterable placeholder="请选择">
+        <el-form-item label="收款负责人" prop="blameId">
+          <el-select v-model="form.blameId" style="width: 100%" filterable placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
           </el-select>
         </el-form-item>
-        <el-card shadow="never" v-for="(item, index) in form.categoryList" :key="index">
+        <el-card shadow="never" v-for="(item, index) in form.items" :key="index">
           <el-row :gutter="10" type="flex" justify="space-between">
             <el-col :span="23">
-              <el-form-item :label="`收款名目${index+1}`" :prop="'categoryList.'+ index + '.name'" :rules="rules.name">
-                <el-input v-model="item.name" placeholder="请输入" style="width: 100%"></el-input>
+              <el-form-item :label="`收款名目${index+1}`" :prop="'items.'+ index + '.title'" :rules="rules.title">
+                <el-input v-model="item.title" placeholder="请输入" style="width: 100%"></el-input>
               </el-form-item>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item label="收款日期" :prop="'categoryList.'+ index + '.date'" :rules="rules.date">
-                    <el-date-picker clearable v-model="item.date" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
+                  <el-form-item label="收款日期" :prop="'items.'+ index + '.startTime'" :rules="rules.startTime">
+                    <el-date-picker clearable v-model="item.startTime" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="收款比例" :prop="'categoryList.'+ index + '.scale'" :rules="rules.scale">
+                  <el-form-item label="收款比例" :prop="'items.'+ index + '.scale'" :rules="rules.scale">
                     <el-input-number placeholder="请输入" v-model="item.scale" controls-position="right" :min="0" :max="100" style="width: 100%"></el-input-number>
                   </el-form-item>
                 </el-col>
               </el-row>
             </el-col>
-            <i class="outer el-icon-delete" v-if="form.categoryList.length > 1" @click="deleteItems(item, index)"></i>
+            <i class="outer el-icon-delete" v-if="form.items.length > 1" @click="deleteItems(item, index)"></i>
           </el-row>
         </el-card>
         <el-button type="primary" plain icon="el-icon-plus" @click="addItems" style="width: 100%">添 加</el-button>
@@ -82,16 +82,10 @@
 </template>
 
 <script>
-import {
-  createFactoryArea,
-  deleteFactoryArea,
-  updateFactoryArea
-} from '@/api/config/factoryArea'
-import { getCustomerPage } from "@/api/config/customer";
+import { createReceipt, getReceipt } from '@/api/operations/overview'
+import { listSimpleUsers } from '@/api/system/user'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
-import { listSimpleUsers } from '@/api/system/user'
-import { number } from 'echarts/lib/export'
 
 export default {
   name: 'PayManage',
@@ -135,26 +129,27 @@ export default {
         id: undefined,
         contactId: undefined, // 联系人
         amount: undefined, // 合同总金额
-        principalId: undefined, // 收款负责人
-        categoryList: [{
-          name: undefined,
-          date: undefined,
-          scale: undefined
+        blameId: undefined, // 收款负责人
+        items: [{
+          title: undefined,
+          startTime: undefined,
+          scale: undefined,
+          amount: undefined
         }]
       },
       // 表单校验
       rules: {
         contactId: { required: true, message: '请选择联系人', trigger: 'change'},
         amount: { required: true, type: 'number', message: '请输入合同总金额', trigger: 'blur'},
-        name: { required: true, message: '请输入收款名目', trigger: 'blur'},
-        date: { required: true, message: '请选择收款日期', trigger: 'change'},
+        title: { required: true, message: '请输入收款名目', trigger: 'blur'},
+        startTime: { required: true, message: '请选择收款日期', trigger: 'change'},
         scale: { required: true, type: 'number', message: '请输入收款比例', trigger: 'blur'}
       }
     }
   },
   created() {
-    this.getList()
     this.getUserList()
+    this.getReceipt()
   },
   methods: {
     /** 用户列表 */
@@ -163,15 +158,11 @@ export default {
         this.userList = response.data
       })
     },
-    /** 查询列表 */
-    getList() {
-      this.loading = true;
-      // 执行查询
-      getCustomerPage(this.queryParams).then(response => {
-        this.list = response.data.list;
-        this.total = response.data.total;
-        this.loading = false;
-      });
+    /** 获取收款管理详情 */
+    getReceipt() {
+      getReceipt(this.$route.query.id).then(response => {
+        this.form = response.data
+      })
     },
     /** 取消按钮 */
     cancel() {
@@ -184,11 +175,12 @@ export default {
         id: undefined,
         contactId: undefined, // 联系人
         amount: undefined, // 合同总金额
-        principalId: undefined, // 收款负责人
-        categoryList: [{
-          name: undefined,
-          date: undefined,
-          scale: undefined
+        blameId: undefined, // 收款负责人
+        items: [{
+          title: undefined,
+          startTime: undefined,
+          scale: undefined,
+          amount: undefined
         }]
       }
       this.resetForm('form')
@@ -196,7 +188,7 @@ export default {
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNo = 1
-      this.getList()
+      this.getReceipt()
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -211,44 +203,24 @@ export default {
           return
         }
         // 修改的提交
-        if (this.form.id != null) {
-          updateFactoryArea(this.form).then(response => {
-            this.$modal.msgSuccess('修改成功')
-            this.open = false
-            this.getList()
-          })
-          return
-        }
-        // 添加的提交
-        createFactoryArea(this.form).then(response => {
-          this.$modal.msgSuccess('新增成功')
+        createReceipt(this.form).then(response => {
+          this.$modal.msgSuccess('修改成功')
           this.open = false
-          this.getList()
+          this.getReceipt()
         })
-      })
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const name = row.name
-      const id = row.id
-      this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteFactoryArea(id)
-      }).then(() => {
-        this.getList()
-        this.$modal.msgSuccess('删除成功')
-      }).catch(() => {
       })
     },
     /** 删除收款名目 */
     deleteItems(item, index) {
-      this.form.categoryList.splice(index, 1)
+      this.form.items.splice(index, 1)
     },
     /** 添加收款名目 */
     addItems() {
-      this.form.categoryList.push({
-        name: undefined,
-        date: undefined,
-        scale: undefined
+      this.form.items.push({
+        title: undefined,
+        startTime: undefined,
+        scale: undefined,
+        amount: undefined
       })
     }
   }

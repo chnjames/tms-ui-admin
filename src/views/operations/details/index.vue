@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="form" ref="infosRef" label-width="100px">
+    <el-form :model="form" ref="infosRef" label-width="110px">
       <el-form-item label="名称:" class="item-name">
         <div v-if="!isEditing" class="item-name-flex">
           <div class="item-name-content">{{form.name}}</div>
@@ -8,18 +8,18 @@
         </div>
         <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
       </el-form-item>
-      <el-row type="flex" align="middle">
-        <el-col :xs="24" :sm="24" :lg="16" :xl="16">
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16">
             <el-col :span="12">
               <el-form-item label="负责人:" prop="blameId">
-                <el-select v-model="form.blameId" style="width: 240px" filterable placeholder="请选择">
+                <el-select v-model="form.blameId" style="width: 260px" filterable placeholder="请选择">
                   <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="计划起止日期:">
-                <el-date-picker v-model="form.beginEndTime" style="width: 240px" value-format="timestamp"
+                <el-date-picker v-model="form.beginEndTime" style="width: 260px" value-format="timestamp"
                                 type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
               </el-form-item>
             </el-col>
@@ -30,13 +30,13 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="内部关注人:" prop="followerIds">
-                <el-select v-model="form.followerIds" collapse-tags style="width: 240px" :multiple-limit="10" filterable multiple placeholder="请选择">
+                <el-select v-model="form.followerIds" collapse-tags style="width: 260px" :multiple-limit="10" filterable multiple placeholder="请选择">
                   <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
                 </el-select>
               </el-form-item>
             </el-col>
         </el-col>
-        <el-col :xs="24" :sm="24" :lg="8" :xl="8">
+        <el-col :xs="24" :sm="24" :md="24" :lg="8" :xl="8">
           <div class="progress">
             <div>
               <div class="progress-label">当前进展</div>
@@ -64,20 +64,20 @@
 
 <script>
 
-import { listSimpleUsers } from '@/api/system/user'
 import {
-  getOverview,
-  updateOverview
+getOverview,
+updateOverview
 } from '@/api/operations/overview'
-import ComTinymceEditor from '@/views/operations/details/components/ComTinymceEditor.vue'
-import TaskInfo from '@/views/operations/details/components/TaskInfo.vue'
-import DocAppendix from '@/views/operations/details/components/DocAppendix.vue'
-import BomList from '@/views/operations/details/components/BomList.vue'
-import ContractManage from '@/views/operations/details/components/ContractManage.vue'
-import PayManage from '@/views/operations/details/components/PayManage.vue'
-import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
-import ExecuteRecord from '@/views/operations/details/components/ExecuteRecord.vue'
+import { listSimpleUsers } from '@/api/system/user'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
+import BomList from '@/views/operations/details/components/BomList.vue'
+import ComTinymceEditor from '@/views/operations/details/components/ComTinymceEditor.vue'
+import ContractManage from '@/views/operations/details/components/ContractManage.vue'
+import DocAppendix from '@/views/operations/details/components/DocAppendix.vue'
+import ExecuteRecord from '@/views/operations/details/components/ExecuteRecord.vue'
+import PayManage from '@/views/operations/details/components/PayManage.vue'
+import TaskInfo from '@/views/operations/details/components/TaskInfo.vue'
+import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
 
 export default {
   name: 'Details',

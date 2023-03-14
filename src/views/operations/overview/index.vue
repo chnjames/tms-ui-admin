@@ -22,8 +22,8 @@
             <el-radio-button :label="item.value" v-for="(item, index) in this.getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_STATUS)" :key="index">{{item.label}}</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item prop="createTime">
-          <el-date-picker v-model="queryParams.createTime" style="width: 240px" value-format="yyyy-MM-dd HH:mm:ss"
+        <el-form-item prop="timeScope">
+          <el-date-picker v-model="queryParams.timeScope" style="width: 240px" value-format="yyyy-MM-dd HH:mm:ss"
                           type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
                           :default-time="['00:00:00', '23:59:59']"/>
         </el-form-item>
@@ -157,16 +157,16 @@
 <script>
 import { getDevicePage } from '@/api/config/device'
 import {
-  createOverview,
-  deleteOverview,
-  exportOverviewExcel,
-  getOverview,
-  getOverviewPage,
-  updateOverview
+createOverview,
+deleteOverview,
+exportOverviewExcel,
+getOverview,
+getOverviewPage,
+updateOverview
 } from '@/api/operations/overview'
-import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 import { listSimpleUsers } from '@/api/system/user'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: 'Overview',
@@ -217,7 +217,7 @@ export default {
       queryParams: {
         pageNo: 1,
         pageSize: 10,
-        createTime: [],
+        timeScope: [],
         fieldType: 1, // 字段类型
         status: null, // 状态
         blameId: null, // 责任人
