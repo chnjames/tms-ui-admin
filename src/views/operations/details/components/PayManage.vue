@@ -56,12 +56,12 @@
                 <el-input v-model="item.name" placeholder="请输入" style="width: 100%"></el-input>
               </el-form-item>
               <el-row>
-                <el-col span="12">
+                <el-col :span="12">
                   <el-form-item label="收款日期" :prop="'categoryList.'+ index + '.date'" :rules="rules.date">
                     <el-date-picker clearable v-model="item.date" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
                   </el-form-item>
                 </el-col>
-                <el-col span="12">
+                <el-col :span="12">
                   <el-form-item label="收款比例" :prop="'categoryList.'+ index + '.scale'" :rules="rules.scale">
                     <el-input-number placeholder="请输入" v-model="item.scale" controls-position="right" :min="0" :max="100" style="width: 100%"></el-input-number>
                   </el-form-item>

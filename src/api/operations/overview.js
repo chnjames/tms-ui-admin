@@ -113,3 +113,25 @@ export function getDocumentPage(query) {
     params: query
   })
 }
+// 创建收款项
+export function createReceipt(data) {
+  return request({
+    url: '/operations/payment/create',
+    method: 'post',
+    data
+  })
+}
+// 获取收款项
+export function getReceipt(id) {
+  return request({
+    url: '/operations/payment/get?projectId=' + id,
+    method: 'get'
+  })
+}
+// 启动收款项
+export function startReceipt(id) {
+  return request({
+    url: '/operations/payment/start?id=' + id,
+    method: 'post'
+  })
+}
