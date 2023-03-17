@@ -58,7 +58,7 @@
               <el-row>
                 <el-col :span="12">
                   <el-form-item label="收款日期" :prop="'items.'+ index + '.startTime'" :rules="rules.startTime">
-                    <el-date-picker clearable v-model="item.startTime" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
+                    <el-date-picker clearable v-model="item.startTime" type="date" value-format="yyyy-MM-dd HH:mm:ss" style="width: 100%" placeholder="请选择" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -92,6 +92,8 @@ export default {
   components: { FileUpload, DrawerPlus },
   data() {
     return {
+      // 项目ID
+      projectId: undefined,
       // 遮罩层
       loading: true,
       // 总条数
@@ -130,6 +132,7 @@ export default {
         contactId: undefined, // 联系人
         amount: undefined, // 合同总金额
         blameId: undefined, // 收款负责人
+        projectId: undefined, // 项目id
         items: [{
           title: undefined,
           startTime: undefined,
@@ -147,9 +150,31 @@ export default {
       }
     }
   },
+  watch: {
+    form: {
+      handler(val) {
+        let sum = 0
+        val.items.forEach(item => {
+          sum += item.scale
+        })
+        if (sum > 100) {
+          val.items[val.items.length - 1].scale = 100 - (sum - val.items[val.items.length - 1].scale)
+        }
+        if (val.amount) {
+          val.items.forEach(item => {
+            item.amount = (val.amount * item.scale / 100).toFixed(2)
+          })
+        }
+      },
+      deep: true
+    }
+  },
+  // 获取路由参数
   created() {
+    const { id } = this.$route.query
+    this.projectId = id
     this.getUserList()
-    this.getReceipt()
+    this.getReceipt(id)
   },
   methods: {
     /** 用户列表 */
@@ -159,9 +184,10 @@ export default {
       })
     },
     /** 获取收款管理详情 */
-    getReceipt() {
-      getReceipt(this.$route.query.id).then(response => {
-        this.form = response.data
+    getReceipt(id) {
+      getReceipt(id).then(response => {
+        console.log(response)
+        // this.form = response.data
       })
     },
     /** 取消按钮 */
@@ -176,6 +202,7 @@ export default {
         contactId: undefined, // 联系人
         amount: undefined, // 合同总金额
         blameId: undefined, // 收款负责人
+        projectId: undefined, // 项目id
         items: [{
           title: undefined,
           startTime: undefined,
@@ -202,9 +229,10 @@ export default {
         if (!valid) {
           return
         }
-        // 修改的提交
+        this.form.projectId = this.projectId
+        this.form.contactId = 2
         createReceipt(this.form).then(response => {
-          this.$modal.msgSuccess('修改成功')
+          this.$modal.msgSuccess('编辑成功')
           this.open = false
           this.getReceipt()
         })

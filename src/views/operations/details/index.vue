@@ -2,11 +2,20 @@
   <div class="app-container">
     <el-form :model="form" ref="infosRef" label-width="110px">
       <el-form-item label="名称:" class="item-name">
-        <div v-if="!isEditing" class="item-name-flex">
-          <div class="item-name-content">{{form.name}}</div>
-          <i class="el-icon-edit" @click="bindIsEdit"></i>
+        <div class="item-name-flex">
+          <div v-if="!isEditing" class="item-name-content cursor" @click="bindIsEdit">{{form.name}}</div>
+          <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
+          <el-dropdown trigger="click" @command="handleCommand">
+            <el-button round size="mini" plain :type="form.colorType">进行中 <i class="el-icon-arrow-down"></i></el-button>
+            <el-dropdown-menu slot="dropdown">
+              <div class="dropdown-title">更改项目状态</div>
+              <el-dropdown-item v-for="item in statusList" :key="item.value" :command="item.value">
+                <el-button round plain size="mini" :type="item.colorType">{{item.label}}</el-button>
+                <i class="el-icon-check" v-if="form.status === parseInt(item.value)"></i>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </div>
-        <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
       </el-form-item>
       <el-row :gutter="20">
         <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16">
@@ -112,6 +121,8 @@ export default {
       userList: [],
       // 项目类型列表
       typeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_TYPE),
+      // 项目状态列表
+      statusList: [],
       // 项目详情
       form: {
         name: undefined,
@@ -134,6 +145,7 @@ export default {
     }
   },
   async created() {
+    this.statusList = await this.getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_STATUS)
     await this.getUserList()
     await this.getOverview()
   },
@@ -154,6 +166,7 @@ export default {
         data.beginEndTime = [data.beginTime, data.endTime]
         data.current = data.rate.current
         data.total = data.rate.total
+        data.colorType = this.statusList.find(status => parseInt(status.value) === data.status).colorType
         data.progress = Math.floor((data.rate.current / data.rate.total) * 100)
         if (data.progress < 100) {
           if (data.endTime > new Date().getTime()) {
@@ -171,6 +184,11 @@ export default {
         this.form = data
       })
     },
+    /** 下拉菜单切换 */
+    handleCommand(command) {
+      this.form.status = command
+      this.updateOverview()
+    },
     /** 提交按钮 */
     updateOverview() {
       updateOverview(this.form).then(response => {
@@ -178,6 +196,7 @@ export default {
           type: 'success',
           message: '保存成功!'
         })
+        this.getOverview()
       })
     },
     /** 名称可编辑状态 */
@@ -200,11 +219,16 @@ export default {
   }
   &-flex {
     display: flex;
-    align-items: baseline;
+    align-items: center;
   }
   &-content {
     font-size: 20px;
     font-weight: bold;
+    margin-right: 10px;
+    max-width: 300px;
+  }
+  .cursor {
+    cursor: pointer;
   }
   .el-icon-edit {
     margin-left: 10px;
@@ -222,5 +246,18 @@ export default {
   &-label {
     margin-bottom: 15px;
   }
+}
+.dropdown-title {
+  padding-left: 10px;
+}
+:deep(.el-button--mini.is-round) {
+  padding: 5px 10px;
+}
+:deep(.el-icon-check) {
+  color: #409EFF;
+  margin-left: 20px;
+}
+:deep(.el-dropdown-menu__item) {
+  padding: 0 10px;
 }
 </style>
