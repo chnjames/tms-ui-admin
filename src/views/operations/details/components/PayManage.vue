@@ -9,36 +9,39 @@
       <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>
     <!--基本/收款信息-->
-    <el-row>
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">基本信息</div>
-          <div>合同总金额(RMB)：1000,000</div>
-          <div>收款负责人：刘能</div>
-          <div>联系人(客户)：陈逸飞</div>
-          <div>客户所在公司：XXXX制作有限公司</div>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card shadow="never">
-          <div slot="header">收款信息</div>
-          <el-steps direction="vertical" :active="1" :space="80">
-            <el-step :title="activity.content" :description="activity.timestamp" v-for="(activity, index) in activities" :key="index"></el-step>
-          </el-steps>
-        </el-card>
-      </el-col>
-    </el-row>
+    <el-empty v-if="form.items" description="暂无数据"></el-empty>
+    <template v-else>
+      <el-row>
+        <el-col :span="12">
+          <el-card shadow="never">
+            <div slot="header">基本信息</div>
+            <div>合同总金额(RMB)：1000,000</div>
+            <div>收款负责人：刘能</div>
+            <div>联系人(客户)：陈逸飞</div>
+            <div>客户所在公司：XXXX制作有限公司</div>
+          </el-card>
+        </el-col>
+        <el-col :span="12">
+          <el-card shadow="never">
+            <div slot="header">收款信息</div>
+            <el-steps direction="vertical" :active="1" :space="80">
+              <el-step :title="item.title" :description="item.description" v-for="(item, index) in form.items" :key="index"></el-step>
+            </el-steps>
+          </el-card>
+        </el-col>
+      </el-row>
+    </template>
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="600" append-to-body>
       <el-form class="form" ref="form" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="联系人" prop="contactId">
-          <el-select v-model="form.contactId" style="width: 100%" filterable placeholder="请选择">
-            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"/>
+          <el-select v-model="form.contactId" @change="bindContact" style="width: 100%" filterable placeholder="请选择">
+            <el-option v-for="item in customerContactList" :key="item.id" :label="item.name"
+                       :value="item.id"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="公司名称">
-          <div>金属制品有限公司</div>
+        <el-form-item v-if="form.customerName" label="公司名称">
+          <div>{{form.customerName}}</div>
         </el-form-item>
         <el-form-item label="合同总金额(¥)" prop="amount">
           <el-input-number placeholder="请输入" v-model="form.amount" controls-position="right" :min="0" style="width: 100%"></el-input-number>
@@ -58,7 +61,7 @@
               <el-row>
                 <el-col :span="12">
                   <el-form-item label="收款日期" :prop="'items.'+ index + '.startTime'" :rules="rules.startTime">
-                    <el-date-picker clearable v-model="item.startTime" type="date" value-format="yyyy-MM-dd HH:mm:ss" style="width: 100%" placeholder="请选择" />
+                    <el-date-picker clearable v-model="item.startTime" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -83,9 +86,12 @@
 
 <script>
 import { createReceipt, getReceipt } from '@/api/operations/overview'
+import { getCustomerContactSimpleList } from '@/api/config/customer'
 import { listSimpleUsers } from '@/api/system/user'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
+import { parseTime } from '@/utils/ruoyi'
+import { formatMoney } from '@/utils'
 
 export default {
   name: 'PayManage',
@@ -106,20 +112,9 @@ export default {
       open: false,
       // 用户列表
       userList: [],
+      // 联系人列表
+      customerContactList: [],
       // 流程列表
-      activities: [{
-        content: '首付款',
-        timestamp: '2022/11/21 30% 300,000'
-      }, {
-        content: '首付款',
-        timestamp: '2022/11/21 30% 300,000'
-      }, {
-        content: '首付款',
-        timestamp: '2022/11/21 30% 300,000'
-      }, {
-        content: '首付款',
-        timestamp: '2022/11/21 30% 300,000'
-      }],
       // 查询参数
       queryParams: {
         name: null,
@@ -128,8 +123,8 @@ export default {
       },
       // 表单参数
       form: {
-        id: undefined,
         contactId: undefined, // 联系人
+        customerName: undefined, // 公司名称
         amount: undefined, // 合同总金额
         blameId: undefined, // 收款负责人
         projectId: undefined, // 项目id
@@ -153,17 +148,19 @@ export default {
   watch: {
     form: {
       handler(val) {
-        let sum = 0
-        val.items.forEach(item => {
-          sum += item.scale
-        })
-        if (sum > 100) {
-          val.items[val.items.length - 1].scale = 100 - (sum - val.items[val.items.length - 1].scale)
-        }
-        if (val.amount) {
+        if (val.items.length > 1) {
+          let sum = 0
           val.items.forEach(item => {
-            item.amount = (val.amount * item.scale / 100).toFixed(2)
+            sum += item.scale
           })
+          if (sum > 100) {
+            val.items[val.items.length - 1].scale = 100 - (sum - val.items[val.items.length - 1].scale)
+          }
+          if (val.amount) {
+            val.items.forEach(item => {
+              item.amount = (val.amount * item.scale / 100).toFixed(2) - 0
+            })
+          }
         }
       },
       deep: true
@@ -174,20 +171,39 @@ export default {
     const { id } = this.$route.query
     this.projectId = id
     this.getUserList()
+    this.getCustomerContactSimpleList()
     this.getReceipt(id)
   },
   methods: {
-    /** 用户列表 */
+    /** 收款负责人列表 */
     getUserList() {
       listSimpleUsers().then(response => {
         this.userList = response.data
       })
     },
+    /** 联系人列表 */
+    getCustomerContactSimpleList() {
+      getCustomerContactSimpleList().then(response => {
+        this.customerContactList = response.data
+      })
+    },
+    /** 选择联系人 */
+    bindContact(val) {
+      this.form.customerName = this.customerContactList.find(item => item.id === val).customerName
+    },
     /** 获取收款管理详情 */
     getReceipt(id) {
       getReceipt(id).then(response => {
-        console.log(response)
-        // this.form = response.data
+        const { data } = response
+        data.amount = (data.amount / 100).toFixed(2) - 0
+        this.form = data
+        data.items?.map(item => {
+          let { startTime, amount } = item
+          startTime = parseTime(startTime, '{y}-{m}-{d}')
+          item.scale = ((amount / data.amount) * 100).toFixed(2)
+          amount = (amount / 100).toFixed(2)
+          item.description = `${startTime} ${item.scale}% ${amount}`
+        }) || (this.form.items = [])
       })
     },
     /** 取消按钮 */
@@ -198,8 +214,8 @@ export default {
     /** 表单重置 */
     reset() {
       this.form = {
-        id: undefined,
         contactId: undefined, // 联系人
+        customerName: undefined, // 公司名称
         amount: undefined, // 合同总金额
         blameId: undefined, // 收款负责人
         projectId: undefined, // 项目id
@@ -212,16 +228,12 @@ export default {
       }
       this.resetForm('form')
     },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNo = 1
-      this.getReceipt()
-    },
     /** 新增按钮操作 */
-    handleAdd() {
-      this.reset()
+    async handleAdd() {
+      await this.reset()
+      await this.getReceipt(this.projectId)
       this.open = true
-      this.title = '添加'
+      this.title = "编辑"
     },
     /** 提交按钮 */
     submitForm() {
@@ -229,12 +241,21 @@ export default {
         if (!valid) {
           return
         }
-        this.form.projectId = this.projectId
-        this.form.contactId = 2
-        createReceipt(this.form).then(response => {
+        const convertAmountToCents = (amount) => amount * 100;
+        const items = this.form.items.map(({ amount, ...item }) => ({
+          ...item,
+          amount: convertAmountToCents(amount)
+        }));
+        const params = {
+          projectId: this.projectId,
+          amount: convertAmountToCents(this.form.amount),
+          items,
+          ...this.form
+        }
+        createReceipt(params).then(response => {
           this.$modal.msgSuccess('编辑成功')
           this.open = false
-          this.getReceipt()
+          this.getReceipt(this.projectId)
         })
       })
     },

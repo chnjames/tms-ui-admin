@@ -481,4 +481,12 @@ export function formatFileSize(size, pointLength = 2, unitArr = ['B', 'KB', 'MB'
   return `${sizeStr} ${unitArr[index]}`;
 }
 
-
+/**
+ * 金额格式化 123456789 => 123,456,789
+ * @param {Number} num 金额
+ * @param {Number} pointLength 保留的小数点长度
+ * @returns {String} 格式化后的金额
+ */
+export function formatMoney(num, pointLength = 2) {
+  return (num || 0).toFixed(pointLength).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+}

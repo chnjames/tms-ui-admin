@@ -135,3 +135,55 @@ export function startReceipt(id) {
     method: 'post'
   })
 }
+
+/**
+ * BOM需求
+ */
+// 发起采购
+export function createPurchase(data) {
+  return request({
+    url: '/operations/project-bom/buy',
+    method: 'put',
+    data
+  })
+}
+// 创建BOM需求
+export function createBom(data) {
+  return request({
+    url: '/operations/project-bom/create',
+    method: 'post',
+    data
+  })
+}
+// 删除BOM需求
+export function deleteBom(id) {
+  return request({
+    url: '/operations/project-bom/delete?id=' + id,
+    method: 'delete'
+  })
+}
+// 获得BOM需求列表
+export function getBomList(query) {
+  return request({
+    url: '/operations/project-bom/list',
+    method: 'get',
+    params: query
+  })
+}
+// 发起出库
+export function createOutbound(data) {
+  return request({
+    url: '/operations/project-bom/outbound',
+    method: 'put',
+    data
+  })
+}
+// 更新BOM需求
+export function updateBom(data) {
+  return request({
+    url: '/operations/project-bom/update',
+    method: 'put',
+    data
+  })
+}
+

@@ -74,7 +74,8 @@ export const DICT_TYPE = {
   // ========== OPERATIONS 模块 ==========
   OPERATIONS_PROJECT_TYPE: 'operations_project_type', // 项目类型
   OPERATIONS_PROJECT_STATUS: 'operations_project_status', // 项目状态
-  OPERATIONS_PROJECT_FILE_BIZ_TYPE: 'operations_project_file_biz_type' // 项目文件业务类型
+  OPERATIONS_PROJECT_FILE_BIZ_TYPE: 'operations_project_file_biz_type', // 项目文件业务类型
+  OPERATIONS_PROJECT_BOM_STATUS: 'operations_project_bom_status' // BOM需求状态
 }
 
 /**

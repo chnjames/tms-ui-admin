@@ -17,48 +17,48 @@
           </el-dropdown>
         </div>
       </el-form-item>
-      <el-row :gutter="20">
-        <el-col :xs="24" :sm="24" :md="24" :lg="16" :xl="16">
-            <el-col :span="12">
-              <el-form-item label="负责人:" prop="blameId">
-                <el-select v-model="form.blameId" style="width: 260px" filterable placeholder="请选择">
-                  <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="计划起止日期:">
-                <el-date-picker v-model="form.beginEndTime" style="width: 260px" value-format="timestamp"
-                                type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="任务类型:">
-                <div>{{ form.typeDesc }}</div>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="内部关注人:" prop="followerIds">
-                <el-select v-model="form.followerIds" collapse-tags style="width: 260px" :multiple-limit="10" filterable multiple placeholder="请选择">
-                  <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
-                </el-select>
-              </el-form-item>
-            </el-col>
+      <el-row :gutter="10">
+        <el-col :md="16" :xs="24">
+          <el-col :span="12">
+            <el-form-item label="负责人:" prop="blameId">
+              <el-select v-model="form.blameId" style="width: 100%;max-width: 300px" filterable placeholder="请选择">
+                <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="计划起止日期:">
+              <el-date-picker v-model="form.beginEndTime" style="width: 100%;max-width: 300px" value-format="timestamp"
+                              type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="任务类型:">
+              <div>{{ form.typeDesc }}</div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="内部关注人:" prop="followerIds">
+              <el-select v-model="form.followerIds" collapse-tags style="width: 100%;max-width: 300px" :multiple-limit="10" filterable multiple placeholder="请选择">
+                <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-col>
-        <el-col :xs="24" :sm="24" :md="24" :lg="8" :xl="8">
+        <el-col :md="8" :xs="24">
           <div class="progress">
-            <div>
+            <el-col :span="8">
               <div class="progress-label">当前进展</div>
-              <div :style="{color: form.progressColor}">{{form.progress}}%</div>
-            </div>
-            <div>
+              <count-to :style="{color: form.progressColor}" :start-val="0" :end-val="form.progress" suffix="%" />
+            </el-col>
+            <el-col :span="8">
               <div class="progress-label">已消耗工时(h)</div>
-              <div>{{form.current}}</div>
-            </div>
-            <div>
+              <count-to :start-val="0" :end-val="form.current" />
+            </el-col>
+            <el-col :span="8">
               <div class="progress-label">预估工时(h)</div>
-              <div>{{form.total}}</div>
-            </div>
+              <count-to :start-val="0" :end-val="form.total" />
+            </el-col>
           </div>
         </el-col>
       </el-row>
@@ -79,6 +79,7 @@ updateOverview
 } from '@/api/operations/overview'
 import { listSimpleUsers } from '@/api/system/user'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
+import CountTo from 'vue-count-to'
 import BomList from '@/views/operations/details/components/BomList.vue'
 import ComTinymceEditor from '@/views/operations/details/components/ComTinymceEditor.vue'
 import ContractManage from '@/views/operations/details/components/ContractManage.vue'
@@ -91,6 +92,7 @@ import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
 export default {
   name: 'Details',
   components: {
+    CountTo,
     ComTinymceEditor,
     PayManage,
     ContractManage,
@@ -108,7 +110,7 @@ export default {
       isEditing: false,
       // tab列表 tabsType: 1: 设备维保 2: 项目管理 & 生产管理
       tabList: [
-        { label: '任务描述', name: '1', component: 'ComTinymceEditor', content: '任务11111111111111描述' },
+        { label: '任务描述', name: '1', component: 'ComTinymceEditor' },
         { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 1 },
         { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 1 },
         { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 2 },
@@ -139,7 +141,15 @@ export default {
   watch: {
     form: {
       handler(val) {
-        // console.log(val)
+        if (val.name || val.status || val.blameId || val.beginEndTime || val.followerIds) {
+          if (val.beginEndTime) {
+            [val.beginTime, val.endTime] = val.beginEndTime;
+          } else {
+            val.beginTime = undefined;
+            val.endTime = undefined;
+          }
+          // this.updateOverview()
+        }
       },
       deep: true
     }
@@ -182,12 +192,13 @@ export default {
           }
         }
         this.form = data
+        // 给tabList中的name=1的tab添加description属性
+        this.tabList.find(tab => tab.name === '1').content = data.description
       })
     },
     /** 下拉菜单切换 */
     handleCommand(command) {
       this.form.status = command
-      this.updateOverview()
     },
     /** 提交按钮 */
     updateOverview() {
@@ -196,7 +207,6 @@ export default {
           type: 'success',
           message: '保存成功!'
         })
-        this.getOverview()
       })
     },
     /** 名称可编辑状态 */
@@ -241,10 +251,17 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 16px;
+  font-size: 26px;
+  font-weight: bold;
   text-align: center;
+  padding: 12px 20px;
+  color: #FFFFFF;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #60b2fb, #6485f6);
   &-label {
     margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: normal;
   }
 }
 .dropdown-title {

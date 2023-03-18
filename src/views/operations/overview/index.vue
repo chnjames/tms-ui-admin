@@ -66,7 +66,6 @@
         <el-table-column label="项目名称" prop="name">
           <template v-slot="scope">
             <div class="project-name" @click.stop="bindProject(scope.row)">{{ scope.row.name }}</div>
-            <span>{{ scope.row.description }}</span>
           </template>
         </el-table-column>
         <el-table-column label="负责人" align="center" prop="header"/>

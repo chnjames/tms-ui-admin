@@ -62,4 +62,10 @@ export function getCustomerSimpleList(query) {
     params: query
   })
 }
-
+// 获取客户联系人精简信息列表
+export function getCustomerContactSimpleList() {
+  return request({
+    url: '/config/customer/contact/list-all-simple',
+    method: 'get'
+  })
+}

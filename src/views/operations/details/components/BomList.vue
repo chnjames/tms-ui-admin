@@ -16,11 +16,6 @@
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
-
-    <!--切换状态-->
-    <el-tabs v-model="curTab">
-      <el-tab-pane v-for="item in tabList" :key="item.name" :label="item.title" :name="item.name" />
-    </el-tabs>
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list">
       <el-table-column type="selection" :width="55" align="center" />
@@ -38,7 +33,7 @@
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['config:factory-area:delete']">删除</el-button>
           </template>
-          <template v-else-if="item.prop === 'updateTime'">
+          <template v-else-if="item.prop === 'createTime'">
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
@@ -154,9 +149,17 @@ import {
   getFactoryArea,
   updateFactoryArea
 } from '@/api/config/factoryArea'
-import { getCustomerPage } from "@/api/config/customer";
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
+import {
+  createPurchase,
+  createBom,
+  deleteBom,
+  getBomList,
+  createOutbound,
+  updateBom
+} from '@/api/operations/overview'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: 'BomList',
@@ -167,25 +170,8 @@ export default {
       loading: true,
       // 显示搜索条件
       showSearch: true,
-      // 总条数
-      total: 0,
       // 用户列表
       userList: [],
-      // 子任务列表
-      taskOptions: [],
-      // 任务详情类型(项目管理/生产管理)
-      taskType: 1, // 1:项目管理 2:生产管理
-      // tabs列表
-      tabList: [
-        { name: '1', title: '全部任务' },
-        { name: '2', title: '已完成' },
-        { name: '3', title: '延期未完成' }
-      ],
-      // 生效方式Options
-      modeOptions: [
-        { type: 1, label: '选择开始时间' },
-        { type: 2, label: '选择任务触发' }
-      ],
       // 当前tab
       curTab: '1',
       // 任务详情列表
@@ -196,22 +182,19 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        name: null,
-        pageNo: 1,
-        pageSize: 10
+        name: null
       },
       // 基础表头
       tableHeader: [
-        { prop: 'name', label: '物料编号' },
-        { prop: 'name', label: '物料名称' },
-        { prop: 'name', label: '规格型号' },
-        { prop: 'name', label: '需求数量' },
-        { prop: 'name', label: '状态' },
-        { prop: 'name', label: '所在库区' },
-        { prop: 'name', label: '所在库位(排*层*列)' },
-        { prop: 'updateTime', label: '添加时间' },
+        { prop: 'materialCode', label: '物料编号' },
+        { prop: 'materialName', label: '物料名称' },
+        { prop: 'materialSpecs', label: '规格型号' },
+        { prop: 'demand', label: '需求数量' },
+        { prop: 'status', label: '状态' },
+        { prop: 'createTime', label: '添加时间' },
         { prop: 'operation', label: '操作' }
       ],
+      bomStatusList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_BOM_STATUS), // BOM需求状态列表
       // 物料表头
       materialHeader: [
         { prop: 'name', label: '物料编码' },
@@ -295,12 +278,12 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
-      getCustomerPage(this.queryParams).then(response => {
-        this.list = response.data.list;
-        this.list.forEach(item => {
-          item.checked = false
+      getBomList(this.queryParams).then(response => {
+        const { data } = response || []
+        data.map(item => {
+          item.status = this.bomStatusList.find(i => parseInt(i.value) === item.status).label
         })
-        this.total = response.data.total;
+        this.list = data;
         this.loading = false;
       });
     },
