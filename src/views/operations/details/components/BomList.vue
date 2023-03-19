@@ -47,7 +47,7 @@
           <el-input v-model="form.search" placeholder="输入物料名称"/>
         </el-form-item>
         <el-form-item label="物料名称" prop="name">
-          <el-table ref="selectList" :height="300" v-loading="loading" :data="list" :show-header="false" @selection-change="selectedChange">
+          <el-table ref="selectList" :height="300" v-loading="loading" :data="materialList" :show-header="false" @selection-change="selectedChange">
             <el-table-column
               v-for="(item, index) in materialHeader"
               :key="index"
@@ -149,6 +149,7 @@ import {
   getFactoryArea,
   updateFactoryArea
 } from '@/api/config/factoryArea'
+import { getMatchMaterialList } from '@/api/warehouse/material'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
 import {
@@ -197,11 +198,13 @@ export default {
       bomStatusList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_BOM_STATUS), // BOM需求状态列表
       // 物料表头
       materialHeader: [
-        { prop: 'name', label: '物料编码' },
+        { prop: 'code', label: '物料编码' },
         { prop: 'name', label: '物料名称' },
-        { prop: 'name', label: '所在库区及所在库位(排*层*列)' },
-        { prop: 'quantity', label: '数量' },
+        // { prop: 'specs', label: '所在库区及所在库位(排*层*列)' },
+        // { prop: 'warnStock', label: '数量' },
       ],
+      // 物料列表
+      materialList: [],
       selectList: [], // 选中的物料列表
       // 表单参数
       form: {
@@ -266,12 +269,23 @@ export default {
   created() {
     this.getList()
     this.getUserList()
+    this.getMaterialList()
   },
   methods: {
     /** 用户列表 */
     getUserList() {
       listSimpleUsers().then(response => {
         this.userList = response.data
+      })
+    },
+    /** 物料列表 */
+    getMaterialList() {
+      getMatchMaterialList({
+        brand: null,
+        category: null,
+        name: null
+      }).then(response => {
+        this.materialList = response.data
       })
     },
     /** 查询列表 */

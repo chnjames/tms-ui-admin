@@ -108,9 +108,11 @@ export default {
       activeTab: '1',
       // 名称可编辑状态
       isEditing: false,
+      // tab列表
+      tabList: [],
       // tab列表 tabsType: 1: 设备维保 2: 项目管理 & 生产管理
-      tabList: [
-        { label: '任务描述', name: '1', component: 'ComTinymceEditor' },
+      tabsList: [
+        { label: '任务描述', name: '1', component: 'ComTinymceEditor', content: '' },
         { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 1 },
         { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 1 },
         { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 2 },
@@ -192,7 +194,11 @@ export default {
           }
         }
         this.form = data
-        // 给tabList中的name=1的tab添加description属性
+        const {id, type} = this.$route.query
+        console.log(id, type)
+        this.tabList = this.tabsList.filter(tab => (
+          !tab.tabsType || tab.tabsType === parseInt(type)
+        ))
         this.tabList.find(tab => tab.name === '1').content = data.description
       })
     },

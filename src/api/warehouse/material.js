@@ -81,3 +81,12 @@ export function exportMaterialExcel(query) {
     responseType: 'blob'
   })
 }
+
+// 查询匹配物料列表
+export function getMatchMaterialList(query) {
+  return request({
+    url: '/warehouse/material/list',
+    method: 'get',
+    params: query
+  })
+}

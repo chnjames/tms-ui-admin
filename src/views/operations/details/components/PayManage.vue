@@ -9,16 +9,18 @@
       <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>
     <!--基本/收款信息-->
-    <el-empty v-if="form.items" description="暂无数据"></el-empty>
+    <el-empty v-if="!form.items" description="暂无数据"></el-empty>
     <template v-else>
-      <el-row>
+      <el-row :gutter="20">
         <el-col :span="12">
           <el-card shadow="never">
-            <div slot="header">基本信息</div>
-            <div>合同总金额(RMB)：1000,000</div>
-            <div>收款负责人：刘能</div>
-            <div>联系人(客户)：陈逸飞</div>
-            <div>客户所在公司：XXXX制作有限公司</div>
+            <div slot="header">
+              <div>基本信息</div>
+            </div>
+            <div class="essential"><span>合同总金额(RMB)：</span>{{form.amount}}</div>
+            <div class="essential"><span>收款负责人：</span>{{form.blameName}}</div>
+            <div class="essential"><span>联系人(客户)：</span>{{form.contactName}}</div>
+            <div class="essential"><span>客户所在公司：</span>{{form.customerName}}</div>
           </el-card>
         </el-col>
         <el-col :span="12">
@@ -61,7 +63,7 @@
               <el-row>
                 <el-col :span="12">
                   <el-form-item label="收款日期" :prop="'items.'+ index + '.startTime'" :rules="rules.startTime">
-                    <el-date-picker clearable v-model="item.startTime" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
+                    <el-date-picker v-model="item.startTime" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -167,12 +169,12 @@ export default {
     }
   },
   // 获取路由参数
-  created() {
+  async created() {
     const { id } = this.$route.query
     this.projectId = id
-    this.getUserList()
-    this.getCustomerContactSimpleList()
-    this.getReceipt(id)
+    await this.getUserList()
+    await this.getCustomerContactSimpleList()
+    await this.getReceipt(id)
   },
   methods: {
     /** 收款负责人列表 */
@@ -195,8 +197,6 @@ export default {
     getReceipt(id) {
       getReceipt(id).then(response => {
         const { data } = response
-        data.amount = (data.amount / 100).toFixed(2) - 0
-        this.form = data
         data.items?.map(item => {
           let { startTime, amount } = item
           startTime = parseTime(startTime, '{y}-{m}-{d}')
@@ -204,6 +204,12 @@ export default {
           amount = (amount / 100).toFixed(2)
           item.description = `${startTime} ${item.scale}% ${amount}`
         }) || (this.form.items = [])
+        data.amount = (data.amount / 100).toFixed(2) - 0
+        data.amount = formatMoney(data.amount)
+        data.blameName = this.userList.find(item => parseInt(item.id) === data.blameId).nickname
+        data.contactName = this.customerContactList.find(item => item.id === data.contactId).name
+        data.customerName = this.customerContactList.find(item => item.id === data.contactId).customerName
+        this.form = data
       })
     },
     /** 取消按钮 */
@@ -291,6 +297,16 @@ export default {
     font-size: 16px;
     top: 8px;
     right: 8px;
+  }
+}
+// 基本信息
+.essential {
+  margin-bottom: 20px;
+  font-size: 12px;
+  span {
+    display: inline-block;
+    width: 110px;
+    text-align: end;
   }
 }
 </style>

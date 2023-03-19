@@ -2,6 +2,7 @@
   <div class="tinymce-box">
     <slot/>
     <Editor v-model="contentValue" :init="initOptions" :id="id" :disabled="disabled"  @change="callBack"/>
+    <slot name="footer"/>
   </div>
 </template>
 
@@ -138,7 +139,8 @@ export default {
   },
   methods: {
     callBack() {
-      this.$emit('callBack')
+      console.log('callBack', this.contentValue)
+      this.$emit('change', this.contentValue)
     },
     clear() {
       this.contentValue = '';
