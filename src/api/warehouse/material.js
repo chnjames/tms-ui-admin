@@ -90,3 +90,49 @@ export function getMatchMaterialList(query) {
     params: query
   })
 }
+
+/**
+ * 物料采购
+ */
+// 删除物料采购
+export function deletePurchase(id) {
+  return request({
+    url: '/warehouse/purchase/delete?id=' + id,
+    method: 'delete'
+  })
+}
+// 获得物料采购
+export function getPurchase(query) {
+  return request({
+    url: '/warehouse/material-buying/get',
+    method: 'get',
+    params: query
+  })
+}
+// 获得物料采购分页
+export function getPurchasePage(query) {
+  return request({
+    url: '/warehouse/material-buying/page',
+    method: 'get',
+    params: query
+  })
+}
+
+/**
+ * 物料需求
+ */
+// 删除物料需求
+export function deleteDemand(id) {
+  return request({
+    url: '/warehouse/material-demand/delete?id=' + id,
+    method: 'delete'
+  })
+}
+// 获得物料需求分页
+export function getDemandPage(query) {
+  return request({
+    url: '/warehouse/material-demand/page',
+    method: 'get',
+    params: query
+  })
+}

@@ -128,18 +128,18 @@ export default {
         // }
       }
     },
-    // contentValue: {
-    //   get() {
-    //     return this.value
-    //   },
-    //   set(value) {
-    //     this.$emit('update:value', value)
-    //   }
-    // }
+  },
+  watch: {
+    //监听内容变化
+    value(val) {
+      this.contentValue = val === null ? '' : val
+    },
+    contentValue(val) {
+      this.$emit('input', val)
+    }
   },
   methods: {
     callBack() {
-      console.log('callBack', this.contentValue)
       this.$emit('change', this.contentValue)
     },
     clear() {

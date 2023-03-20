@@ -1,6 +1,6 @@
 <template>
   <div>
-    <tinymce-editor v-model="content" :height="550" @change="bindContent" />
+    <tinymce-editor v-model="contentVal" :height="550" @change="bindContent" />
     <div style="margin-top:15px;float:right;" >
       <!--取消-->
       <el-button @click="cancel">取消</el-button>

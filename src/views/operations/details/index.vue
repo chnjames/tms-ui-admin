@@ -261,9 +261,10 @@ export default {
   font-weight: bold;
   text-align: center;
   padding: 12px 20px;
-  color: #FFFFFF;
+  //color: #FFFFFF;
   border-radius: 5px;
-  background: linear-gradient(90deg, #60b2fb, #6485f6);
+  background: linear-gradient(90deg, rgba(158, 194, 255, 0.3), rgba(125, 241, 93, 0.3));
+  //background: linear-gradient(90deg, #60b2fb, #6485f6);
   &-label {
     margin-bottom: 15px;
     font-size: 14px;
