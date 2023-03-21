@@ -11,11 +11,11 @@
     <!--基本/收款信息-->
     <el-empty v-if="!form.items" description="暂无数据"></el-empty>
     <template v-else>
-      <el-row :gutter="20">
+      <el-row type="flex" :gutter="20">
         <el-col :span="12">
-          <el-card shadow="never">
+          <el-card shadow="never" class="pay-card">
             <div slot="header">
-              <div>基本信息</div>
+              <div class="header">基本信息</div>
             </div>
             <div class="essential"><span>合同总金额(RMB)：</span>{{form.amount}}</div>
             <div class="essential"><span>收款负责人：</span>{{form.blameName}}</div>
@@ -24,8 +24,10 @@
           </el-card>
         </el-col>
         <el-col :span="12">
-          <el-card shadow="never">
-            <div slot="header">收款信息</div>
+          <el-card shadow="never" class="pay-card">
+            <div slot="header">
+              <div class="header">收款信息</div>
+            </div>
             <el-steps direction="vertical" :active="1" :space="80">
               <el-step :title="item.title" :description="item.description" v-for="(item, index) in form.items" :key="index"></el-step>
             </el-steps>
@@ -300,13 +302,24 @@ export default {
   }
 }
 // 基本信息
+.pay-card {
+  height: 100%;
+  :deep(.el-card__header) {
+    padding: 10px 15px;
+  }
+  .header {
+    font-size: 16px;
+    font-weight: bold;
+  }
+}
 .essential {
   margin-bottom: 20px;
-  font-size: 12px;
+  font-size: 14px;
   span {
     display: inline-block;
-    width: 110px;
+    width: 10em;
     text-align: end;
+    font-weight: bold;
   }
 }
 </style>

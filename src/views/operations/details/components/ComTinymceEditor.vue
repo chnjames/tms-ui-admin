@@ -12,7 +12,7 @@
 
 <script>
 import TinymceEditor from '@/components/TinymceEditor/index.vue'
-import { updateOverview } from '@/api/operations/overview'
+import { getOverview, updateOverview } from '@/api/operations/overview'
 export default {
   name: 'ComTinymceEditor',
   components: {
@@ -30,23 +30,30 @@ export default {
     }
   },
   methods: {
+    /** 获取项目详情 */
+    getOverview() {
+      getOverview(this.$route.query.id).then(response => {
+        const { data } = response
+        this.contentVal = data.description
+      })
+    },
     cancel() {
-      console.log('cancel')
+      this.getOverview()
     },
     bindContent(value) {
-      console.log(value)
       this.contentVal = value
     },
     confirm() {
-      console.log('confirm')
       updateOverview({
         id: this.$route.query.id,
-        description: this.contentVal
+        description: this.contentVal,
+        blameId: 1
       }).then(response => {
         this.$message({
           type: 'success',
           message: '保存成功!'
         })
+        this.getOverview()
       })
     }
   }

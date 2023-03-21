@@ -31,7 +31,7 @@
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['config:factory-area:delete']"
                        :disabled="row.status === 2">删除</el-button>
-            <el-button size="mini" type="text" icon="el-icon-s-promotion" @click="bindPurchase"
+            <el-button size="mini" type="text" icon="el-icon-s-promotion" @click="bindPurchase(row)"
                        v-hasPermi="['config:factory-area:update']"
                        :disabled="row.status !== 3">发起采购</el-button>
           </template>
@@ -79,19 +79,12 @@
     <!-- 对话框发起出库(添加 / 修改) -->
     <drawer-plus :title="initiateTitle" :visible.sync="initiateOpen" :size="550" append-to-body>
       <el-form ref="initiateForm" :model="initiateForm" :rules="initiateRules" label-width="100px">
-        <el-form-item label="任务指派" prop="taskAssign">
-          <el-select v-model="initiateForm.taskAssign" style="width: 100%" placeholder="请选择任务指派">
-            <el-option v-for="item in taskAssignList" :key="item.type" :label="item.label" :value="item.type" />
-          </el-select>
+        <el-form-item label="指定部门" prop="deptId">
+          <tree-select v-model="initiateForm.deptId" :options="deptList" :show-count="true" :clearable="false"
+                       placeholder="请选择指定部门" :normalizer="normalizer" />
         </el-form-item>
-        <el-form-item label="指定部门" prop="departmentId" v-if="initiateForm.taskAssign === 1">
-          <el-select v-model="initiateForm.departmentId" style="width: 100%" placeholder="请选择指定部门">
-            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="指定负责人" prop="principalId" v-if="initiateForm.taskAssign === 2">
-          <el-select v-model="initiateForm.principalId" style="width: 100%" placeholder="请选择指定负责人">
+        <el-form-item label="指定负责人" prop="blameId">
+          <el-select v-model="initiateForm.blameId" style="width: 100%" placeholder="请选择指定负责人">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
           </el-select>
@@ -108,20 +101,16 @@
 <script>
 import { getMatchMaterialList } from '@/api/warehouse/material'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import TreeSelect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { listSimpleUsers } from '@/api/system/user'
-import {
-  createPurchase,
-  createBom,
-  deleteBom,
-  getBomList,
-  createOutbound,
-  updateBom
-} from '@/api/operations/overview'
+import { listSimpleDepts } from '@/api/system/dept'
+import { createBom, createPurchase, deleteBom, getBomList, updateBom, createOutbound } from '@/api/operations/overview'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: 'BomList',
-  components: { DrawerPlus },
+  components: { DrawerPlus, TreeSelect },
   data() {
     const validateSearch = (rule, value, callback) => {
       if (value === '') {
@@ -137,6 +126,8 @@ export default {
       showSearch: true,
       // 用户列表
       userList: [],
+      // 部门列表
+      deptList: [],
       // 当前tab
       curTab: '1',
       // 任务详情列表
@@ -196,28 +187,34 @@ export default {
       initiateOpen: false,
       // 表单参数
       initiateForm: {
-        id: undefined,
-        taskAssign: undefined, // 任务指派
-        departmentId: undefined, // 指定部门
-        principalId: undefined // 指定负责人
+        ids: undefined,
+        deptId: undefined, // 指定部门
+        blameId: undefined // 指定负责人
       },
       // 表单校验
       initiateRules: {
-        taskAssign: { required: true, message: '任务指派不能为空', trigger: 'change' },
-        departmentId: { required: true, message: '指定部门不能为空', trigger: 'change' },
-        principalId: { required: true, message: '指定负责人不能为空', trigger: 'change' }
+        deptId: { required: true, message: '指定部门不能为空', trigger: 'change' },
+        blameId: { required: true, message: '指定负责人不能为空', trigger: 'change' }
       }
     }
   },
   created() {
     this.getList()
     this.getUserList()
+    this.getDeptList()
   },
   methods: {
     /** 用户列表 */
     getUserList() {
       listSimpleUsers().then(response => {
         this.userList = response.data
+      })
+    },
+    /** 部门列表 */
+    getDeptList() {
+      listSimpleDepts().then(response => {
+        this.deptList = [];
+        this.deptList.push(...this.handleTree(response.data, "id"));
       })
     },
     /** 物料列表 */
@@ -308,14 +305,14 @@ export default {
       this.initiateTitle = '发起出库'
       this.initiateOpen = true
       this.resetInitiateForm()
+      this.getDeptList()
     },
     /** 删除按钮操作 */
     resetInitiateForm() {
       this.initiateForm = {
-        id: undefined,
-        taskAssign: undefined, // 任务指派
-        departmentId: undefined, // 指定部门
-        principalId: undefined // 指定负责人
+        ids: undefined,
+        deptId: undefined, // 指定部门
+        blameId: undefined // 指定负责人
       }
       this.resetForm('initiateForm')
     },
@@ -354,9 +351,13 @@ export default {
     submitInitiate() {
       this.$refs.initiateForm.validate((valid) => {
         if (valid) {
-          this.$message.success('提交出库成功')
-          this.initiateOpen = false
-          this.resetInitiateForm()
+          const initiateList = this.$refs.multipleTable.selection
+          this.initiateForm.ids = initiateList.map(item => item.id)
+          createOutbound(this.initiateForm).then(response => {
+            this.$message.success('发起出库成功')
+            this.initiateOpen = false
+            this.getList()
+          })
         }
       })
     },
@@ -402,6 +403,14 @@ export default {
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })
+    },
+    // 格式化部门的下拉框
+    normalizer(node) {
+      return {
+        id: node.id,
+        label: node.name,
+        children: node.children
+      }
     }
   }
 }
