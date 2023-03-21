@@ -131,8 +131,9 @@ export function getReceipt(id) {
 // 启动收款项
 export function startReceipt(id) {
   return request({
-    url: '/operations/payment/start?id=' + id,
-    method: 'post'
+    url: '/operations/payment/start',
+    method: 'post',
+    data: { id }
   })
 }
 
@@ -143,7 +144,7 @@ export function startReceipt(id) {
 export function createPurchase(data) {
   return request({
     url: '/operations/project-bom/buy',
-    method: 'put',
+    method: 'post',
     data
   })
 }
@@ -174,7 +175,7 @@ export function getBomList(query) {
 export function createOutbound(data) {
   return request({
     url: '/operations/project-bom/outbound',
-    method: 'put',
+    method: 'post',
     data
   })
 }

@@ -46,8 +46,7 @@ export default {
     confirm() {
       updateOverview({
         id: this.$route.query.id,
-        description: this.contentVal,
-        blameId: 1
+        description: this.contentVal
       }).then(response => {
         this.$message({
           type: 'success',
