@@ -9,7 +9,7 @@
       <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>
     <!--基本/收款信息-->
-    <el-empty v-if="!form.items" description="暂无数据"></el-empty>
+    <el-empty v-if="!form.blameId" description="暂无数据"></el-empty>
     <template v-else>
       <el-row type="flex" :gutter="20">
         <el-col :span="12">
@@ -29,7 +29,7 @@
               <div class="header">收款信息</div>
             </div>
             <el-steps direction="vertical" :active="1" :space="80">
-              <el-step :title="item.title" :description="item.description" v-for="(item, index) in form.items" :key="index"></el-step>
+              <el-step :title="item.title" :description="item.description" v-for="(item, index) in form.items" :status="item.status" :key="index"></el-step>
             </el-steps>
           </el-card>
         </el-col>
@@ -96,14 +96,13 @@ import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
 import { parseTime } from '@/utils/ruoyi'
 import { formatMoney } from '@/utils'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: 'PayManage',
   components: { FileUpload, DrawerPlus },
   data() {
     return {
-      // 项目ID
-      projectId: undefined,
       // 遮罩层
       loading: true,
       // 总条数
@@ -118,7 +117,8 @@ export default {
       userList: [],
       // 联系人列表
       customerContactList: [],
-      // 流程列表
+      // 收款条目状态列表
+      statusList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_PAYMENT_ITEM_STATUS),
       // 查询参数
       queryParams: {
         name: null,
@@ -152,7 +152,7 @@ export default {
   watch: {
     form: {
       handler(val) {
-        if (val.items.length > 1) {
+        if (val.items && val.items.length > 1) {
           let sum = 0
           val.items.forEach(item => {
             sum += item.scale
@@ -170,13 +170,16 @@ export default {
       deep: true
     }
   },
+  computed: {
+    proId() {
+      return this.$route.query.id
+    }
+  },
   // 获取路由参数
-  async created() {
-    const { id } = this.$route.query
-    this.projectId = id
-    await this.getUserList()
-    await this.getCustomerContactSimpleList()
-    await this.getReceipt(id)
+  created() {
+    this.getUserList()
+    this.getCustomerContactSimpleList()
+    this.getReceipt(this.proId)
   },
   methods: {
     /** 收款负责人列表 */
@@ -205,12 +208,13 @@ export default {
           item.scale = ((amount / data.amount) * 100).toFixed(2)
           amount = (amount / 100).toFixed(2)
           item.description = `${startTime} ${item.scale}% ${amount}`
+          item.status = this.statusList.find(e => parseInt(e.value) === item.status).cssClass || ''
         }) || (this.form.items = [])
-        data.amount = (data.amount / 100).toFixed(2) - 0
-        data.amount = formatMoney(data.amount)
-        data.blameName = this.userList.find(item => parseInt(item.id) === data.blameId).nickname
-        data.contactName = this.customerContactList.find(item => item.id === data.contactId).name
-        data.customerName = this.customerContactList.find(item => item.id === data.contactId).customerName
+        data.amount = data.amount ? (data.amount / 100).toFixed(2) - 0 : ''
+        data.amount = data.amount ? formatMoney(data.amount) : ''
+        data.blameName = data.blameId ? this.userList.find(item => parseInt(item.id) === data.blameId).nickname : ''
+        data.contactName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId).name : ''
+        data.customerName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId).customerName : ''
         this.form = data
       })
     },
@@ -237,9 +241,12 @@ export default {
       this.resetForm('form')
     },
     /** 新增按钮操作 */
-    async handleAdd() {
-      await this.reset()
-      await this.getReceipt(this.projectId)
+    handleAdd() {
+      this.reset()
+      console.log(this.form)
+      if (this.form.blameId) {
+        this.getReceipt(this.proId)
+      }
       this.open = true
       this.title = "编辑"
     },
@@ -249,21 +256,22 @@ export default {
         if (!valid) {
           return
         }
-        const convertAmountToCents = (amount) => amount * 100;
-        const items = this.form.items.map(({ amount, ...item }) => ({
-          ...item,
-          amount: convertAmountToCents(amount)
-        }));
+        const convertAmountToYuan = val => val * 100
         const params = {
-          projectId: this.projectId,
-          amount: convertAmountToCents(this.form.amount),
-          items,
-          ...this.form
+          ...this.form,
+          projectId: this.proId,
+          amount: convertAmountToYuan(this.form.amount),
+          items: this.form.items.map(item => {
+            return {
+              ...item,
+              amount: convertAmountToYuan(item.amount)
+            }
+          })
         }
         createReceipt(params).then(response => {
           this.$modal.msgSuccess('编辑成功')
           this.open = false
-          this.getReceipt(this.projectId)
+          this.getReceipt(this.proId)
         })
       })
     },

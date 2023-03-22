@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" v-loading="projectLoading">
     <el-form :model="form" ref="infosRef" label-width="110px">
       <el-form-item label="名称:" class="item-name">
         <div class="item-name-flex">
@@ -65,7 +65,8 @@
     </el-form>
     <el-tabs v-model="activeTab">
       <el-tab-pane v-for="(tab, i) in tabList" :key="`tab${i}`" :label="tab.label" :name="tab.name">
-        <component v-if="activeTab === tab.name" v-bind:is="tab.component" :ref="tab.component" :content="tab.content" />
+        <component v-if="activeTab === tab.name" :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />
+        <!--<component :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />-->
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -88,6 +89,7 @@ import ExecuteRecord from '@/views/operations/details/components/ExecuteRecord.v
 import PayManage from '@/views/operations/details/components/PayManage.vue'
 import TaskInfo from '@/views/operations/details/components/TaskInfo.vue'
 import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
+import { arrayNotEqual } from '@/utils'
 
 export default {
   name: 'Details',
@@ -106,6 +108,8 @@ export default {
     return {
       // 当前激活的tab
       activeTab: '1',
+      // 项目详情加载中
+      projectLoading: false,
       // 名称可编辑状态
       isEditing: false,
       // tab列表
@@ -137,20 +141,35 @@ export default {
         type: undefined,
         typeDesc: undefined,
         followerIds: []
+      },
+      // 项目详情Copy
+      copyForm: {}
+    }
+  },
+  computed: {
+    proId() {
+      return this.$route.query.id
+    },
+    proType() {
+      return this.$route.query.type
+    },
+    formAndCopyForm() {
+      return {
+        form: this.form,
+        copyForm: this.copyForm
       }
     }
   },
   watch: {
-    form: {
+    formAndCopyForm: {
       handler(val) {
-        if (val.name || val.status || val.blameId || val.beginEndTime || val.followerIds) {
-          if (val.beginEndTime) {
-            [val.beginTime, val.endTime] = val.beginEndTime;
-          } else {
-            val.beginTime = undefined;
-            val.endTime = undefined;
-          }
-          // this.updateOverview()
+        const { form, copyForm } = val
+        const { name, blameId, beginEndTime, type, followerIds, description } = form
+        const [beginTime, endTime] = beginEndTime
+        const { name: copyName, blameId: copyBlameId, beginEndTime: copyBeginEndTime, type: copyType, followerIds: copyFollowerIds, description: copyDescription } = copyForm
+        const [copyBeginTime, copyEndTime] = copyBeginEndTime
+        if (name !== copyName || blameId !== copyBlameId || beginTime !== copyBeginTime || endTime !== copyEndTime || type !== copyType || arrayNotEqual(followerIds, copyFollowerIds) || description !== copyDescription) {
+          this.updateOverview()
         }
       },
       deep: true
@@ -170,7 +189,8 @@ export default {
     },
     /** 获取项目详情 */
     getOverview() {
-      getOverview(this.$route.query.id).then(response => {
+      this.projectLoading = true
+      getOverview(this.proId).then(response => {
         const { data } = response
         data.blameId = data.blame.id
         data.followerIds = data.followers.map(item => item.id)
@@ -194,12 +214,12 @@ export default {
           }
         }
         this.form = data
-        const {id, type} = this.$route.query
-        console.log(id, type)
+        this.copyForm = JSON.parse(JSON.stringify(data))
         this.tabList = this.tabsList.filter(tab => (
-          !tab.tabsType || tab.tabsType === parseInt(type)
+          !tab.tabsType || tab.tabsType === parseInt(this.proType)
         ))
-        this.tabList.find(tab => tab.name === '1').content = data.description
+        this.tabList.find(tab => tab.name === '1').content = data.description || ''
+        this.projectLoading = false
       })
     },
     /** 下拉菜单切换 */
@@ -208,7 +228,17 @@ export default {
     },
     /** 提交按钮 */
     updateOverview() {
-      updateOverview(this.form).then(response => {
+      const params = {
+        id: this.proId,
+        name: this.form.name,
+        blameId: this.form.blameId,
+        beginTime: this.form.beginTime,
+        endTime: this.form.endTime,
+        type: this.form.type,
+        followerIds: this.form.followerIds,
+        description: this.form.description
+      }
+      updateOverview(params).then(response => {
         this.$message({
           type: 'success',
           message: '保存成功!'
@@ -222,7 +252,11 @@ export default {
     /** 失焦保存名称 */
     bindSaveName() {
       this.isEditing = false
-    }
+    },
+    /** 项目描述更新 */
+    bindContentChange(content) {
+      this.form.description = content
+    },
   }
 }
 </script>
@@ -241,7 +275,6 @@ export default {
     font-size: 20px;
     font-weight: bold;
     margin-right: 10px;
-    max-width: 300px;
   }
   .cursor {
     cursor: pointer;

@@ -53,7 +53,7 @@
           <el-input v-model="form.search" placeholder="输入物料名称" clearable @blur="handleSearch" @keyup.enter.native="handleSearch" />
         </el-form-item>
         <el-form-item label="物料名称" prop="materialId" v-if="materialList.length > 0">
-          <el-table class="material" ref="selectList" :height="300" v-loading="loading" :data="materialList" :show-header="false" @selection-change="selectedChange">
+          <el-table class="material" ref="selectList" :height="300" v-loading="formLoading" :data="materialList" :show-header="false" @selection-change="selectedChange">
             <el-table-column
               v-for="(item, index) in materialHeader"
               :key="index"
@@ -122,6 +122,8 @@ export default {
     return {
       // 遮罩层
       loading: true,
+      // 物料列表加载中
+      formLoading: false,
       // 显示搜索条件
       showSearch: true,
       // 用户列表
@@ -219,8 +221,10 @@ export default {
     },
     /** 物料列表 */
     getMaterialList(name) {
+      this.formLoading = true;
       getMatchMaterialList({name}).then(response => {
         this.materialList = response.data
+        this.formLoading = false;
       })
     },
     /** 查询列表 */

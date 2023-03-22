@@ -490,3 +490,17 @@ export function formatFileSize(size, pointLength = 2, unitArr = ['B', 'KB', 'MB'
 export function formatMoney(num, pointLength = 2) {
   return (num || 0).toFixed(pointLength).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 }
+
+/**
+ * 判断两个数组是否不相等
+ * @param {Array} arr1
+ * @param {Array} arr2
+ * @returns {Boolean}
+ */
+export function arrayNotEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) return true;
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) return true;
+  }
+  return false;
+}

@@ -3,16 +3,15 @@
     <tinymce-editor v-model="contentVal" :height="550" @change="bindContent" />
     <div style="margin-top:15px;float:right;" >
       <!--取消-->
-      <el-button @click="cancel">取消</el-button>
+      <el-button @click="cancel" :disabled="!isUpdate">取消</el-button>
       <!--确认-->
-      <el-button size="medium" type="primary" @click="confirm">确认</el-button>
+      <el-button size="medium" type="primary" :disabled="!isUpdate" @click="confirm">确认</el-button>
     </div>
   </div>
 </template>
 
 <script>
 import TinymceEditor from '@/components/TinymceEditor/index.vue'
-import { getOverview, updateOverview } from '@/api/operations/overview'
 export default {
   name: 'ComTinymceEditor',
   components: {
@@ -24,36 +23,25 @@ export default {
       default: ''
     }
   },
+  computed: {
+    isUpdate() {
+      return this.contentVal !== this.content
+    }
+  },
   data() {
     return {
       contentVal: this.content
     }
   },
   methods: {
-    /** 获取项目详情 */
-    getOverview() {
-      getOverview(this.$route.query.id).then(response => {
-        const { data } = response
-        this.contentVal = data.description
-      })
-    },
     cancel() {
-      this.getOverview()
+      this.contentVal = this.content
     },
     bindContent(value) {
       this.contentVal = value
     },
     confirm() {
-      updateOverview({
-        id: this.$route.query.id,
-        description: this.contentVal
-      }).then(response => {
-        this.$message({
-          type: 'success',
-          message: '保存成功!'
-        })
-        this.getOverview()
-      })
+      this.$emit('content-change', this.contentVal)
     }
   }
 }
