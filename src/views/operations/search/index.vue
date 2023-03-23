@@ -10,8 +10,7 @@
         </el-col>
         <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="4">
           <el-button-group>
-            <el-button type="primary" @click="handleSearch('document')">文档搜索</el-button>
-            <el-button type="primary" @click="handleSearch('contract')">合同搜索</el-button>
+            <el-button type="primary" v-for="item in fileBusinessTypeList" :key="item.value" @click="handleSearch(item.value)">{{item.label}}搜索</el-button>
           </el-button-group>
         </el-col>
       </el-row>
@@ -20,24 +19,32 @@
       <!-- 操作工具栏 -->
       <el-row :gutter="10" class="mb8">
         <el-col :span="1.5">
-          <el-button plain icon="el-icon-download" size="mini"
+          <el-button plain icon="el-icon-download" size="mini" @click="handleBatch"
                      v-hasPermi="['config:device:create']">批量下载</el-button>
         </el-col>
         <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
       </el-row>
 
       <!-- 列表 -->
-      <el-table v-loading="loading" :data="list">
+      <el-table ref="docRef" v-loading="loading" :data="list">
         <!--选择-->
         <el-table-column type="selection" width="55" align="center"/>
-        <el-table-column label="所属项目" align="center" prop="name" />
+        <el-table-column label="所属项目" align="center" prop="projectName" />
         <el-table-column label="名称" align="center" prop="name" />
-        <el-table-column label="格式" align="center" prop="name" />
-        <el-table-column label="大小" align="center" prop="name" />
-        <el-table-column label="上传者" align="center" prop="name" />
-        <el-table-column label="上传时间" align="center" prop="startTime">
-          <template v-slot="scope">
-            <span>{{ parseTime(scope.row.startTime) }}</span>
+        <el-table-column label="格式" align="center" prop="type" />
+        <el-table-column label="大小" align="center" prop="size">
+          <template v-slot="{row}">
+            <span>{{ formatFileSize(row.size) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="上传者" align="center" prop="executorName">
+          <template v-slot="{row}">
+            <span>{{ row.creator.nickname || '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="上传时间" align="center" prop="createTime">
+          <template v-slot="{row}">
+            <span>{{ parseTime(row.createTime) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -56,19 +63,17 @@
 
 <script>
 import {
-  getMaterialPage,
-  exportMaterialExcel
-} from '@/api/warehouse/material'
-
-import {
   getContractPage,
   getDocumentPage
 } from '@/api/operations/overview'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
+import { formatFileSize } from '@/utils'
 
 export default {
   name: "Search",
   data() {
     return {
+      formatFileSize,
       // 遮罩层
       loading: true,
       // 导出遮罩层
@@ -77,11 +82,14 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
+      // 项目文件业务类型列表
+      fileBusinessTypeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_FILE_BIZ_TYPE),
       // 物料基础数据列表
       list: [],
       // 查询参数
       queryParams: {
         name: null,
+        type: null,
         pageNo: 1,
         pageSize: 10
       }
@@ -90,41 +98,28 @@ export default {
   watch: {
     '$route': {
       handler(val) {
-        const {name} = val.query;
+        const {name, type} = val.query;
         this.queryParams.name = name;
+        this.queryParams.type = type;
         this.queryParams.pageNo = 1;
-        this.getList();
+        this.getList(type);
       },
       deep: true,
       immediate: true
     }
   },
   methods: {
-    /** 查询列表 */
-    getList() {
+    /** 查询合同/文档列表 */
+    getList(type) {
       this.loading = true;
-      // 执行查询
-      if (this.$route.query.type === 'contract') {
-        this.getContractList();
-      } else if (this.$route.query.type === 'document') {
-        this.getDocumentList();
+      if (type === '0') {
+        this.getListByType(getDocumentPage);
+      } else if (type === '1') {
+        this.getListByType(getContractPage);
       }
     },
-    /** 查询合同列表 */
-    getContractList() {
-      this.loading = true;
-      // 执行查询
-      getContractPage(this.queryParams).then(response => {
-        this.list = response.data.list;
-        this.total = response.data.total;
-        this.loading = false;
-      });
-    },
-    /** 查询文档列表 */
-    getDocumentList() {
-      this.loading = true;
-      // 执行查询
-      getDocumentPage(this.queryParams).then(response => {
+    getListByType(api) {
+      api(this.queryParams).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
         this.loading = false;
@@ -148,21 +143,18 @@ export default {
     },
     /** 详情按钮操作 */
     handleDownload(row) {
-      console.log(row)
+      const downloadUrl = row.url;
+      window.open(downloadUrl, '_blank');
     },
-    /** 导出按钮操作 */
-    handleExport() {
-      // 处理查询参数
-      let params = {...this.queryParams};
-      params.pageNo = undefined;
-      params.pageSize = undefined;
-      this.$modal.confirm('是否确认导出所有物料基础数据数据项?').then(() => {
-        this.exportLoading = true;
-        return exportMaterialExcel(params);
-      }).then(response => {
-        this.$download.excel(response, '物料基础数据.xls');
-        this.exportLoading = false;
-      }).catch(() => {});
+    /** 批量下载 */
+    handleBatch() {
+      let selectedRows = this.$refs.docRef.selection
+      if (selectedRows.length === 0) {
+        this.$message.warning('请选择要下载的文件');
+        return;
+      }
+      const downloadUrl = selectedRows.map(item => item.url).join(',');
+      window.open(downloadUrl, '_blank');
     }
   }
 };

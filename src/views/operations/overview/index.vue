@@ -7,8 +7,7 @@
         </el-col>
         <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="4">
           <el-button-group>
-            <el-button type="primary" @click="handleSearch('document')">文档搜索</el-button>
-            <el-button type="primary" @click="handleSearch('contract')">合同搜索</el-button>
+            <el-button type="primary" v-for="item in fileBusinessTypeList" :key="item.value" @click="handleSearch(item.value)">{{item.label}}搜索</el-button>
           </el-button-group>
         </el-col>
       </el-row>

@@ -83,6 +83,7 @@ export default {
       // 查询参数
       queryParams: {
         name: null,
+        projectId: null,
         pageNo: 1,
         pageSize: 10
       },
@@ -108,6 +109,11 @@ export default {
       }
     }
   },
+  computed: {
+    proId() {
+      return this.$route.query.id
+    }
+  },
   created() {
     this.getList()
   },
@@ -116,6 +122,7 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
+      this.queryParams.projectId = this.proId
       getContractPage(this.queryParams).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
@@ -161,7 +168,7 @@ export default {
         fileList.forEach((item, index) => {
           const formData = new FormData()
           formData.append('file', item.raw)
-          formData.append('projectId', this.$route.query.id)
+          formData.append('projectId', this.proId)
           createContract(formData).then(() => {
             if (index === fileList.length - 1) {
               this.submitLoading = false
