@@ -492,6 +492,15 @@ export function formatMoney(num, pointLength = 2) {
 }
 
 /**
+ * 反格式化金额 123,456,789 => 123456789
+ * @param {String} num 金额
+ * @returns {Number} 反格式化后的金额
+ */
+export function unFormatMoney(num) {
+  return Number(num.replace(/,/g, ''));
+}
+
+/**
  * 判断两个数组是否不相等
  * @param {Array} arr1
  * @param {Array} arr2

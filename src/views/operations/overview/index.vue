@@ -200,6 +200,8 @@ export default {
       ],
       // 项目类型列表
       typeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_TYPE),
+      // 项目文件业务类型列表
+      fileBusinessTypeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_FILE_BIZ_TYPE),
       // 结束时间是否禁用
       isEndTime: false,
       // 设备列表

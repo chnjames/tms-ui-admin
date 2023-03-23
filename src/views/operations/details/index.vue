@@ -5,16 +5,14 @@
         <div class="item-name-flex">
           <div v-if="!isEditing" class="item-name-content cursor" @click="bindIsEdit">{{form.name}}</div>
           <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
-          <el-dropdown trigger="click" @command="handleCommand">
-            <el-button round size="mini" plain :type="form.colorType">进行中 <i class="el-icon-arrow-down"></i></el-button>
-            <el-dropdown-menu slot="dropdown">
-              <div class="dropdown-title">更改项目状态</div>
-              <el-dropdown-item v-for="item in statusList" :key="item.value" :command="item.value">
-                <el-button round plain size="mini" :type="item.colorType">{{item.label}}</el-button>
-                <i class="el-icon-check" v-if="form.status === parseInt(item.value)"></i>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <el-select size="mini" v-model="form.status" placeholder="请选择" style="width: 100px;">
+            <el-option-group label="更改项目状态" style="width: 160px">
+              <el-option class="option" v-for="item in statusList" :key="item.value" :label="item.label" :value="parseInt(item.value)">
+                <span class="option-tag">{{ item.label }}</span>
+                <i v-if="form.status === parseInt(item.value)" class="el-icon-check"></i>
+              </el-option>
+            </el-option-group>
+          </el-select>
         </div>
       </el-form-item>
       <el-row :gutter="10">
@@ -63,7 +61,7 @@
         </el-col>
       </el-row>
     </el-form>
-    <el-tabs v-model="activeTab">
+    <el-tabs v-model="activeTab" @tab-click="bindTab">
       <el-tab-pane v-for="(tab, i) in tabList" :key="`tab${i}`" :label="tab.label" :name="tab.name">
         <component v-if="activeTab === tab.name" :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />
         <!--<component :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />-->
@@ -135,12 +133,14 @@ export default {
       form: {
         name: undefined,
         blameId: undefined,
+        status: undefined,
         beginTime: undefined,
         endTime: undefined,
         beginEndTime: [],
         type: undefined,
         typeDesc: undefined,
-        followerIds: []
+        followerIds: [],
+        description: undefined
       },
       // 项目详情Copy
       copyForm: {}
@@ -164,11 +164,11 @@ export default {
     formAndCopyForm: {
       handler(val) {
         const { form, copyForm } = val
-        const { name, blameId, beginEndTime, type, followerIds, description } = form
+        const { name, blameId, beginEndTime, type, followerIds, description, status } = form
         const [beginTime, endTime] = beginEndTime
-        const { name: copyName, blameId: copyBlameId, beginEndTime: copyBeginEndTime, type: copyType, followerIds: copyFollowerIds, description: copyDescription } = copyForm
+        const { name: copyName, blameId: copyBlameId, beginEndTime: copyBeginEndTime, type: copyType, followerIds: copyFollowerIds, description: copyDescription, status: copyStatus } = copyForm
         const [copyBeginTime, copyEndTime] = copyBeginEndTime
-        if (name !== copyName || blameId !== copyBlameId || beginTime !== copyBeginTime || endTime !== copyEndTime || type !== copyType || arrayNotEqual(followerIds, copyFollowerIds) || description !== copyDescription) {
+        if (name !== copyName || blameId !== copyBlameId || beginTime !== copyBeginTime || endTime !== copyEndTime || type !== copyType || arrayNotEqual(followerIds, copyFollowerIds) || description !== copyDescription || status !== copyStatus) {
           this.updateOverview()
         }
       },
@@ -232,6 +232,7 @@ export default {
         id: this.proId,
         name: this.form.name,
         blameId: this.form.blameId,
+        status: this.form.status,
         beginTime: this.form.beginTime,
         endTime: this.form.endTime,
         type: this.form.type,
@@ -252,6 +253,12 @@ export default {
     /** 失焦保存名称 */
     bindSaveName() {
       this.isEditing = false
+    },
+    /** 切换Tab */
+    bindTab(tab) {
+      if (tab.name === '1') {
+        this.tabList.find(tab => tab.name === '1').content = this.form.description
+      }
     },
     /** 项目描述更新 */
     bindContentChange(content) {
@@ -304,17 +311,17 @@ export default {
     font-weight: normal;
   }
 }
-.dropdown-title {
-  padding-left: 10px;
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  &-tag {
+    font-size: 10px;
+    line-height: normal;
+  }
 }
-:deep(.el-button--mini.is-round) {
-  padding: 5px 10px;
-}
-:deep(.el-icon-check) {
+.el-icon-check {
   color: #409EFF;
-  margin-left: 20px;
-}
-:deep(.el-dropdown-menu__item) {
-  padding: 0 10px;
+  font-weight: bold;
 }
 </style>

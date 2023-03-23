@@ -3,13 +3,13 @@
     <!-- 操作工具栏 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAddEdit"
                    v-hasPermi="['config:factory-area:create']">编辑</el-button>
       </el-col>
       <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>
     <!--基本/收款信息-->
-    <el-empty v-if="!form.blameId" description="暂无数据"></el-empty>
+    <el-empty v-if="!payInfo.blameId" description="暂无数据"></el-empty>
     <template v-else>
       <el-row type="flex" :gutter="20">
         <el-col :span="12">
@@ -17,10 +17,10 @@
             <div slot="header">
               <div class="header">基本信息</div>
             </div>
-            <div class="essential"><span>合同总金额(RMB)：</span>{{form.amount}}</div>
-            <div class="essential"><span>收款负责人：</span>{{form.blameName}}</div>
-            <div class="essential"><span>联系人(客户)：</span>{{form.contactName}}</div>
-            <div class="essential"><span>客户所在公司：</span>{{form.customerName}}</div>
+            <div class="essential"><span>合同总金额(RMB)：</span>{{payInfo.amount}}</div>
+            <div class="essential"><span>收款负责人：</span>{{payInfo.blameName}}</div>
+            <div class="essential"><span>联系人(客户)：</span>{{payInfo.contactName}}</div>
+            <div class="essential"><span>客户所在公司：</span>{{payInfo.customerName}}</div>
           </el-card>
         </el-col>
         <el-col :span="12">
@@ -29,7 +29,7 @@
               <div class="header">收款信息</div>
             </div>
             <el-steps direction="vertical" :active="1" :space="80">
-              <el-step :title="item.title" :description="item.description" v-for="(item, index) in form.items" :status="item.status" :key="index"></el-step>
+              <el-step :title="item.title" :description="item.description" v-for="(item, index) in payInfo.items" :status="item.status" :key="index"></el-step>
             </el-steps>
           </el-card>
         </el-col>
@@ -95,7 +95,7 @@ import { listSimpleUsers } from '@/api/system/user'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
 import { parseTime } from '@/utils/ruoyi'
-import { formatMoney } from '@/utils'
+import { formatMoney, unFormatMoney } from '@/utils'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
@@ -113,6 +113,8 @@ export default {
       title: '',
       // 是否显示弹出层
       open: false,
+      // 新增/修改标识
+      isBlameId: undefined,
       // 用户列表
       userList: [],
       // 联系人列表
@@ -124,6 +126,20 @@ export default {
         name: null,
         pageNo: 1,
         pageSize: 10
+      },
+      // 收款详情
+      payInfo: {
+        contactId: undefined, // 联系人
+        customerName: undefined, // 公司名称
+        amount: undefined, // 合同总金额
+        blameId: undefined, // 收款负责人
+        projectId: undefined, // 项目id
+        items: [{
+          title: undefined,
+          startTime: undefined,
+          scale: undefined,
+          amount: undefined
+        }]
       },
       // 表单参数
       form: {
@@ -179,7 +195,7 @@ export default {
   created() {
     this.getUserList()
     this.getCustomerContactSimpleList()
-    this.getReceipt(this.proId)
+    this.getReceipt()
   },
   methods: {
     /** 收款负责人列表 */
@@ -199,29 +215,23 @@ export default {
       this.form.customerName = this.customerContactList.find(item => item.id === val).customerName
     },
     /** 获取收款管理详情 */
-    getReceipt(id) {
-      getReceipt(id).then(response => {
+    getReceipt() {
+      getReceipt(this.proId).then(response => {
         const { data } = response
         data.items?.map(item => {
           let { startTime, amount } = item
           startTime = parseTime(startTime, '{y}-{m}-{d}')
           item.scale = ((amount / data.amount) * 100).toFixed(2)
-          amount = (amount / 100).toFixed(2)
+          item.amount = item.amount ? (item.amount / 100).toFixed(2) - 0 : ''
           item.description = `${startTime} ${item.scale}% ${amount}`
           item.status = this.statusList.find(e => parseInt(e.value) === item.status).cssClass || ''
         }) || (this.form.items = [])
         data.amount = data.amount ? (data.amount / 100).toFixed(2) - 0 : ''
-        data.amount = data.amount ? formatMoney(data.amount) : ''
         data.blameName = data.blameId ? this.userList.find(item => parseInt(item.id) === data.blameId).nickname : ''
         data.contactName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId).name : ''
         data.customerName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId).customerName : ''
-        this.form = data
+        this.payInfo = data
       })
-    },
-    /** 取消按钮 */
-    cancel() {
-      this.open = false
-      this.reset()
     },
     /** 表单重置 */
     reset() {
@@ -240,15 +250,29 @@ export default {
       }
       this.resetForm('form')
     },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset()
-      console.log(this.form)
-      if (this.form.blameId) {
-        this.getReceipt(this.proId)
+    /** 新增编辑按钮操作 */
+    handleAddEdit() {
+      const { items } = this.payInfo
+      if (this.payInfo.blameId) {
+        this.form = {
+          ...this.payInfo,
+          items: items.map(item => {
+            return {
+              ...item,
+              scale: item.scale - 0
+            }
+          })
+        }
+      } else {
+        this.reset()
       }
       this.open = true
       this.title = "编辑"
+    },
+    /** 取消按钮 */
+    cancel() {
+      this.open = false
+      this.reset()
     },
     /** 提交按钮 */
     submitForm() {
@@ -271,7 +295,7 @@ export default {
         createReceipt(params).then(response => {
           this.$modal.msgSuccess('编辑成功')
           this.open = false
-          this.getReceipt(this.proId)
+          this.getReceipt()
         })
       })
     },
@@ -321,7 +345,7 @@ export default {
   }
 }
 .essential {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   font-size: 14px;
   span {
     display: inline-block;

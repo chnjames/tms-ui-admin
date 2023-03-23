@@ -92,7 +92,7 @@ export default {
         { prop: 'type', label: '格式' },
         { prop: 'size', label: '大小' },
         { prop: 'executorName', label: '上传者' },
-        { prop: 'updateTime', label: '上传时间' },
+        { prop: 'createTime', label: '上传时间' },
         { prop: 'operation', label: '操作' }
       ],
       // 表单参数
