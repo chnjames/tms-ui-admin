@@ -41,7 +41,8 @@ import 'tinymce/plugins/table'; // 表格
 import 'tinymce/plugins/template'; // 模板
 import 'tinymce/plugins/visualblocks'; // 显示隐藏的区块
 import 'tinymce/plugins/visualchars'; // 显示隐藏的字符
-import 'tinymce/plugins/wordcount'; // 字数统计
+import 'tinymce/plugins/wordcount';
+import { getAccessToken } from '@/utils/auth' // 字数统计
 
 export default {
   name: 'TinymceEditor',
@@ -109,23 +110,37 @@ export default {
         // forced_root_block: false, // 去除默认的 P 标签
         custom_undo_redo_levels: 10, // 自定义撤销恢复次数
         draggable_modal: true, // 拖拽模态框
-        // media_alt_source :false,
-        // media_poster :false,
-        // media_dimensions  :false,
-        // images_upload_url: '/image/edu/certificate',
-        // images_upload_base_path: '',
-        // images_upload_handler: (blobInfo:any) => {
-        //   return new Promise((resolve, reject) => {
-        //     let fd = new FormData();
-        //     fd.append("image", blobInfo.blob())
-        //     api.edu.image.edu.certificate({ method:'POST', data:fd }).then((res:any) => {
-        //       const img = res.imageUrl
-        //       resolve(img)//上传成功，在成功函数里填入图片路径
-        //     }).catch(() => {
-        //       reject("上传失败")
-        //     })
-        //   })
-        // }
+        paste_data_images: true, //图片是否可粘贴
+        image_description: false,
+        image_title: false, // 是否开启图片标题设置的选择，这里设置否
+        images_upload_handler: function (blobInfo, success, failure) {
+          const isAccord = blobInfo.blob().type === 'image/jpeg' || blobInfo.blob().type === 'image/png' || blobInfo.blob().type === 'image/GIF' || blobInfo.blob().type === 'image/jpg' || blobInfo.blob().type === 'image/BMP';
+          if (blobInfo.blob().size/1024/1024>2) {
+            failure("上传失败，图片大小请控制在 2M 以内")
+          } else if (blobInfo.blob().type === isAccord) {
+            failure('图片格式错误')
+          } else {
+            let formData = new FormData()
+            formData.append('file', blobInfo.blob())
+            this.$axios({
+              method: 'post',
+              url: '/infra/file/upload',
+              data: formData,
+              headers: {
+                'Authorization': "Bearer " + getAccessToken(),
+                'Content-Type': 'multipart/form-data'
+              }
+            }).then(res => {
+              if (res.data.code === 200) {
+                success(res.data.data)
+              } else {
+                failure(res.data.msg)
+              }
+            }).catch(err => {
+              failure(err)
+            })
+          }
+        }
       }
     },
   },

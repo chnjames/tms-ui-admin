@@ -6,6 +6,9 @@
           <div v-if="!isEditing" class="item-name-content cursor" @click="bindIsEdit">{{form.name}}</div>
           <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
           <el-select size="mini" v-model="form.status" placeholder="请选择" style="width: 100px;">
+            <template slot="prefix">
+              <!--<span class="tag" :class="form.colorType"></span>-->
+            </template>
             <el-option-group label="更改项目状态" style="width: 160px">
               <el-option class="option" v-for="item in statusList" :key="item.value" :label="item.label" :value="parseInt(item.value)">
                 <span class="option-tag">{{ item.label }}</span>
@@ -222,10 +225,6 @@ export default {
         this.projectLoading = false
       })
     },
-    /** 下拉菜单切换 */
-    handleCommand(command) {
-      this.form.status = command
-    },
     /** 提交按钮 */
     updateOverview() {
       const params = {
@@ -239,7 +238,7 @@ export default {
         followerIds: this.form.followerIds,
         description: this.form.description
       }
-      updateOverview(params).then(response => {
+      updateOverview(params).then(() => {
         this.$message({
           type: 'success',
           message: '保存成功!'
@@ -323,5 +322,21 @@ export default {
 .el-icon-check {
   color: #409EFF;
   font-weight: bold;
+}
+.tag {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 5px;
+  &.success {
+    background: #67C23A;
+  }
+  &.warning {
+    background: #F56C6C;
+  }
+  &.primary {
+    background: #409EFF;
+  }
 }
 </style>

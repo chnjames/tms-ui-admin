@@ -40,7 +40,7 @@
 
     <!-- 列表 -->
     <el-table ref="materialDemandRef" v-loading="loading" :data="list">
-      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column type="selection" :selectable="compSelection" width="55" align="center"/>
       <el-table-column label="物料编号" align="center" prop="materialCode" />
       <el-table-column label="物料名称" align="center" prop="materialName" />
       <el-table-column label="规格型号" align="center" prop="materialSpecs" />
@@ -50,6 +50,11 @@
       <el-table-column label="需求发起人" align="center">
         <template v-slot="{row}">
           <span>{{row.creator.nickname || '-'}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center">
+        <template v-slot="{row}">
+          <span class="status" :class="row.statusColor">{{row.statusName}}</span>
         </template>
       </el-table-column>
       <el-table-column label="需求发起时间" align="center">
@@ -112,6 +117,7 @@ import {
   getDemandPage
 } from '@/api/warehouse/material'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: "MaterialDemand",
@@ -140,6 +146,8 @@ export default {
       categoryList: [],
       // 规格型号列表
       specList: [],
+      // 物料需求状态列表
+      statusList: getDictDatas(DICT_TYPE.WAREHOUSE_MATERIAL_DEMAND_STATUS),
       // 是否只读
       isReadonly: false,
       // 查询参数
@@ -201,10 +209,27 @@ export default {
       this.loading = true;
       // 执行查询
       getDemandPage(this.queryParams).then(response => {
-        this.list = response.data.list;
-        this.total = response.data.total;
+        const { list, total } = response.data;
+        const statusLookup = this.statusList.reduce((lookup, status) => {
+          lookup[status.value] = {
+            label: status.label,
+            color: status.colorType
+          };
+          return lookup;
+        }, {});
+        list.forEach(item => {
+          const {label, color} = statusLookup[item.status];
+          item.statusName = label;
+          item.statusColor = color;
+        });
+        this.list = list;
+        this.total = total;
         this.loading = false;
       });
+    },
+    /** 限制list列表多选 */
+    compSelection(row) {
+      return row.status === 0;
     },
     /** 清除品牌 */
     bindBrandClear() {
@@ -308,3 +333,13 @@ export default {
   }
 };
 </script>
+<style lang="scss" scoped>
+.status {
+  &.danger {
+    color: #f56c6c;
+  }
+  &.info {
+    color: #909399;
+  }
+}
+</style>
