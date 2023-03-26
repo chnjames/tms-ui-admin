@@ -33,11 +33,26 @@
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list">
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="采购(PN)单号" align="center" prop="PN单号" />
+      <el-table-column label="采购(PN)单号" align="center" prop="pnCode" />
       <el-table-column label="采购总金额" align="center" prop="name" />
-      <el-table-column label="采购负责人" align="center" prop="brand" />
-      <el-table-column label="采购发起时间" align="center" prop="category" />
-      <el-table-column label="采购合同" align="center" prop="specs" />
+      <el-table-column label="采购负责人" align="center">
+        <template v-slot="{row}">
+          <span>{{row.creator.nickname || '-'}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="采购发起时间" align="center">
+        <template v-slot="{row}">
+          <span>{{ parseTime(row.createTime) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="采购合同" align="center">
+      <!-- status 0=未发起采购 1=未上传合同 2=已上传合同 -->
+        <template v-slot="{row}">
+          <span v-if="row.status === 0">未发起采购</span>
+          <span v-else-if="row.status === 1">未上传合同</span>
+          <span v-else-if="row.status === 2">已上传合同</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"

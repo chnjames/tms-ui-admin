@@ -24,10 +24,6 @@
     <!-- 操作工具栏 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['warehouse:material:create']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleCreatePurchase"
                    v-hasPermi="['warehouse:material:create']">创建采购单</el-button>
       </el-col>
@@ -46,7 +42,7 @@
       <el-table-column label="规格型号" align="center" prop="materialSpecs" />
       <el-table-column label="品牌" align="center" prop="materialBrand" />
       <el-table-column label="物料类别" align="center" prop="materialCategory" />
-      <el-table-column label="需求数量" align="center" prop="demand" />
+      <el-table-column label="需求数量" align="center" prop="count" />
       <el-table-column label="需求发起人" align="center">
         <template v-slot="{row}">
           <span>{{row.creator.nickname || '-'}}</span>
@@ -68,38 +64,63 @@
                 @pagination="getList"/>
 
     <!-- 对话框(添加 / 修改) -->
-    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-        <el-form-item label="物料编码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入物料编码" />
-        </el-form-item>
-        <el-form-item label="物料名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入物料名称" />
-        </el-form-item>
-        <el-form-item label="物料品牌" prop="brand">
-          <el-select v-model="form.brand" filterable allow-create default-first-option placeholder="请选择物料品牌"
-                     style="width: 100%">
-            <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="物料类别" prop="category">
-          <el-select v-model="form.category" :disabled="isReadonly" filterable allow-create default-first-option placeholder="请选择物料类别"
-                     style="width: 100%">
-            <el-option v-for="(item, index) in categoryList" :key="index" :label="item.category" :value="item.category" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="物料规格型号" prop="specs">
-          <el-autocomplete style="width: 100%" value-key="specs" v-model="form.specs" :fetch-suggestions="querySearch" placeholder="请输入物料规格型号" :trigger-on-focus="false" @select="handleSelect"></el-autocomplete>
-        </el-form-item>
-        <el-form-item label="物料库存预警" prop="warnStock">
-          <el-input-number style="width: 100%" v-model="form.warnStock" controls-position="right" :min="0"></el-input-number>
-        </el-form-item>
+    <el-dialog :title="title" :visible.sync="open" width="900px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" inline>
+        <div class="flex-between">
+          <el-form-item label="采购负责人" prop="blameId">
+            <el-select v-model="form.blameId" style="width: 100%" placeholder="请选择采购负责人">
+              <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                         :value="parseInt(item.id)"/>
+            </el-select>
+          </el-form-item>
+          <el-button type="primary" icon="el-icon-plus" size="mini" @click="submitForm(1)">发起采购</el-button>
+        </div>
+        <el-divider />
+        <el-table ref="materialRef" :show-summary="showSummary" :summary-method="getSumPrice" :data="form.items" style="width: 100%">
+          <el-table-column label="物料编号" align="center" prop="materialCode" :width="100" />
+          <el-table-column label="物料名称" align="center" prop="materialName" :width="100" />
+          <el-table-column label="规格型号" align="center" prop="materialSpecs" :width="160" />
+          <el-table-column label="品牌" align="center" prop="materialBrand" :width="100" />
+          <el-table-column label="物料类别" align="center" prop="materialCategory" :width="100" />
+          <el-table-column label="供应商" align="center" :width="160">
+            <template v-slot="{row, $index}">
+              <el-form-item :prop="`items.${$index}.supplierId`" :rules="rules.supplierId">
+                <el-select v-model="row.supplierId" placeholder="请选择">
+                  <el-option v-for="(item, index) in supplierList" :key="index" :label="item.name" :value="item.id" />
+                </el-select>
+              </el-form-item>
+            </template>
+          </el-table-column>
+          <el-table-column label="需求发起人" align="center" :width="100">
+            <template v-slot="{row}">
+              <span>{{row.demander || '-'}}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="历史平均价格" align="center" :width="100">
+            <template v-slot="{row}">
+              <span>{{row.historyPrice || '-'}}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="单购价格" align="center" :width="140">
+            <template v-slot="{row, $index}">
+              <el-form-item :prop="`items.${$index}.price`" :rules="rules.price">
+                <el-input v-model="row.price" placeholder="请输入" />
+              </el-form-item>
+            </template>
+          </el-table-column>
+          <el-table-column label="需求数量" align="center" prop="count" :width="100" />
+          <el-table-column label="总价" align="center" prop="totalPrice" :width="120">
+            <template v-slot="{row}">
+              <span>{{row.totalPrice}}</span>
+            </template>
+          </el-table-column>
+        </el-table>
       </el-form>
-      <template slot="footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+      <span slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-      </template>
-    </drawer-plus>
+        <el-button type="primary" @click="submitForm(0)">保 存</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -108,22 +129,17 @@ import {
   getBrandList,
   getCategoryList,
   getSpecList,
-  createMaterial,
-  updateMaterial,
-  deleteMaterial,
-  getMaterial,
-  getMaterialPage,
   exportMaterialExcel,
   getDemandPage
 } from '@/api/warehouse/material'
-import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
+import { getSupplierSimpleList } from '@/api/config/supplier'
+import { getMaterialBuyingAvgPrice, createMaterialBuying } from '@/api/warehouse/materialBuying'
+import store from '@/store'
+import { listSimpleUsers } from '@/api/system/user'
 
 export default {
   name: "MaterialDemand",
-  components: {
-    DrawerPlus
-  },
   data() {
     return {
       // 遮罩层
@@ -146,6 +162,10 @@ export default {
       categoryList: [],
       // 规格型号列表
       specList: [],
+      // 供应商列表
+      supplierList: [],
+      // 用户列表
+      userList: [],
       // 物料需求状态列表
       statusList: getDictDatas(DICT_TYPE.WAREHOUSE_MATERIAL_DEMAND_STATUS),
       // 是否只读
@@ -158,34 +178,61 @@ export default {
         brand: null,
         category: null
       },
+      // 物料ID列表
+      ids: null,
+      // 是否合并计算
+      showSummary: true,
       // 表单参数
       form: {
-        id: null,
-        name: null,
-        code: null,
-        brand: null,
-        category: null,
-        specs: null,
-        warnStock: 0
+        blameId: null,
+        action: null,
+        items: [
+          {
+            demandId: null,
+            price: null,
+            supplierId: null
+          }
+        ]
       },
       // 表单校验
       rules: {
-        name: [{ required: true, message: "物料名称不能为空", trigger: "blur" }],
-        code: [{ required: true, message: "物料编码不能为空", trigger: "blur" }],
-        brand: [{ required: true, message: "物料品牌不能为空", trigger: "blur" }],
-        category: [{ required: true, message: "物料类别不能为空", trigger: "blur" }],
-        specs: [{ required: true, message: "物料规格型号不能为空", trigger: "blur" }],
-        warnStock: [{ required: true, message: "物料库存预警不能为空", trigger: "blur", type: "number" }],
+        blameId: { required: true, message: "责任人不能为空", trigger: "change" },
+        supplierId: { required: true, message: "供应商不能为空", trigger: "change" },
+        price: { required: true, message: "单购价格不能为空", trigger: "blur" }
       }
     };
+  },
+  watch: {
+    form: {
+      handler(val) {
+        val.items.forEach(item => {
+          item.price = item.price || '';
+          item.count = item.count || '';
+          item.totalPrice = item.price * item.count;
+        });
+        this.showSummary = false;
+        this.$nextTick().then(() => {
+          this.showSummary = true;
+        })
+      },
+      deep: true
+    }
   },
   created() {
     this.getList();
     this.getBrandList();
     this.getCategoryList();
     this.getSpecList();
+    this.getSupplierSimpleList();
+    this.getUserList();
   },
   methods: {
+    /** 用户列表 */
+    getUserList() {
+      listSimpleUsers().then(response => {
+        this.userList = response.data
+      })
+    },
     /** 品牌列表 */
     getBrandList() {
       getBrandList().then(response => {
@@ -202,6 +249,12 @@ export default {
     getSpecList() {
       getSpecList().then(response => {
         this.specList = response.data;
+      });
+    },
+    /** 获取供应商精简信息列表 */
+    getSupplierSimpleList() {
+      getSupplierSimpleList().then(response => {
+        this.supplierList = response.data;
       });
     },
     /** 查询列表 */
@@ -275,44 +328,80 @@ export default {
       this.queryParams.pageNo = 1;
       this.getList();
     },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset();
-      this.isReadonly = false;
-      this.open = true;
-      this.title = "添加物料";
-    },
     /** 创建采购单按钮操作 */
     handleCreatePurchase() {
       const arr = this.$refs.materialDemandRef.selection;
-      console.log(arr);
+      if (arr.length === 0) {
+        this.$modal.msgWarning("请选择物料");
+        return;
+      }
+      this.ids = arr.map(item => item.id).join(",")
+      this.getMaterialBuyingAvgPrice();
+    },
+    /** 获得物料采购均价 */
+    getMaterialBuyingAvgPrice() {
+      getMaterialBuyingAvgPrice({
+        demandIds: this.ids
+      }).then(response => {
+        const { data } = response;
+        data.map(item => {
+          item.materialCode = item.materialAvg.material.code;
+          item.materialName = item.materialAvg.material.name;
+          item.materialSpecs = item.materialAvg.material.specs;
+          item.materialBrand = item.materialAvg.material.brand;
+          item.materialCategory = item.materialAvg.material.category;
+          item.demander = item.demander.nickname;
+          item.historyPrice = item.materialAvg.avg;
+        });
+        const userId = store.getters.userId;
+        this.form = {
+          blameId: userId,
+          action: 0,
+          items: data
+        };
+        this.open = true;
+        this.title = "编辑物料采购清单";
+      });
+    },
+    /** 表尾合计 */
+    getSumPrice(param) {
+      const { columns, data } = param
+      const len = columns.length
+      const sums = []
+      columns.forEach((column, index) => {
+        if (index === 0) {
+          sums[index] = '总计'
+        } else if (index === len - 1 || index === len - 2) {
+          const values = data.map(item => Number(item[column.property]))
+          if (!values.every(value => isNaN(value))) {
+            sums[index] = values.reduce((prev, curr) => {
+              const value = Number(curr)
+              if (!isNaN(value)) {
+                return prev + curr
+              } else {
+                return prev
+              }
+            }, 0)
+          } else {
+            sums[index] = 'N/A'
+          }
+        } else {
+          sums[index] = ''
+        }
+      })
+      return sums
     },
     /** 提交按钮 */
-    submitForm() {
+    submitForm(type) {
       this.$refs["form"].validate(valid => {
         if (!valid) {
           return;
         }
-        // 修改的提交
-        if (this.form.id != null) {
-          updateMaterial(this.form).then(response => {
-            this.$modal.msgSuccess("修改成功");
-            this.open = false;
-            this.getList();
-            this.getBrandList();
-            this.getCategoryList();
-            this.getSpecList();
-          });
-          return;
-        }
-        // 添加的提交
-        createMaterial(this.form).then(response => {
-          this.$modal.msgSuccess("新增成功");
+        this.form.action = type;
+        createMaterialBuying(this.form).then(() => {
+          this.$modal.msgSuccess(type === 0 ? "保存成功" : "发起成功");
           this.open = false;
           this.getList();
-          this.getBrandList();
-          this.getCategoryList();
-          this.getSpecList();
         });
       });
     },
@@ -340,6 +429,14 @@ export default {
   }
   &.info {
     color: #909399;
+  }
+}
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  :deep(.el-form-item) {
+    margin-bottom: 0;
   }
 }
 </style>

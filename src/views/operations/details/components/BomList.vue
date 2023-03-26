@@ -38,9 +38,9 @@
           <template v-else-if="item.prop === 'createTime'">
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
-          <template v-else-if="item.prop === 'demand'">
-            <el-input v-if="row.isSelected" v-model="row.demand" @focus="handleFocus(row)" @blur="handleBlur(row)" v-auto-focus></el-input>
-            <div style="cursor: pointer;" @click="handleDemand(row)" v-else>{{row.demand}}</div>
+          <template v-else-if="item.prop === 'count'">
+            <el-input v-if="row.isSelected" v-model="row.count" @focus="handleFocus(row)" @blur="handleBlur(row)" v-auto-focus></el-input>
+            <div style="cursor: pointer;" @click="handleDemand(row)" v-else>{{row.count}}</div>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
         </template>
@@ -66,8 +66,8 @@
             <el-table-column type="selection" :width="55" align="center" />
           </el-table>
         </el-form-item>
-        <el-form-item label="需求数量" prop="demand">
-          <el-input-number v-model="form.demand" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        <el-form-item label="需求数量" prop="count">
+          <el-input-number v-model="form.count" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -140,14 +140,15 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        name: null
+        name: null,
+        projectId: null
       },
       // 基础表头
       tableHeader: [
         { prop: 'materialCode', label: '物料编号' },
         { prop: 'materialName', label: '物料名称' },
         { prop: 'materialSpecs', label: '规格型号' },
-        { prop: 'demand', label: '需求数量' },
+        { prop: 'count', label: '需求数量' },
         { prop: 'statusDesc', label: '状态' },
         { prop: 'createTime', label: '添加时间' },
         { prop: 'operation', label: '操作' }
@@ -166,7 +167,7 @@ export default {
         projectId: undefined, // 项目id
         search: undefined, // 模糊查询
         materialId: undefined, // 物料id
-        demand: undefined // 需求数量
+        count: undefined // 需求数量
       },
       // 表单校验
       rules: {
@@ -175,7 +176,7 @@ export default {
           { required: true, message: '物料名称不能为空', trigger: 'blur' },
           { validator: validateSearch, trigger: 'blur' }
         ],
-        demand: { required: true, type: 'number', message: '需求数量不能为空', trigger: 'blur' }
+        count: { required: true, type: 'number', message: '需求数量不能为空', trigger: 'blur' }
       },
       // 任务指派列表
       taskAssignList: [
@@ -205,6 +206,11 @@ export default {
     this.getUserList()
     this.getDeptList()
   },
+  computed: {
+    proId() {
+      return this.$route.query.id
+    }
+  },
   methods: {
     /** 用户列表 */
     getUserList() {
@@ -231,6 +237,7 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
+      this.queryParams.projectId = this.proId;
       getBomList(this.queryParams).then(response => {
         const { data } = response || []
         data.map(item => {
@@ -284,7 +291,7 @@ export default {
         projectId: undefined,
         search: undefined,
         materialId: undefined,
-        demand: undefined // 需求数量
+        count: undefined // 需求数量
       }
       this.resetForm('form')
     },
@@ -336,14 +343,14 @@ export default {
     },
     /** 聚焦需求数量 */
     handleFocus(row) {
-      row.oldDemand = row.demand
+      row.oldDemand = row.count
     },
     /** 失焦需求数量 */
     handleBlur(row) {
       row.isSelected = !row.isSelected
-      if (row.demand !== row.oldDemand) {
+      if (row.count !== row.oldDemand) {
         updateBom({
-          demand: row.demand,
+          count: row.count,
           id: row.id
         }).then(() => {
           this.$message.success('修改需求数量成功')
