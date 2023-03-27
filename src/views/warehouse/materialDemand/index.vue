@@ -186,13 +186,11 @@ export default {
       form: {
         blameId: null,
         action: null,
-        items: [
-          {
-            demandId: null,
-            price: null,
-            supplierId: null
-          }
-        ]
+        items: [{
+          demandId: null,
+          price: null,
+          supplierId: null
+        }]
       },
       // 表单校验
       rules: {
@@ -313,14 +311,14 @@ export default {
     /** 表单重置 */
     reset() {
       this.form = {
-        id: undefined,
-        name: undefined,
-        code: undefined,
-        brand: undefined,
-        category: undefined,
-        specs: undefined,
-        warnStock: 0
-      };
+        blameId: null,
+        action: null,
+        items: [{
+          demandId: null,
+          price: null,
+          supplierId: null
+        }]
+      }
       this.resetForm("form");
     },
     /** 搜索按钮操作 */

@@ -45,7 +45,11 @@
           <span>{{ parseTime(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="采购合同" align="center" prop="statusDesc" />
+      <el-table-column label="采购合同" align="center" prop="status">
+        <template v-slot="{row}">
+          <el-tag :type="row.statusType" size="small">{{row.statusDesc}}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
@@ -143,9 +147,9 @@ export default {
       specList: [],
       // 采购状态列表
       materialBuyList: [
-        { label: "未发起采购", value: 0 },
-        { label: "未上传合同", value: 1 },
-        { label: "已上传合同", value: 2 }
+        { label: "未发起采购", value: 0, type: 'warning' },
+        { label: "未上传合同", value: 1, type: 'danger' },
+        { label: "已上传合同", value: 2, type: 'success' }
       ],
       // 是否只读
       isReadonly: false,
@@ -216,6 +220,7 @@ export default {
         const { list, total } = response.data;
         list.map(item => {
           item.statusDesc = this.materialBuyList.find(i => i.value === item.status).label
+          item.statusType = this.materialBuyList.find(i => i.value === item.status).type
           item.totalPrice = item.items.reduce((total, item) => {
             return total + item.price * item.count
           }, 0)
