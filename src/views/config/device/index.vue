@@ -60,7 +60,7 @@
             <template v-slot="scope">
               <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
                          v-hasPermi="['config:device:update']">编辑</el-button>
-              <el-button size="mini" type="text" icon="el-icon-document" @click="handleUpdate(scope.row)"
+              <el-button size="mini" type="text" icon="el-icon-document" @click="handleLogs(scope.row)"
                          v-hasPermi="['config:device:update']">设备日志</el-button>
               <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
                          v-hasPermi="['config:device:delete']">删除</el-button>
@@ -299,6 +299,10 @@ export default {
         this.open = true
         this.title = '修改设备'
       })
+    },
+    /** 设备日志按钮操作 */
+    handleLogs(row) {
+      console.log('设备日志按钮操作')
     },
     /** 提交按钮 */
     submitForm() {

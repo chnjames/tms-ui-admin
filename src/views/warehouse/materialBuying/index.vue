@@ -34,7 +34,7 @@
     <el-table v-loading="loading" :data="list">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="采购(PN)单号" align="center" prop="pnCode" />
-      <el-table-column label="采购总金额" align="center" prop="name" />
+      <el-table-column label="采购总金额" align="center" prop="totalPrice" />
       <el-table-column label="采购负责人" align="center">
         <template v-slot="{row}">
           <span>{{row.creator.nickname || '-'}}</span>
@@ -45,14 +45,7 @@
           <span>{{ parseTime(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="采购合同" align="center">
-      <!-- status 0=未发起采购 1=未上传合同 2=已上传合同 -->
-        <template v-slot="{row}">
-          <span v-if="row.status === 0">未发起采购</span>
-          <span v-else-if="row.status === 1">未上传合同</span>
-          <span v-else-if="row.status === 2">已上传合同</span>
-        </template>
-      </el-table-column>
+      <el-table-column label="采购合同" align="center" prop="statusDesc" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
@@ -113,7 +106,6 @@ import {
   updateMaterial,
   deleteMaterial,
   getMaterial,
-  getMaterialPage,
   exportMaterialExcel,
   getPurchasePage
 } from '@/api/warehouse/material'
@@ -149,6 +141,12 @@ export default {
       categoryList: [],
       // 规格型号列表
       specList: [],
+      // 采购状态列表
+      materialBuyList: [
+        { label: "未发起采购", value: 0 },
+        { label: "未上传合同", value: 1 },
+        { label: "已上传合同", value: 2 }
+      ],
       // 是否只读
       isReadonly: false,
       // 查询参数
@@ -215,8 +213,15 @@ export default {
       this.loading = true;
       // 执行查询
       getPurchasePage(this.queryParams).then(response => {
-        this.list = response.data.list;
-        this.total = response.data.total;
+        const { list, total } = response.data;
+        list.map(item => {
+          item.statusDesc = this.materialBuyList.find(i => i.value === item.status).label
+          item.totalPrice = item.items.reduce((total, item) => {
+            return total + item.price * item.count
+          }, 0)
+        });
+        this.list = list;
+        this.total = total;
         this.loading = false;
       });
     },

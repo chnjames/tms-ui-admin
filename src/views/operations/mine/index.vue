@@ -112,7 +112,6 @@ import {
   updateMaterial,
   deleteMaterial,
   getMaterial,
-  getMaterialPage,
   exportMaterialExcel
 } from '@/api/warehouse/material'
 import { timeFormat } from '@/utils'
@@ -129,7 +128,7 @@ export default {
     return {
       timeFormat,
       // 遮罩层
-      loading: true,
+      loading: false,
       // 导出遮罩层
       exportLoading: false,
       // 显示搜索条件
@@ -189,7 +188,7 @@ export default {
     };
   },
   created() {
-    this.getList();
+    // this.getList();
     this.getBrandList();
     this.getCategoryList();
     this.getSpecList();
@@ -214,7 +213,7 @@ export default {
       });
     },
     /** 查询列表 */
-    getList() {
+    /* getList() {
       this.loading = true;
       // 执行查询
       getMaterialPage(this.queryParams).then(response => {
@@ -222,11 +221,11 @@ export default {
         this.total = response.data.total;
         this.loading = false;
       });
-    },
+    }, */
     /** 切换Tabs */
     handleTask(tab, event) {
       console.log(tab, event);
-      this.getList();
+      // this.getList();
     },
     /** Row行详情 */
     handleRow(row, column, event) {
@@ -270,7 +269,7 @@ export default {
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNo = 1;
-      this.getList();
+      // this.getList();
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -301,7 +300,7 @@ export default {
           updateMaterial(this.form).then(response => {
             this.$modal.msgSuccess("修改成功");
             this.open = false;
-            this.getList();
+            // this.getList();
             this.getBrandList();
             this.getCategoryList();
             this.getSpecList();
@@ -312,7 +311,7 @@ export default {
         createMaterial(this.form).then(response => {
           this.$modal.msgSuccess("新增成功");
           this.open = false;
-          this.getList();
+          // this.getList();
           this.getBrandList();
           this.getCategoryList();
           this.getSpecList();
@@ -325,7 +324,7 @@ export default {
       this.$modal.confirm('是否确认删除物料基础数据编号为"' + id + '"的数据项?').then(function() {
         return deleteMaterial({id});
       }).then(() => {
-        this.getList();
+        // this.getList();
         this.getBrandList();
         this.getCategoryList();
         this.getSpecList();

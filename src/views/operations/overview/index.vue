@@ -18,7 +18,7 @@
         <el-form-item prop="status">
           <el-radio-group v-model="queryParams.status" @change="handleQuery">
             <el-radio-button :label="null">全部</el-radio-button>
-            <el-radio-button :label="item.value" v-for="(item, index) in this.getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_STATUS)" :key="index">{{item.label}}</el-radio-button>
+            <el-radio-button :label="item.value" v-for="(item, index) in statusList" :key="index">{{item.label}}</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item prop="timeScope">
@@ -63,24 +63,29 @@
       <!-- 列表 -->
       <el-table v-loading="loading" :data="list">
         <el-table-column label="项目名称" prop="name">
-          <template v-slot="scope">
-            <div class="project-name" @click.stop="bindProject(scope.row)">{{ scope.row.name }}</div>
+          <template v-slot="{row}">
+            <div class="project-name" @click.stop="bindProject(row)">{{ row.name }}</div>
           </template>
         </el-table-column>
         <el-table-column label="负责人" align="center" prop="header"/>
         <el-table-column label="项目类型" align="center" prop="typeDesc"/>
         <el-table-column label="开始时间" align="center" prop="beginTime"/>
         <el-table-column label="结束时间" align="center" prop="endTime"/>
+        <el-table-column label="状态" align="center" prop="status">
+          <template v-slot="{row}">
+            <el-tag size="mini" :type="row.statusColor">{{row.statusDesc}}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="项目进度" align="center" prop="progress">
           <template v-slot="{row}">
             <el-progress :percentage="row.progress > 100 ? 100 : row.progress" :color="row.progressColor" :format="progressFormat(row.progress)"></el-progress>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-          <template v-slot="scope">
-            <el-button size="mini" type="text" icon="el-icon-view" @click="handleUpdate(scope.row)"
+          <template v-slot="{row}">
+            <el-button size="mini" type="text" icon="el-icon-view" @click="bindProject(row)"
                        v-hasPermi="['warehouse:material:delete']">详情</el-button>
-            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
+            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['operations:project:delete']">删除</el-button>
           </template>
         </el-table-column>
@@ -158,7 +163,6 @@ import {
 createOverview,
 deleteOverview,
 exportOverviewExcel,
-getOverview,
 getOverviewPage,
 updateOverview
 } from '@/api/operations/overview'
@@ -201,6 +205,8 @@ export default {
       typeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_TYPE),
       // 项目文件业务类型列表
       fileBusinessTypeList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_FILE_BIZ_TYPE),
+      // 项目状态列表
+      statusList: getDictDatas(DICT_TYPE.OPERATIONS_PROJECT_STATUS),
       // 结束时间是否禁用
       isEndTime: false,
       // 设备列表
@@ -299,6 +305,8 @@ export default {
           item.endTime = this.parseTime(item.endTime, '{y}-{m}-{d}')
           item.header = item.blame.nickname
           item.typeDesc = this.typeList.find(type => parseInt(type.value) === item.type).label
+          item.statusDesc = this.statusList.find(status => parseInt(status.value) === item.status).label
+          item.statusColor = this.statusList.find(status => parseInt(status.value) === item.status).colorType
           item.progress = Math.floor((item.rate.current / item.rate.total) * 100)
           if (item.progress < 100) {
             if (item.endTime > new Date().getTime()) {
@@ -377,35 +385,6 @@ export default {
       this.reset()
       this.open = true
       this.title = '新建项目'
-    },
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.reset()
-      const id = row.id
-      getOverview(id).then(response => {
-        const { data } = response
-        data.blameId = data.blame.id
-        data.followerIds = data.followers.map(item => item.id)
-        data.period = this.periodList.find(item => item.value === (data.endTime - data.beginTime))?.value || 0;
-        this.isEndTime = data.period !== 0;
-        this.form = {
-          id: data.id,
-          type: data.type,
-          name: data.name, // 项目名称
-          blameId: data.blameId,
-          followerIds: data.followerIds, // 内部关注人
-          deviceCode: data.deviceCode, // 设备编号
-          beginTime: data.beginTime,
-          period: data.period, // 任务周期
-          endTime: data.endTime
-        }
-        if (data.device) {
-          this.form.device = data.device.id
-          this.form.code = data.device.code
-        }
-        this.open = true
-        this.title = '修改项目'
-      })
     },
     /** 提交按钮 */
     submitForm() {

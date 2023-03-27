@@ -7,7 +7,6 @@
 </template>
 
 <script>
-// import api from '/@/api';
 //引入tinymce编辑器
 import tinymce from 'tinymce/tinymce';
 import Editor from '@tinymce/tinymce-vue';
@@ -41,8 +40,11 @@ import 'tinymce/plugins/table'; // 表格
 import 'tinymce/plugins/template'; // 模板
 import 'tinymce/plugins/visualblocks'; // 显示隐藏的区块
 import 'tinymce/plugins/visualchars'; // 显示隐藏的字符
-import 'tinymce/plugins/wordcount';
-import { getAccessToken } from '@/utils/auth' // 字数统计
+import 'tinymce/plugins/wordcount'; // 字数统计
+
+import {
+  uploadFile
+} from '@/api/operations/overview'
 
 export default {
   name: 'TinymceEditor',
@@ -87,6 +89,7 @@ export default {
   },
   computed: {
     initOptions() {
+      const projectId = this.proId
       return {
         language: 'zh-Hans',
         language_url: '/tinymce/langs/zh-Hans.js',
@@ -122,15 +125,9 @@ export default {
           } else {
             let formData = new FormData()
             formData.append('file', blobInfo.blob())
-            this.$axios({
-              method: 'post',
-              url: '/infra/file/upload',
-              data: formData,
-              headers: {
-                'Authorization': "Bearer " + getAccessToken(),
-                'Content-Type': 'multipart/form-data'
-              }
-            }).then(res => {
+            formData.append('projectId', projectId)
+            uploadFile(formData).then(res => {
+              console.log(res)
               if (res.data.code === 200) {
                 success(res.data.data)
               } else {
@@ -143,6 +140,9 @@ export default {
         }
       }
     },
+    proId() {
+      return this.$route.query.id
+    }
   },
   watch: {
     //监听内容变化

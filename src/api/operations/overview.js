@@ -187,4 +187,12 @@ export function updateBom(data) {
     data
   })
 }
+// 富文本文件上传
+export function uploadFile(data) {
+  return request({
+    url: '/operations/project-bom/upload',
+    method: 'post',
+    data
+  })
+}
 
