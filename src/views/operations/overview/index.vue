@@ -412,8 +412,9 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const id = row.id
-      this.$modal.confirm('是否确认删除物料基础数据编号为"' + id + '"的数据项?').then(function() {
-        return deleteOverview({ id })
+      const name = row.name
+      this.$modal.confirm('是否确认删除项目名称为"' + name + '"的数据项?').then(function() {
+        return deleteOverview(id)
       }).then(() => {
         this.getList()
         this.$modal.msgSuccess('删除成功')
