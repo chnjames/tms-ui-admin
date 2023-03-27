@@ -3,38 +3,44 @@
     <!-- 操作工具栏 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAddEdit"
+        <el-button :disabled="payStatus === 1" type="primary" plain icon="el-icon-plus" size="mini" @click="handleAddEdit"
                    v-hasPermi="['config:factory-area:create']">编辑</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button :disabled="!payInfo.blameId || payStatus === 1" type="primary" plain icon="el-icon-position" size="mini" @click="handleInitiate"
+                   v-hasPermi="['config:factory-area:create']">启动收款</el-button>
       </el-col>
       <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>
     <!--基本/收款信息-->
-    <el-empty v-if="!payInfo.blameId" description="暂无数据"></el-empty>
-    <template v-else>
-      <el-row type="flex" :gutter="20">
-        <el-col :span="12">
-          <el-card shadow="never" class="pay-card">
-            <div slot="header">
-              <div class="header">基本信息</div>
-            </div>
-            <div class="essential"><span>合同总金额(RMB)：</span>{{payInfo.amount}}</div>
-            <div class="essential"><span>收款负责人：</span>{{payInfo.blameName}}</div>
-            <div class="essential"><span>联系人(客户)：</span>{{payInfo.contactName}}</div>
-            <div class="essential"><span>客户所在公司：</span>{{payInfo.customerName}}</div>
-          </el-card>
-        </el-col>
-        <el-col :span="12">
-          <el-card shadow="never" class="pay-card">
-            <div slot="header">
-              <div class="header">收款信息</div>
-            </div>
-            <el-steps direction="vertical" :active="1" :space="80">
-              <el-step :title="item.title" :description="item.description" v-for="(item, index) in payInfo.items" :status="item.status" :key="index"></el-step>
-            </el-steps>
-          </el-card>
-        </el-col>
-      </el-row>
-    </template>
+    <div v-loading="payLoading">
+      <el-empty v-if="!payInfo.blameId" description="暂无数据"></el-empty>
+      <template v-else>
+        <el-row type="flex" :gutter="20">
+          <el-col :span="12">
+            <el-card shadow="never" class="pay-card">
+              <div slot="header">
+                <div class="header">基本信息</div>
+              </div>
+              <div class="essential"><span>合同总金额(RMB)：</span>{{payInfo.amount}}</div>
+              <div class="essential"><span>收款负责人：</span>{{payInfo.blameName}}</div>
+              <div class="essential"><span>联系人(客户)：</span>{{payInfo.contactName}}</div>
+              <div class="essential"><span>客户所在公司：</span>{{payInfo.customerName}}</div>
+            </el-card>
+          </el-col>
+          <el-col :span="12">
+            <el-card shadow="never" class="pay-card">
+              <div slot="header">
+                <div class="header">收款信息</div>
+              </div>
+              <el-steps direction="vertical" :active="1" :space="80">
+                <el-step :title="item.title" :description="item.description" v-for="(item, index) in payInfo.items" :status="item.status" :key="index"></el-step>
+              </el-steps>
+            </el-card>
+          </el-col>
+        </el-row>
+      </template>
+    </div>
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="600" append-to-body>
       <el-form class="form" ref="form" :model="form" :rules="rules" label-width="120px">
@@ -89,13 +95,12 @@
 </template>
 
 <script>
-import { createReceipt, getReceipt } from '@/api/operations/overview'
+import { createReceipt, getReceipt, startReceipt } from '@/api/operations/overview'
 import { getCustomerContactSimpleList } from '@/api/config/customer'
 import { listSimpleUsers } from '@/api/system/user'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
 import { parseTime } from '@/utils/ruoyi'
-import { formatMoney, unFormatMoney } from '@/utils'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
@@ -115,6 +120,8 @@ export default {
       open: false,
       // 新增/修改标识
       isBlameId: undefined,
+      // 加载中
+      payLoading: false,
       // 用户列表
       userList: [],
       // 联系人列表
@@ -127,6 +134,7 @@ export default {
         pageNo: 1,
         pageSize: 10
       },
+      payStatus: undefined, // 启动收款状态
       // 收款详情
       payInfo: {
         contactId: undefined, // 联系人
@@ -159,6 +167,7 @@ export default {
       rules: {
         contactId: { required: true, message: '请选择联系人', trigger: 'change'},
         amount: { required: true, type: 'number', message: '请输入合同总金额', trigger: 'blur'},
+        blameId: { required: true, message: '请选择收款负责人', trigger: 'change'},
         title: { required: true, message: '请输入收款名目', trigger: 'blur'},
         startTime: { required: true, message: '请选择收款日期', trigger: 'change'},
         scale: { required: true, type: 'number', message: '请输入收款比例', trigger: 'blur'}
@@ -192,24 +201,27 @@ export default {
     }
   },
   // 获取路由参数
-  created() {
-    this.getUserList()
-    this.getCustomerContactSimpleList()
-    this.getReceipt()
+  async created() {
+    this.payLoading = true
+    const [userListData, customerContactListData] = await Promise.all([listSimpleUsers(), getCustomerContactSimpleList()])
+    this.userList = userListData.data
+    this.customerContactList = customerContactListData.data
+    await this.getReceipt()
+    this.payLoading = false
   },
   methods: {
     /** 收款负责人列表 */
-    getUserList() {
+    /* getUserList() {
       listSimpleUsers().then(response => {
         this.userList = response.data
       })
-    },
+    }, */
     /** 联系人列表 */
-    getCustomerContactSimpleList() {
+    /* getCustomerContactSimpleList() {
       getCustomerContactSimpleList().then(response => {
         this.customerContactList = response.data
       })
-    },
+    }, */
     /** 选择联系人 */
     bindContact(val) {
       this.form.customerName = this.customerContactList.find(item => item.id === val).customerName
@@ -218,18 +230,19 @@ export default {
     getReceipt() {
       getReceipt(this.proId).then(response => {
         const { data } = response
+        this.payStatus = data.status
         data.items?.map(item => {
           let { startTime, amount } = item
           startTime = parseTime(startTime, '{y}-{m}-{d}')
           item.scale = ((amount / data.amount) * 100).toFixed(2)
           item.amount = item.amount ? (item.amount / 100).toFixed(2) - 0 : ''
-          item.description = `${startTime} ${item.scale}% ${amount}`
+          item.description = `${startTime} ${item.scale}% ${item.amount}`
           item.status = this.statusList.find(e => parseInt(e.value) === item.status).cssClass || ''
         }) || (this.form.items = [])
         data.amount = data.amount ? (data.amount / 100).toFixed(2) - 0 : ''
-        data.blameName = data.blameId ? this.userList.find(item => parseInt(item.id) === data.blameId).nickname : ''
-        data.contactName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId).name : ''
-        data.customerName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId).customerName : ''
+        data.blameName = data.blameId ? this.userList.find(item => parseInt(item.id) === data.blameId)?.nickname : ''
+        data.contactName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId)?.name : ''
+        data.customerName = data.contactId ? this.customerContactList.find(item => item.id === data.contactId)?.customerName : ''
         this.payInfo = data
       })
     },
@@ -268,6 +281,19 @@ export default {
       }
       this.open = true
       this.title = "编辑"
+    },
+    /** 启动收款按钮操作 */
+    handleInitiate() {
+      this.$confirm('确认启动收款吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        startReceipt(this.proId).then(response => {
+          this.$modal.msgSuccess('启动成功')
+          this.getReceipt()
+        })
+      })
     },
     /** 取消按钮 */
     cancel() {

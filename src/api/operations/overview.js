@@ -129,11 +129,11 @@ export function getReceipt(id) {
   })
 }
 // 启动收款项
-export function startReceipt(id) {
+export function startReceipt(projectId) {
   return request({
     url: '/operations/payment/start',
     method: 'post',
-    data: { id }
+    data: { projectId }
   })
 }
 
@@ -190,7 +190,7 @@ export function updateBom(data) {
 // 富文本文件上传
 export function uploadFile(data) {
   return request({
-    url: '/operations/project-bom/upload',
+    url: '/operations/project/rich-text/file/upload',
     method: 'post',
     data
   })

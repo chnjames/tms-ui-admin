@@ -34,7 +34,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="任务类型:">
+            <el-form-item label="项目类型:">
               <div>{{ form.typeDesc }}</div>
             </el-form-item>
           </el-col>
@@ -115,16 +115,16 @@ export default {
       isEditing: false,
       // tab列表
       tabList: [],
-      // tab列表 tabsType: 1: 设备维保 2: 项目管理 & 生产管理
+      // tab列表 tabsType: 2: 设备维保 1: 项目管理 & 生产管理
       tabsList: [
-        { label: '任务描述', name: '1', component: 'ComTinymceEditor', content: '' },
-        { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 1 },
-        { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 1 },
-        { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 2 },
+        { label: '项目描述', name: '1', component: 'ComTinymceEditor', content: '' },
+        { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 2 },
+        { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 2 },
+        { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 1 },
         { label: '文档附件', name: '3', component: 'DocAppendix' },
-        { label: 'BOM清单', name: '4', component: 'BomList', tabsType: 2 },
-        { label: '合同管理', name: '5', component: 'ContractManage', tabsType: 2 },
-        { label: '收款管理', name: '6', component: 'PayManage', tabsType: 2 }
+        { label: 'BOM清单', name: '4', component: 'BomList', tabsType: 1 },
+        { label: '合同管理', name: '5', component: 'ContractManage', tabsType: 1 },
+        { label: '收款管理', name: '6', component: 'PayManage', tabsType: 1 }
       ],
       // 用户列表
       userList: [],

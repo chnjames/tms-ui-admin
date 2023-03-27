@@ -128,10 +128,10 @@ export default {
             formData.append('projectId', projectId)
             uploadFile(formData).then(res => {
               console.log(res)
-              if (res.data.code === 200) {
-                success(res.data.data)
+              if (res.code === 0) {
+                success(res.data)
               } else {
-                failure(res.data.msg)
+                failure(res.msg)
               }
             }).catch(err => {
               failure(err)

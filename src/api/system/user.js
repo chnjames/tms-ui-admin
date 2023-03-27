@@ -11,10 +11,11 @@ export function listUser(query) {
 }
 
 // 获取用户精简信息列表
-export function listSimpleUsers() {
+export function listSimpleUsers(query) {
   return request({
     url: '/system/user/list-all-simple',
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 

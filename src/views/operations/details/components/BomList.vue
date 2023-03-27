@@ -11,7 +11,7 @@
                    v-hasPermi="['config:factory-area:create']">发起出库</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入任务名称" clearable
+        <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入物料名称" clearable
                   @keyup.enter.native="handleQuery"/>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -30,7 +30,7 @@
           <template v-if="item.prop === 'operation'">
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['config:factory-area:delete']"
-                       :disabled="row.status === 2">删除</el-button>
+                       :disabled="!(row.status === 0 || row.status === 3)">删除</el-button>
             <el-button size="mini" type="text" icon="el-icon-s-promotion" @click="bindPurchase(row)"
                        v-hasPermi="['config:factory-area:update']"
                        :disabled="row.status !== 3">发起采购</el-button>
@@ -40,7 +40,9 @@
           </template>
           <template v-else-if="item.prop === 'count'">
             <el-input v-if="row.isSelected" v-model="row.count" @focus="handleFocus(row)" @blur="handleBlur(row)" v-auto-focus></el-input>
-            <div style="cursor: pointer;" @click="handleDemand(row)" v-else>{{row.count}}</div>
+            <template v-else>
+              <el-link :type="(row.status === 0 || row.status === 3)  ? 'primary': ''" :underline="(row.status === 0 || row.status === 3)" @click="handleDemand(row)">{{row.count}}</el-link>
+            </template>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
         </template>
@@ -80,10 +82,10 @@
     <drawer-plus :title="initiateTitle" :visible.sync="initiateOpen" :size="550" append-to-body>
       <el-form ref="initiateForm" :model="initiateForm" :rules="initiateRules" label-width="100px">
         <el-form-item label="指定部门" prop="deptId">
-          <tree-select v-model="initiateForm.deptId" :options="deptList" :show-count="true" :clearable="false"
+          <tree-select @select="bindDept" v-model="initiateForm.deptId" :options="deptList" :show-count="true" :clearable="false"
                        placeholder="请选择指定部门" :normalizer="normalizer" />
         </el-form-item>
-        <el-form-item label="指定负责人" prop="blameId">
+        <el-form-item label="指定负责人">
           <el-select v-model="initiateForm.blameId" style="width: 100%" placeholder="请选择指定负责人">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
@@ -196,14 +198,12 @@ export default {
       },
       // 表单校验
       initiateRules: {
-        deptId: { required: true, message: '指定部门不能为空', trigger: 'change' },
-        blameId: { required: true, message: '指定负责人不能为空', trigger: 'change' }
+        deptId: { required: true, message: '指定部门不能为空', trigger: 'change' }
       }
     }
   },
   created() {
     this.getList()
-    this.getUserList()
     this.getDeptList()
   },
   computed: {
@@ -213,8 +213,8 @@ export default {
   },
   methods: {
     /** 用户列表 */
-    getUserList() {
-      listSimpleUsers().then(response => {
+    getUserList(deptId) {
+      listSimpleUsers({deptId}).then(response => {
         this.userList = response.data
       })
     },
@@ -242,6 +242,7 @@ export default {
         const { data } = response || []
         data.map(item => {
           item.statusDesc = this.bomStatusList.find(i => parseInt(i.value) === item.status).label
+          console.log(this.bomStatusList)
           item.isSelected = false
         })
         this.list = data;
@@ -337,8 +338,6 @@ export default {
       // 未出库、库存不足才可以修改
       if (row.status === 0 || row.status === 3) {
         row.isSelected = !row.isSelected
-      } else {
-        this.$message.warning(`${row.statusDesc}不可修改`)
       }
     },
     /** 聚焦需求数量 */
@@ -374,7 +373,6 @@ export default {
     },
     /** 模糊查询 */
     handleSearch() {
-      console.log(this.form)
       this.getMaterialList(this.form.search)
     },
     /** 单选物料名称 */
@@ -414,6 +412,11 @@ export default {
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })
+    },
+    // 根据部门获取负责人
+    bindDept(item) {
+      this.initiateForm.blameId = undefined
+      this.getUserList(item.id)
     },
     // 格式化部门的下拉框
     normalizer(node) {

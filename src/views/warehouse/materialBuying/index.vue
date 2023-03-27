@@ -51,12 +51,12 @@
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template v-slot="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
+        <template v-slot="{row}">
+          <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
                      v-hasPermi="['warehouse:material:update']">编辑</el-button>
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleDetail(scope.row)"
+          <el-button :disabled="row.status === 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row)"
                      v-hasPermi="['warehouse:material:update']">详情</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
+          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                      v-hasPermi="['warehouse:material:delete']">删除</el-button>
         </template>
       </el-table-column>

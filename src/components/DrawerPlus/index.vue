@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-drawer v-bind="$attrs" v-on="$listeners" :before-close="handleClose">
+    <el-drawer v-bind="$attrs" v-on="$listeners">
       <el-scrollbar class="scrollbar">
         <div class="content">
           <slot/>

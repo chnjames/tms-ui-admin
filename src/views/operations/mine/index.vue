@@ -23,7 +23,8 @@
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
                    v-hasPermi="['warehouse:material:export']">导出</el-button>
       </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      <!--<right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>-->
+      <right-toolbar :showSearch.sync="showSearch"></right-toolbar>
     </el-row>
     <el-tabs v-model="taskType" @tab-click="handleTask">
       <el-tab-pane v-for="item in taskTypeList" :key="item.name" :label="item.label" :name="item.name" />
@@ -52,8 +53,9 @@
     </el-table>
 
     <!-- 分页组件 -->
-    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
-                @pagination="getList"/>
+    <!--<pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"-->
+    <!--            @pagination="getList"/>-->
+    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize" />
 
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
