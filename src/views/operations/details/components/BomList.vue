@@ -151,6 +151,7 @@ export default {
         { prop: 'materialName', label: '物料名称' },
         { prop: 'materialSpecs', label: '规格型号' },
         { prop: 'count', label: '需求数量' },
+        { prop: 'stock', label: '库存数量' },
         { prop: 'statusDesc', label: '状态' },
         { prop: 'createTime', label: '添加时间' },
         { prop: 'operation', label: '操作' }
@@ -242,7 +243,6 @@ export default {
         const { data } = response || []
         data.map(item => {
           item.statusDesc = this.bomStatusList.find(i => parseInt(i.value) === item.status).label
-          console.log(this.bomStatusList)
           item.isSelected = false
         })
         this.list = data;

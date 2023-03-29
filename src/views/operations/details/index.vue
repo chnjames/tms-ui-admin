@@ -218,9 +218,14 @@ export default {
         }
         this.form = data
         this.copyForm = JSON.parse(JSON.stringify(data))
-        this.tabList = this.tabsList.filter(tab => (
-          !tab.tabsType || tab.tabsType === parseInt(this.proType)
-        ))
+        const proType = parseInt(this.proType)
+        this.tabList = this.tabsList.filter(tab => {
+          if (proType === 0 || proType === 1) {
+            return !tab.tabsType || tab.tabsType === 1
+          } else {
+            return !tab.tabsType || tab.tabsType === 2
+          }
+        })
         this.tabList.find(tab => tab.name === '1').content = data.description || ''
         this.projectLoading = false
       })

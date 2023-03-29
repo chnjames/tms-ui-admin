@@ -120,7 +120,7 @@
         <el-form-item v-if="form.type === 1" label="项目类型">
           <div>流程型(子任务顺序执行)</div>
         </el-form-item>
-        <el-form-item label="标题" prop="name">
+        <el-form-item v-if="form.type !== 2" label="标题" prop="name">
           <el-input v-model="form.name" placeholder="给目标起个名字"/>
         </el-form-item>
         <el-form-item label="负责人" prop="blameId">
