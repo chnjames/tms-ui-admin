@@ -20,12 +20,7 @@
     <!-- 操作工具栏 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['warehouse:material:create']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
-                   v-hasPermi="['warehouse:material:export']">导出</el-button>
+        <el-button plain icon="el-icon-delete" size="mini" v-hasPermi="['config:device:create']">批量删除</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -52,9 +47,9 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="{row}">
-          <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
+          <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row, 1)"
                      v-hasPermi="['warehouse:material:update']">编辑</el-button>
-          <el-button :disabled="row.status === 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row)"
+          <el-button :disabled="row.status === 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row, 2)"
                      v-hasPermi="['warehouse:material:update']">详情</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                      v-hasPermi="['warehouse:material:delete']">删除</el-button>
@@ -64,63 +59,22 @@
     <!-- 分页组件 -->
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
                 @pagination="getList"/>
-
     <!-- 对话框(添加 / 修改) -->
-    <drawer-plus :title="title" :visible.sync="open" :size="500" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-        <el-form-item label="物料编码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入物料编码" />
-        </el-form-item>
-        <el-form-item label="物料名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入物料名称" />
-        </el-form-item>
-        <el-form-item label="物料品牌" prop="brand">
-          <el-select v-model="form.brand" filterable allow-create default-first-option placeholder="请选择物料品牌"
-                     style="width: 100%">
-            <el-option v-for="(item, index) in brandList" :key="index" :label="item.brand" :value="item.brand" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="物料类别" prop="category">
-          <el-select v-model="form.category" :disabled="isReadonly" filterable allow-create default-first-option placeholder="请选择物料类别"
-                     style="width: 100%">
-            <el-option v-for="(item, index) in categoryList" :key="index" :label="item.category" :value="item.category" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="物料规格型号" prop="specs">
-          <el-autocomplete style="width: 100%" value-key="specs" v-model="form.specs" :fetch-suggestions="querySearch" placeholder="请输入物料规格型号" :trigger-on-focus="false" @select="handleSelect"></el-autocomplete>
-        </el-form-item>
-        <el-form-item label="物料库存预警" prop="warnStock">
-          <el-input-number style="width: 100%" v-model="form.warnStock" controls-position="right" :min="0"></el-input-number>
-        </el-form-item>
-      </el-form>
-      <template slot="footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </template>
-    </drawer-plus>
+    <material-table ref="materialTableRef" :title="title" :open="open" :transfer="transfer" @cancel="cancel" @submit="submitForm" />
   </div>
 </template>
 
 <script>
 import {
-  getBrandList,
-  getCategoryList,
-  getSpecList,
-  createMaterial,
-  updateMaterial,
-  deleteMaterial,
-  getMaterial,
-  exportMaterialExcel,
-  getPurchasePage
-} from '@/api/warehouse/material'
-import DrawerPlus from '@/components/DrawerPlus/index.vue'
+  getPurchasePage,
+  deleteMaterialBuying,
+  getPurchase } from '@/api/warehouse/materialBuying'
 import { listSimpleUsers } from '@/api/system/user'
+import MaterialTable from '@/views/warehouse/components/materialTable.vue'
 
 export default {
   name: "MaterialBuying",
-  components: {
-    DrawerPlus
-  },
+  components: { MaterialTable },
   data() {
     return {
       // 遮罩层
@@ -137,22 +91,14 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
-      // 品牌列表
-      brandList: [],
       // 用户列表
       userList: [],
-      // 类别列表
-      categoryList: [],
-      // 规格型号列表
-      specList: [],
       // 采购状态列表
       materialBuyList: [
         { label: "未发起采购", value: 0, type: 'warning' },
         { label: "未上传合同", value: 1, type: 'danger' },
         { label: "已上传合同", value: 2, type: 'success' }
       ],
-      // 是否只读
-      isReadonly: false,
       // 查询参数
       queryParams: {
         pageNo: 1,
@@ -160,32 +106,13 @@ export default {
         blameId: null,
         createTime: null
       },
-      // 表单参数
-      form: {
-        id: null,
-        name: null,
-        code: null,
-        brand: null,
-        category: null,
-        specs: null,
-        warnStock: 0
-      },
-      // 表单校验
-      rules: {
-        name: [{ required: true, message: "物料名称不能为空", trigger: "blur" }],
-        code: [{ required: true, message: "物料编码不能为空", trigger: "blur" }],
-        brand: [{ required: true, message: "物料品牌不能为空", trigger: "blur" }],
-        category: [{ required: true, message: "物料类别不能为空", trigger: "blur" }],
-        specs: [{ required: true, message: "物料规格型号不能为空", trigger: "blur" }],
-        warnStock: [{ required: true, message: "物料库存预警不能为空", trigger: "blur", type: "number" }],
-      }
+      // 传递给子组件的参数
+      transfer: null
     };
   },
   created() {
+    this.getUserList();
     this.getList();
-    this.getBrandList();
-    this.getCategoryList();
-    this.getSpecList();
   },
   methods: {
     /** 用户列表 */
@@ -193,24 +120,6 @@ export default {
       listSimpleUsers().then(response => {
         this.userList = response.data
       })
-    },
-    /** 品牌列表 */
-    getBrandList() {
-      getBrandList().then(response => {
-        this.brandList = response.data;
-      });
-    },
-    /** 类别列表 */
-    getCategoryList() {
-      getCategoryList().then(response => {
-        this.categoryList = response.data;
-      });
-    },
-    /** 规格型号列表 */
-    getSpecList() {
-      getSpecList().then(response => {
-        this.specList = response.data;
-      });
     },
     /** 查询列表 */
     getList() {
@@ -223,7 +132,7 @@ export default {
           item.statusType = this.materialBuyList.find(i => i.value === item.status).type
           item.totalPrice = item.items.reduce((total, item) => {
             return total + item.price * item.count
-          }, 0)
+          }, 0) / 100
         });
         this.list = list;
         this.total = total;
@@ -234,120 +143,64 @@ export default {
     bindBlameClear() {
       this.queryParams.blameId = null
     },
-    querySearch(queryString, cb) {
-      const specs = this.specList;
-      const results = queryString ? specs.filter(this.createFilter(queryString)) : specs;
-      cb(results);
-    },
-    createFilter(queryString) {
-      return (restaurant) => {
-        return (restaurant.specs.indexOf(queryString) === 0);
-      };
-    },
-    handleSelect(item) {
-      console.log(item);
-    },
     /** 取消按钮 */
     cancel() {
       this.open = false;
-      this.reset();
-    },
-    /** 表单重置 */
-    reset() {
-      this.form = {
-        id: undefined,
-        name: undefined,
-        code: undefined,
-        brand: undefined,
-        category: undefined,
-        specs: undefined,
-        warnStock: 0
-      };
-      this.resetForm("form");
     },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNo = 1;
       this.getList();
     },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset();
-      this.isReadonly = false;
-      this.open = true;
-      this.title = "添加物料";
-    },
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.reset();
-      this.isReadonly = true;
-      const id = row.id;
-      getMaterial({id}).then(response => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改物料";
-      });
-    },
     /** 详情按钮操作 */
-    handleDetail(row) {
-      console.log(row)
+    handleDetail(row, type) {
+      getPurchase({ id: row.id }).then(response => {
+        const data = response.data
+        data.items.map(item => {
+          item.price = item.price / 100;
+          item.materialCode = item.materialAvg.material.code;
+          item.materialName = item.materialAvg.material.name;
+          item.materialSpecs = item.materialAvg.material.specs;
+          item.materialBrand = item.materialAvg.material.brand;
+          item.materialCategory = item.materialAvg.material.category;
+          item.demander = item.demander.nickname;
+          item.historyPrice = item.materialAvg.avg;
+        })
+        this.transfer = {
+          blameId: data.blameId,
+          action: type,
+          items: data.items
+        };
+        this.title = type === 1 ? "编辑" : "查看";
+        this.open = true;
+      })
     },
     /** 提交按钮 */
     submitForm() {
-      this.$refs["form"].validate(valid => {
-        if (!valid) {
-          return;
-        }
-        // 修改的提交
-        if (this.form.id != null) {
-          updateMaterial(this.form).then(response => {
-            this.$modal.msgSuccess("修改成功");
-            this.open = false;
-            this.getList();
-            this.getBrandList();
-            this.getCategoryList();
-            this.getSpecList();
-          });
-          return;
-        }
-        // 添加的提交
-        createMaterial(this.form).then(response => {
-          this.$modal.msgSuccess("新增成功");
-          this.open = false;
-          this.getList();
-          this.getBrandList();
-          this.getCategoryList();
-          this.getSpecList();
-        });
-      });
+
     },
     /** 删除按钮操作 */
     handleDelete(row) {
       const id = row.id;
-      this.$modal.confirm('是否确认删除物料基础数据编号为"' + id + '"的数据项?').then(function() {
-        return deleteMaterial({id});
+      const pnCode = row.pnCode;
+      this.$modal.confirm('是否确认删除采购(PN)单号为"' + pnCode + '"的数据项?').then(function() {
+        return deleteMaterialBuying(id);
       }).then(() => {
         this.getList();
-        this.getBrandList();
-        this.getCategoryList();
-        this.getSpecList();
         this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
-    },
-    /** 导出按钮操作 */
-    handleExport() {
-      // 处理查询参数
-      let params = {...this.queryParams};
-      params.pageNo = undefined;
-      params.pageSize = undefined;
-      this.$modal.confirm('是否确认导出所有物料基础数据数据项?').then(() => {
-        this.exportLoading = true;
-        return exportMaterialExcel(params);
-      }).then(response => {
-        this.$download.excel(response, '物料基础数据.xls');
-        this.exportLoading = false;
       }).catch(() => {});
     }
   }
 };
 </script>
+<style lang="scss" scoped>
+.material {
+  :deep(.el-upload) {
+    width: 100%;
+  }
+  :deep(.el-upload-dragger) {
+    height: 200px;
+    width: 100%;
+  }
+}
+</style>

@@ -56,7 +56,7 @@
       </el-table-column>
     </el-table>
     <!-- 上传附件 -->
-    <el-dialog custom-class="material" :title="title" :visible.sync="open" width="600px" append-to-body>
+    <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
         <el-form-item>
           <file-upload multiple ref="fileUpload" :auto-upload="false" :is-show-tip="false" drag />

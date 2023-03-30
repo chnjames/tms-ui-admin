@@ -281,7 +281,7 @@ export default {
         }).catch(() => {});
     },
     /** 合并行 */
-    objectSpanMethod({ row, column, rowIndex, columnIndex }) {
+    objectSpanMethod({ rowIndex, columnIndex }) {
       if (columnIndex === 0 || columnIndex === 1) {
         const _row = (this.mergeColumn(this.list).one)[rowIndex]
         const _col = _row > 0 ? 1 : 0
