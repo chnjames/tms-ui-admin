@@ -20,14 +20,15 @@
     <!-- 操作工具栏 -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button plain icon="el-icon-delete" size="mini" v-hasPermi="['config:device:create']">批量删除</el-button>
+        <el-button plain icon="el-icon-delete" size="mini" @click="handleDeleteBatch"
+                   v-hasPermi="['config:device:create']">批量删除</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <!-- 列表 -->
-    <el-table v-loading="loading" :data="list">
-      <el-table-column type="selection" width="55" align="center"/>
+    <el-table ref="materialRef" v-loading="loading" :data="list">
+      <el-table-column type="selection" :selectable="compSelection" width="55" align="center"/>
       <el-table-column label="采购(PN)单号" align="center" prop="pnCode" />
       <el-table-column label="采购总金额" align="center" prop="totalPrice" />
       <el-table-column label="采购负责人" align="center">
@@ -51,7 +52,7 @@
                      v-hasPermi="['warehouse:material:update']">编辑</el-button>
           <el-button :disabled="row.status === 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row, 2)"
                      v-hasPermi="['warehouse:material:update']">详情</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+          <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                      v-hasPermi="['warehouse:material:delete']">删除</el-button>
         </template>
       </el-table-column>
@@ -146,6 +147,7 @@ export default {
     /** 取消按钮 */
     cancel() {
       this.open = false;
+      this.getList();
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -164,10 +166,13 @@ export default {
           item.materialBrand = item.materialAvg.material.brand;
           item.materialCategory = item.materialAvg.material.category;
           item.demander = item.demander.nickname;
-          item.historyPrice = item.materialAvg.avg;
+          item.historyPrice = item.materialAvg.avg / 100;
         })
         this.transfer = {
           blameId: data.blameId,
+          pnCode: data.pnCode,
+          status: data.status,
+          id: data.id,
           action: type,
           items: data.items
         };
@@ -177,7 +182,26 @@ export default {
     },
     /** 提交按钮 */
     submitForm() {
-
+      this.open = false;
+      this.getList();
+    },
+    /** 限制list列表多选 */
+    compSelection(row) {
+      return row.status === 0;
+    },
+    /** 批量删除按钮操作 */
+    handleDeleteBatch() {
+      const ids = this.$refs.materialRef.selection.map(item => item.id).join(',');
+      if (ids.length === 0) {
+        this.$modal.msgWarning("请选择要删除的数据项");
+        return;
+      }
+      this.$modal.confirm('是否确认删除选中的数据项?').then(function() {
+        return deleteMaterialBuying(ids);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
     },
     /** 删除按钮操作 */
     handleDelete(row) {

@@ -2,6 +2,9 @@
   <div>
     <el-dialog :title="`${title}物料采购清单`" :visible.sync="open" width="900px" :append-to-body="appendToBody">
       <el-form ref="form" :model="form" :rules="rules" inline inline-message>
+        <el-form-item v-if="form.action === 1 || form.action === 2" label="采购(PN)单号：" prop="pnCode">
+          <div>{{form.pnCode}}</div>
+        </el-form-item>
         <div class="flex-between">
           <el-form-item label="采购负责人：" prop="blameId">
             <el-select v-if="form.action === 0 || form.action === 1" v-model="form.blameId" placeholder="请选择采购负责人">
@@ -11,7 +14,7 @@
             <div v-else>{{form.blameName}}</div>
           </el-form-item>
           <el-button v-if="form.action === 0 || form.action === 1" type="primary" icon="el-icon-plus" @click="submitForm(1)">发起采购</el-button>
-          <el-button v-else type="primary" icon="el-icon-upload" size="mini" @click="bindContract">合同上传</el-button>
+          <el-button v-else type="primary" :disabled="form.status !== 1" icon="el-icon-upload" size="mini" @click="bindContract">合同上传</el-button>
         </div>
         <el-divider />
         <el-table class="material" ref="materialRef" :show-summary="showSummary" :summary-method="getSumPrice" :data="form.items" style="width: 100%">
@@ -77,8 +80,7 @@
 
 <script>
 import { listSimpleUsers } from '@/api/system/user'
-import { createMaterialBuying, getMaterialBuyingAvgPrice, uploadContract } from '@/api/warehouse/materialBuying'
-import { getPurchase } from '@/api/warehouse/materialBuying'
+import { createMaterialBuying, uploadContract, updateMaterialBuying } from '@/api/warehouse/materialBuying'
 import { getSupplierSimpleList } from '@/api/config/supplier'
 import FileUpload from '@/components/FileUpload/index.vue'
 
@@ -127,6 +129,7 @@ export default {
       form: {
         blameId: null,
         action: null,
+        id: null,
         items: [{
           demandId: null,
           price: null,
@@ -210,7 +213,8 @@ export default {
             }
           })
         }
-        createMaterialBuying(params).then(() => {
+        const requestFunction = this.form.id ? updateMaterialBuying : createMaterialBuying;
+        requestFunction(params).then(() => {
           this.$modal.msgSuccess(type === 0 ? "保存成功" : "发起成功");
           this.$emit("success");
         });
@@ -238,6 +242,7 @@ export default {
             this.uploadLoading = false
             this.uploadOpen = false
             this.$modal.msgSuccess('上传成功')
+            this.form.status = 2
           }
         }).catch(() => {
           this.uploadLoading = false

@@ -194,7 +194,7 @@ export default {
           item.materialBrand = item.materialAvg.material.brand;
           item.materialCategory = item.materialAvg.material.category;
           item.demander = item.demander.nickname;
-          item.historyPrice = item.materialAvg.avg;
+          item.historyPrice = item.materialAvg.avg / 100;
         });
         const userId = store.getters.userId;
         this.transfer = {
@@ -209,6 +209,7 @@ export default {
     /** 提交按钮 */
     submitForm() {
       this.open = false;
+      this.getList();
     },
     /** 导出按钮操作 */
     handleExport() {

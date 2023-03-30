@@ -25,9 +25,9 @@ export function uploadContract(data) {
   })
 }
 // 删除物料采购
-export function deleteMaterialBuying(id) {
+export function deleteMaterialBuying(ids) {
   return request({
-    url: '/warehouse/material-buying/delete?id=' + id,
+    url: '/warehouse/material-buying/delete?id=' + ids,
     method: 'delete'
   })
 }
