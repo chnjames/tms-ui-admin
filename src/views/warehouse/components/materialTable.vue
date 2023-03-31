@@ -185,6 +185,7 @@ export default {
         action: null,
         items: [{
           demandId: null,
+          id: null,
           price: null,
           supplierId: null
         }]
@@ -207,6 +208,7 @@ export default {
           ...this.form,
           items: this.form.items.map(item => {
             return {
+              id: item.id,
               demandId: item.demandId,
               price: item.price * 100,
               supplierId: item.supplierId

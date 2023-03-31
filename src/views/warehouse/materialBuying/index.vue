@@ -61,7 +61,7 @@
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
                 @pagination="getList"/>
     <!-- 对话框(添加 / 修改) -->
-    <material-table ref="materialTableRef" :title="title" :open="open" :transfer="transfer" @cancel="cancel" @submit="submitForm" />
+    <material-table ref="materialTableRef" :title="title" :open="open" :transfer="transfer" @cancel="cancel" @success="submitForm" />
   </div>
 </template>
 
