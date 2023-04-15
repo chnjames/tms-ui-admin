@@ -3,8 +3,8 @@
     <!-- 搜索工作栏 -->
     <el-form v-show="showSearch" :model="queryParams" ref="queryForm" size="small" :inline="true">
       <el-form-item prop="type">
-        <el-select v-model="queryParams.type" placeholder="设备类型" clearable>
-          <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.type" :value="item.type"/>
+        <el-select v-model="queryParams.type" placeholder="模板类型" clearable @clear="handleClear">
+          <el-option v-for="item in menuOptions" :key="item.value" :label="item.label" :value="item.value"/>
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -39,10 +39,10 @@
     <el-table v-loading="loading" :data="list" ref="multipleTable">
       <!--选择-->
       <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="设备编码" prop="name"/>
-      <el-table-column label="设备名称" prop="description"/>
-      <el-table-column label="模板类型" prop="description"/>
-      <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
+      <el-table-column label="模板编号" sortable prop="code"/>
+      <el-table-column label="模板名称" sortable prop="name"/>
+      <el-table-column label="模板类型" prop="typeDesc"/>
+      <el-table-column label="更新时间" sortable align="center" prop="updateTime" width="180">
         <template v-slot="scope">
           <span>{{ parseTime(scope.row.updateTime) }}</span>
         </template>
@@ -56,64 +56,73 @@
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分页组件 -->
+    <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize" @pagination="getList"/>
     <!-- 对话框(添加 / 修改) -->
-    <el-dialog :title="title" :visible.sync="open" width="900px" append-to-body>
-      <el-form class="form" ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="设备名称" prop="equipmentName">
-          <el-select v-model="form.equipmentName" placeholder="请选择设备名称" clearable style="width: 100%">
-            <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.name" :value="item.name"/>
+    <drawer-plus :title="title" :visible.sync="open" :size="600" append-to-body>
+      <el-form class="form" ref="form" :model="form" :rules="rules" label-width="90px">
+        <el-form-item label="模板类型" prop="type">
+          <el-select v-model="form.type" placeholder="请选择模板类型" clearable style="width: 100%">
+            <el-option v-for="item in menuOptions" :key="item.value" :label="item.label" :value="item.value"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="模板类型" prop="templateType">
-          <el-select v-model="form.templateType" placeholder="请选择模板类型" clearable style="width: 100%">
-            <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.name" :value="item.name"/>
-          </el-select>
+        <el-form-item label="模板名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入模板名称"/>
         </el-form-item>
-        <el-card shadow="never" v-for="(item, index) in form.partsList" :key="index">
+        <el-card shadow="never" v-for="(item, index) in form.extras" :key="index">
           <el-row :gutter="10" type="flex" justify="space-between">
             <el-col :span="23">
-              <el-form-item label="设备部位" :prop="'partsList.'+ index + '.location'" :rules="partsListRules.location">
-                <el-input v-model="item.location" placeholder="请输入设备部位"/>
+              <el-form-item label="设备部位" :prop="'extras.'+ index + '.name'" :rules="extrasRules.name">
+                <el-input v-model="item.name" placeholder="请输入设备部位"/>
               </el-form-item>
-              <el-form-item label="部位图片" :prop="'partsList.' + index + '.image'" :rules="partsListRules.image">
-                <imageUpload v-model="item.image" :limit="1" :is-show-tip="false"/>
+              <el-form-item label="工序/项目" :prop="'extras.'+ index + '.name'" :rules="extrasRules.name">
+                <el-input v-model="item.name" placeholder="请输入工序/项目名称"/>
               </el-form-item>
-              <el-card shadow="never" v-for="(task, idx) in item.taskList" :key="idx">
+              <el-form-item label="执行人">
+                <el-select v-model="item.blameId" style="width: 100%" placeholder="请选择执行人">
+                  <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
+                             :value="parseInt(item.id)"/>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="部位图片" :prop="'extras.' + index + '.url'" :rules="extrasRules.url">
+                <imageUpload v-model="item.url" :limit="1" :is-show-tip="false"/>
+              </el-form-item>
+              <el-card shadow="never" v-for="(task, idx) in item.tasks" :key="idx">
                 <el-row :gutter="10" type="flex" justify="space-between">
                   <el-col :span="23">
-                    <el-form-item label="任务名称" :prop="'partsList.' + index + '.taskList.' + idx + '.taskName'" :rules="taskListRules.taskName">
+                    <el-form-item label="任务名称" :prop="'extras.' + index + '.tasks.' + idx + '.taskName'" :rules="tasksRules.taskName">
                       <el-input v-model="task.taskName" placeholder="请输入任务名称"/>
                     </el-form-item>
                     <el-form-item label="执行结果" required>
                       <el-row :gutter="20" type="flex" justify="space-between">
                         <el-col :span="8">
-                          <el-form-item :prop="'partsList.' + index + '.taskList.' + idx + '.outcome'" :rules="taskListRules.outcome">
+                          <el-form-item :prop="'extras.' + index + '.tasks.' + idx + '.outcome'" :rules="tasksRules.outcome">
                             <el-select v-model="task.outcome" style="width: 100%" placeholder="请选择执行结果" clearable>
                               <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.name" :value="item.name"/>
                             </el-select>
                           </el-form-item>
                         </el-col>
                         <el-col :span="4">
-                          <el-form-item :prop="'partsList.' + index + '.taskList.' + idx + '.termOne'" :rules="taskListRules.termOne">
+                          <el-form-item :prop="'extras.' + index + '.tasks.' + idx + '.termOne'" :rules="tasksRules.termOne">
                             <el-select v-model="task.termOne" style="width: 100%" placeholder="请选择" clearable>
                               <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.name" :value="item.name"/>
                             </el-select>
                           </el-form-item>
                         </el-col>
                         <el-col :span="4">
-                          <el-form-item :prop="'partsList.' + index + '.taskList.' + idx + '.valueOne'" :rules="taskListRules.valueOne">
+                          <el-form-item :prop="'extras.' + index + '.tasks.' + idx + '.valueOne'" :rules="tasksRules.valueOne">
                             <el-input v-model="task.valueOne" placeholder="数值"/>
                           </el-form-item>
                         </el-col>
                         <el-col :span="4">
-                          <el-form-item :prop="'partsList.' + index + '.taskList.' + idx + '.termTwo'" :rules="taskListRules.termTwo">
+                          <el-form-item :prop="'extras.' + index + '.tasks.' + idx + '.termTwo'" :rules="tasksRules.termTwo">
                             <el-select v-model="task.termTwo" style="width: 100%" placeholder="请选择" clearable>
                               <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.name" :value="item.name"/>
                             </el-select>
                           </el-form-item>
                         </el-col>
                         <el-col :span="4">
-                          <el-form-item :prop="'partsList.' + index + '.taskList.' + idx + '.valueTwo'" :rules="taskListRules.valueTwo">
+                          <el-form-item :prop="'extras.' + index + '.tasks.' + idx + '.valueTwo'" :rules="tasksRules.valueTwo">
                             <el-input v-model="task.valueTwo" placeholder="数值"/>
                           </el-form-item>
                         </el-col>
@@ -121,25 +130,25 @@
                     </el-form-item>
                     <el-row :gutter="20">
                       <el-col :span="12">
-                        <el-form-item label="选择备件" :prop="'partsList.' + index + '.taskList.' + idx + '.spare'" :rules="taskListRules.spare">
+                        <el-form-item label="选择备件" :prop="'extras.' + index + '.tasks.' + idx + '.spare'" :rules="tasksRules.spare">
                           <el-select v-model="task.spare" style="width: 100%" placeholder="请选择" clearable>
                             <el-option v-for="(item, index) in menuOptions" :key="index" :label="item.name" :value="item.name"/>
                           </el-select>
                         </el-form-item>
                       </el-col>
                       <el-col :span="12">
-                        <el-form-item label="备件数量" :prop="'partsList.' + index + '.taskList.' + idx + '.quantity'" :rules="taskListRules.quantity">
+                        <el-form-item label="备件数量" :prop="'extras.' + index + '.tasks.' + idx + '.quantity'" :rules="tasksRules.quantity">
                           <el-input-number v-model="task.quantity" :min="0" />
                         </el-form-item>
                       </el-col>
                     </el-row>
                   </el-col>
-                  <i class="inter el-icon-delete" v-if="item.taskList.length > 1" @click="deleteInterItems(task, idx)"></i>
+                  <i class="inter el-icon-delete" v-if="item.tasks.length > 1" @click="deleteInterItems(task, idx)"></i>
                 </el-row>
               </el-card>
               <el-button type="primary" icon="el-icon-plus" @click="addInterItems(item, index)" plain style="margin-top: 10px;width: 100%">添加任务项</el-button>
             </el-col>
-            <i class="outer el-icon-delete" v-if="form.partsList.length > 1" @click="deleteOuterItems(item, index)"></i>
+            <i class="outer el-icon-delete" v-if="form.extras.length > 1" @click="deleteOuterItems(item, index)"></i>
           </el-row>
         </el-card>
         <!--添加外层内容-->
@@ -149,24 +158,26 @@
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </template>
-    </el-dialog>
+    </drawer-plus>
   </div>
 </template>
 
 <script>
 import {
   createFactoryArea,
-  deleteFactoryArea,
   getFactoryArea,
-  getFactoryAreaPage,
-  getSimpleFactoryArea,
   updateFactoryArea
 } from '@/api/config/factoryArea'
+import { getTaskTemplatePage, deleteTaskTemplate } from '@/api/operations/taskTemplate'
 import ImageUpload from '@/components/ImageUpload/index.vue'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
+import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { listSimpleUsers } from '@/api/system/user'
 
 export default {
   name: 'TaskTemplate',
   components: {
+    DrawerPlus,
     ImageUpload
   },
   data() {
@@ -175,7 +186,11 @@ export default {
       loading: true,
       // 显示搜索条件
       showSearch: true,
-      // 工厂区域列表
+      // 任务模板类型列表
+      menuOptions: getDictDatas(DICT_TYPE.OPERATIONS_TEMPLATE_TYPE),
+      // 总条数
+      total: 0,
+      // 模板列表
       list: [],
       // 弹出层标题
       title: '',
@@ -183,17 +198,23 @@ export default {
       open: false,
       // 查询参数
       queryParams: {
-        name: null
+        name: null,
+        type: null,
+        pageNo: 1,
+        pageSize: 10
       },
+      // 用户列表
+      userList: [],
       // 表单参数
       form: {
-        equipmentName: undefined, // 设备名称
-        templateType: undefined, // 模板类型
-        partsList: [
+        name: undefined, // 模板名称
+        type: undefined, // 模板类型
+        extras: [
           {
-            location: undefined, // 设备部位
-            image: undefined, // 图片
-            taskList: [
+            name: undefined, // 设备部位
+            url: undefined, // 图片
+            blameId: undefined, // 执行人 --- 生产管理类型
+            tasks: [
               {
                 taskName: undefined, // 任务名称
                 outcome: undefined, // 执行结果
@@ -212,25 +233,25 @@ export default {
       },
       // 表单校验
       rules: {
-        equipmentName: [
-          { required: true, message: '设备名称不能为空', trigger: 'blur' },
-          { max: 30, message: '设备名称不能超过30个字', trigger: 'blur' }
-        ],
-        templateType: [
+        type: [
           { required: true, message: '模板类型不能为空', trigger: 'blur' },
           { max: 30, message: '模板类型不能超过30个字', trigger: 'blur' }
+        ],
+        name: [
+          { required: true, message: '模板名称不能为空', trigger: 'blur' },
+          { max: 30, message: '模板名称不能超过30个字', trigger: 'blur' }
         ]
       },
-      partsListRules: {
-        location: [
+      extrasRules: {
+        name: [
           { required: true, message: '设备部位不能为空', trigger: 'blur' },
           { max: 30, message: '设备部位不能超过30个字', trigger: 'blur' }
         ],
-        image: [
+        url: [
           { required: true, message: '图片不能为空', trigger: 'blur' }
         ]
       },
-      taskListRules: {
+      tasksRules: {
         taskName: [
           { required: true, message: '任务名称不能为空', trigger: 'blur' },
           { max: 30, message: '任务名称不能超过30个字', trigger: 'blur' }
@@ -270,33 +291,37 @@ export default {
         quantity: [
           { required: true, message: '备件数量不能为空', trigger: 'blur' }
         ]
-      },
-      // 菜单树选项
-      menuOptions: []
+      }
     }
   },
   created() {
     this.getList()
-    this.getSimpleFactoryArea()
+    this.getUserList()
   },
   methods: {
     /** 查询列表 */
     getList() {
       this.loading = true
       // 执行查询
-      getFactoryAreaPage(this.queryParams).then(response => {
-        this.list = this.handleTree(response.data)
+      getTaskTemplatePage(this.queryParams).then(response => {
+        const { list, total } = response.data
+        list.map(item => {
+          item.typeDesc = this.menuOptions.find(type => parseInt(type.value) === item.type).label
+        })
+        this.list = list
+        this.total = total
         this.loading = false
       })
     },
-    /** 获取厂区精简信息列表 */
-    getSimpleFactoryArea() {
-      getSimpleFactoryArea().then(response => {
-        this.menuOptions = []
-        const menu = { id: 0, name: '顶级', children: [] }
-        menu.children = this.handleTree(response.data)
-        this.menuOptions.push(menu)
+    /** 用户列表 */
+    getUserList() {
+      listSimpleUsers().then(response => {
+        this.userList = response.data
       })
+    },
+    /** 清除设备类型 */
+    handleClear() {
+      this.queryParams.type = null
     },
     /** 取消按钮 */
     cancel() {
@@ -336,7 +361,7 @@ export default {
     },
     /** 添加任务项操作 */
     addInterItems(item, index) {
-      item.taskList.push({
+      item.tasks.push({
         taskName: undefined, // 任务名称
         outcome: undefined, // 执行结果
         termOne: undefined, // 条件1
@@ -352,14 +377,14 @@ export default {
     /** 删除任务项操作 */
     deleteInterItems(task, idx) {
       console.log(task, idx)
-      this.form.partsList[idx].taskList.splice(task, 1)
+      this.form.extras[idx].tasks.splice(task, 1)
     },
     /** 添加部位&任务项操作 */
     addOuterItems() {
-      this.form.partsList.push({
-        location: undefined,
-        image: undefined,
-        taskList: [
+      this.form.extras.push({
+        name: undefined,
+        url: undefined,
+        tasks: [
           {
             taskName: undefined, // 任务名称
             outcome: undefined, // 执行结果
@@ -378,7 +403,7 @@ export default {
     /** 删除部位&任务项操作 */
     deleteOuterItems(item, index) {
       console.log(item, index)
-      this.form.partsList.splice(index, 1)
+      this.form.extras.splice(index, 1)
     },
     /** 提交按钮 */
     submitForm() {
@@ -392,7 +417,6 @@ export default {
             this.$modal.msgSuccess('修改成功')
             this.open = false
             this.getList()
-            this.getSimpleFactoryArea()
           })
           return
         }
@@ -401,7 +425,6 @@ export default {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
-          this.getSimpleFactoryArea()
         })
       })
     },
@@ -410,10 +433,9 @@ export default {
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteFactoryArea(id)
+        return deleteTaskTemplate(id)
       }).then(() => {
         this.getList()
-        this.getSimpleFactoryArea()
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {
       })
