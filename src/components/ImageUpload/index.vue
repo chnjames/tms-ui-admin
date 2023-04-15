@@ -67,6 +67,11 @@ export default {
     isShowTip: {
       type: Boolean,
       default: true
+    },
+    // 请求地址
+    uploadFileUrl: {
+      type: String,
+      default: process.env.VUE_APP_BASE_API + "/admin-api/infra/file/upload"
     }
   },
   data() {
@@ -76,7 +81,6 @@ export default {
       dialogImageUrl: "",
       dialogVisible: false,
       hideUpload: false,
-      uploadFileUrl: process.env.VUE_APP_BASE_API + "/admin-api/infra/file/upload", // 请求地址
       headers: { Authorization: "Bearer " + getAccessToken() }, // 设置上传的请求头部
       fileList: []
     };
@@ -90,7 +94,6 @@ export default {
           // 然后将数组转为对象数组
           this.fileList = list.map(item => {
             if (typeof item === "string") {
-              // edit by 芋道源码
               item = { name: item, url: item };
             }
             return item;
@@ -112,16 +115,15 @@ export default {
   },
   methods: {
     // 删除图片
-    handleRemove(file, fileList) {
-      const findex = this.fileList.map(f => f.name).indexOf(file.name);
-      if(findex > -1) {
-        this.fileList.splice(findex, 1);
+    handleRemove(file) {
+      const fIndex = this.fileList.map(f => f.name).indexOf(file.name);
+      if(fIndex > -1) {
+        this.fileList.splice(fIndex, 1);
         this.$emit("input", this.listToString(this.fileList));
       }
     },
     // 上传成功回调
     handleUploadSuccess(res) {
-      // edit by 芋道源码
       this.uploadList.push({ name: res.data, url: res.data });
       if (this.uploadList.length === this.number) {
         this.fileList = this.fileList.concat(this.uploadList);
@@ -154,7 +156,7 @@ export default {
       if (this.fileSize) {
         const isLt = file.size / 1024 / 1024 < this.fileSize;
         if (!isLt) {
-          this.$modal.msgError(`上传头像图片大小不能超过 ${this.fileSize} MB!`);
+          this.$modal.msgError(`上传图片大小不能超过 ${this.fileSize} MB!`);
           return false;
         }
       }
