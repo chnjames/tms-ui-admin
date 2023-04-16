@@ -111,7 +111,7 @@
           </el-row>
         </el-card>
         <!--添加外层内容-->
-        <el-button type="primary" plain icon="el-icon-plus" @click="addOuterItems" style="margin-top: 10px;width: 100%">添加</el-button>
+        <el-button type="primary" plain icon="el-icon-plus" @click="addOuterItems" style="margin-top: 10px;margin-bottom: 10px;width: 100%">添加</el-button>
       </el-form>
       <template slot="footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
