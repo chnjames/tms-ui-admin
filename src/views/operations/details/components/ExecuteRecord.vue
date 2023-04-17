@@ -53,6 +53,7 @@ export default {
       list: [],
       // 查询参数
       queryParams: {
+        projectId: undefined,
         pageNo: 1,
         pageSize: 10
       },
@@ -62,8 +63,8 @@ export default {
         { prop: 'blameName', label: '执行人' },
         { prop: 'status', label: '状态' },
         { prop: 'createTime', label: '触发时间' },
-        { prop: 'activatedTime', label: '开始时间' },
-        { prop: 'completedTime', label: '结束时间' },
+        { prop: 'activatedTime', label: '激活时间' },
+        { prop: 'completedTime', label: '完成时间' },
         { prop: 'attachment', label: '附件' }
       ]
     }
@@ -81,6 +82,7 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
+      this.queryParams.projectId = this.proId
       getTaskPage(this.queryParams).then(response => {
         const { list, total } = response.data
         list.map(item => {

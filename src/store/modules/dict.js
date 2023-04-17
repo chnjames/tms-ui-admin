@@ -36,6 +36,7 @@ const actions = {
           label: dictData.label,
           colorType: dictData.colorType,
           cssClass: dictData.cssClass,
+          status: dictData.status
         })
       })
       // 存储到 Store 中

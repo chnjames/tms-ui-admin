@@ -43,63 +43,62 @@
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="130px">
-        <el-form-item label="设备名称" prop="device">
+        <el-form-item label="设备名称">
           <div>{{form.deviceName}}</div>
         </el-form-item>
-        <el-form-item label="子任务名称">
-          <el-input v-model="form.name" placeholder="子任务名称" style="width: 100%"/>
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input v-model="form.taskName" placeholder="任务名称" style="width: 100%"/>
         </el-form-item>
         <el-form-item label="任务类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择" style="width: 100%" @change="bindTaskType">
+          <el-select v-model="form.type" placeholder="请选择" style="width: 100%">
             <el-option v-for="item in taskPlanTypeList" :key="item.value" :label="item.label" :value="parseInt(item.value)" />
           </el-select>
         </el-form-item>
-        <el-form-item label="任务模板" prop="taskTemp" v-if="form.type === 0">
-          <el-select v-model="form.taskTemp" filterable placeholder="请选择" style="width: 100%">
+        <el-form-item label="任务模板" prop="extra.templateId" v-if="form.type === 0">
+          <el-select v-model="form.extra.templateId" filterable placeholder="请选择" style="width: 100%">
             <el-option v-for="item in taskTempList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="选择备件" prop="taskTemp" v-if="form.type === 1">
-          <el-select v-model="form.taskTemp" placeholder="请选择" style="width: 100%">
+        <el-form-item label="选择备件" prop="extra.materialId" v-if="form.type === 1">
+          <el-select v-model="form.extra.materialId" placeholder="请选择" style="width: 100%">
             <el-option v-for="item in materialList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="备件数量" prop="spareQuantity" v-if="form.type === 1">
-          <el-input-number v-model="form.spareQuantity" :min="1"></el-input-number>
+        <el-form-item label="备件数量" prop="extra.qty" v-if="form.type === 1">
+          <el-input-number v-model="form.extra.qty" :min="1"></el-input-number>
         </el-form-item>
         <el-form-item label="执行人">
-          <el-select v-model="form.executorId" style="width: 100%" filterable placeholder="请选择">
+          <el-select v-model="form.blameId" style="width: 100%" filterable placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
           </el-select>
         </el-form-item>
         <el-form-item label="生效方式" prop="mode">
-          <el-select v-model="form.mode" placeholder="生效方式" style="width: 100%">
+          <el-select v-model="form.mode" placeholder="生效方式" style="width: 100%" @change="bindTaskMode">
             <el-option v-for="(item, index) in modeOptions" :key="index" :label="item.label" :value="item.type" />
           </el-select>
         </el-form-item>
         <!--生效方式：周期生效-->
         <template  v-if="form.mode === 2">
-          <el-form-item>
+          <el-form-item prop="period">
             <el-select v-model="form.period" placeholder="周期" style="width: 100%">
-              <el-option v-for="(item, index) in PeriodTypeOptions" :key="index" :label="item.label" :value="item.value" />
+              <el-option v-for="item in taskPlanPeriodListFilter" :key="item.value" :label="item.label" :value="parseInt(item.value)" />
             </el-select>
           </el-form-item>
           <!--跳过节假日 是否单选-->
           <el-form-item label="跳过节假日">
-            <el-radio-group v-model="form.skipHoliday">
-              <el-radio :label="1">是</el-radio>
-              <el-radio :label="0">否</el-radio>
+            <el-radio-group v-model="form.skipHolidays">
+              <el-radio v-for="item in statusList" :key="item.value" :label="parseInt(item.value)">{{ item.label }}</el-radio>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="开始时间">
-            <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="datetime"
+          <el-form-item label="开始时间" prop="nextTriggerTime">
+            <el-date-picker clearable size="small" style="width: 100%" v-model="form.nextTriggerTime" type="datetime"
                             value-format="timestamp" placeholder="选择开始时间"/>
           </el-form-item>
         </template>
         <template v-if="form.mode === 3">
-          <el-form-item label="触发时间">
-            <el-date-picker clearable size="small" style="width: 100%" v-model="form.timingTime" type="datetime"
+          <el-form-item label="触发时间" prop="nextTriggerTime">
+            <el-date-picker clearable size="small" style="width: 100%" v-model="form.nextTriggerTime" type="datetime"
                             value-format="timestamp" placeholder="选择时间"/>
           </el-form-item>
         </template>
@@ -118,20 +117,23 @@
 
 <script>
 import {
-  createFactoryArea,
-  deleteFactoryArea,
   getFactoryArea,
-  updateFactoryArea
 } from '@/api/config/factoryArea'
-import { getTaskPlanPage } from '@/api/operations/overview'
+import {
+  getTaskPlanPage,
+  createTaskPlan,
+  getTaskPlan,
+  deleteTaskPlan,
+  updateTaskPlan
+} from '@/api/operations/overview'
 import { getTaskTemplateList } from '@/api/operations/taskTemplate'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import TaskTemp from '@/components/TaskTemp/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
 import { getDevicePage } from '@/api/config/device'
-import { PeriodTypeOptions } from '@/utils/constants'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 import { getMatchMaterialList } from '@/api/warehouse/material'
+import { number } from 'echarts/lib/export'
 
 export default {
   name: 'TaskPlan',
@@ -144,8 +146,8 @@ export default {
   },
   data() {
     return {
-      // 周期枚举
-      PeriodTypeOptions,
+      // 系统状态
+      statusList: getDictDatas(DICT_TYPE.COMMON_STATUS),
       // 任务计划类型
       taskPlanTypeList: getDictDatas(DICT_TYPE.OPERATIONS_TASK_PLAN_TYPE),
       // 任务计划周期
@@ -195,21 +197,33 @@ export default {
       // 表单参数
       form: {
         id: undefined,
+        projectId: undefined,
         deviceName: undefined,
-        type: 0,
-        taskTemp: undefined, // 任务模板
-        executorId: undefined, // 执行人
-        spareQuantity: 1, // 备品数量
-        mode: undefined,
-        skipHoliday: 1, // 跳过节假日
-        beginTime: undefined, // 开始时间
-        timingTime: undefined // 定时时间
+        taskName: undefined, // 子任务名称
+        type: 0, // 默认模板任务
+        extra: {
+          templateId: undefined, // 模板ID
+          materialId: undefined, // 物料ID
+          qty: 1 // 数量
+        },
+        blameId: undefined, // 执行人
+        mode: 2, // 默认周期生效
+        period: 2, // 周期 默认每周
+        skipHolidays: 0, // 跳过节假日
+        nextTriggerTime: undefined // 开始时间
       },
       // 表单校验
       rules: {
-        deviceName: [{ required: true, message: '设备不能为空', trigger: 'change' }],
-        taskTemp: { required: true, message: '任务模板不能为空', trigger: 'change' },
-        mode: { required: true, message: '生效方式不能为空', trigger: 'change' }
+        taskName: { required: true, message: '任务名称不能为空', trigger: 'blur' },
+        type: { required: true, message: '任务类型不能为空', trigger: 'change' },
+        extra: {
+          templateId: { required: true, message: '任务模板不能为空', trigger: 'change' },
+          materialId: { required: true, message: '备件不能为空', trigger: 'change' },
+          qty: { required: true, type: 'number', message: '数量不能为空', trigger: 'blur' }
+        },
+        mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
+        period: { required: true, message: '周期不能为空', trigger: 'change' },
+        nextTriggerTime: { required: true, type: 'date', message: '时间不能为空', trigger: 'change' }
       },
       // 任务模板弹出层
       taskTempVisible: false
@@ -221,6 +235,9 @@ export default {
   computed: {
     proId() {
       return this.$route.query.id
+    },
+    taskPlanPeriodListFilter() {
+      return this.taskPlanPeriodList.filter(item => parseInt(item.status) !== 1)
     }
   },
   methods: {
@@ -294,9 +311,18 @@ export default {
         this.loading = false;
       });
     },
-    /** 改变任务类型 */
-    bindTaskType(type) {
-      console.log(type)
+    /** 改变生效方式 */
+    bindTaskMode(mode) {
+      if (mode === 1) {
+        this.form.period = 0
+        this.form.nextTriggerTime = new Date().getTime()
+      } else if (mode === 3) {
+        this.form.period = 1
+        this.form.nextTriggerTime = undefined
+      } else {
+        this.form.period = 2
+        this.form.nextTriggerTime = undefined
+      }
     },
     /** 取消按钮 */
     cancel() {
@@ -307,15 +333,20 @@ export default {
     reset() {
       this.form = {
         id: undefined,
+        projectId: undefined,
         deviceName: undefined,
-        type: 0,
-        taskTemp: undefined, // 任务模板
-        executorId: undefined, // 执行人
-        spareQuantity: 1, // 备品数量
-        mode: undefined,
-        skipHoliday: 1, // 跳过节假日
-        beginTime: undefined, // 开始时间
-        timingTime: undefined // 定时时间
+        taskName: undefined, // 子任务名称
+        type: 0, // 默认模板任务
+        extra: {
+          templateId: undefined, // 模板ID
+          materialId: undefined, // 物料ID
+          qty: 1 // 数量
+        },
+        blameId: undefined, // 执行人
+        mode: 2, // 默认周期生效
+        period: 2, // 周期 默认每周
+        skipHolidays: 0, // 跳过节假日
+        nextTriggerTime: undefined // 开始时间
       }
       this.resetForm('form')
     },
@@ -331,8 +362,17 @@ export default {
     handleUpdate(row) {
       this.reset()
       const id = row.id
-      getFactoryArea(id).then(response => {
-        this.form = response.data
+      getTaskPlan(id).then(response => {
+        const { data } = response
+        if (data.period === 0) {
+          data.mode = 1
+        } else if (data.period === 1) {
+          data.mode = 3
+        } else {
+          data.mode = 2
+        }
+        console.log(data)
+        this.form = data
         this.open = true
         this.title = '修改'
       })
@@ -348,9 +388,10 @@ export default {
         if (!valid) {
           return
         }
+        this.form.projectId = this.proId
         // 修改的提交
         if (this.form.id != null) {
-          updateFactoryArea(this.form).then(response => {
+          updateTaskPlan(this.form).then(response => {
             this.$modal.msgSuccess('修改成功')
             this.open = false
             this.getList()
@@ -358,7 +399,7 @@ export default {
           return
         }
         // 添加的提交
-        createFactoryArea(this.form).then(response => {
+        createTaskPlan(this.form).then(response => {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
@@ -367,8 +408,7 @@ export default {
     },
     /** 创建模板按钮操作 */
     bindTaskTemp() {
-      console.log('创建模板')
-      this.taskTempVisible = true
+      this.$router.push({ name: 'TaskTemplate' })
     },
     /** 任务模板取消 */
     bindTaskTempCancel() {
@@ -382,10 +422,10 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const name = row.name
+      const name = row.taskName
       const id = row.id
-      this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteFactoryArea(id)
+      this.$modal.confirm('是否确认删除任务名称为"' + name + '"的数据项?').then(function() {
+        return deleteTaskPlan(id)
       }).then(() => {
         this.getList()
         this.$modal.msgSuccess('删除成功')
