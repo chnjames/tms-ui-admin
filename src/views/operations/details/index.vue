@@ -118,9 +118,9 @@ export default {
       // tab列表 tabsType: 2: 设备维保 1: 项目管理 & 生产管理
       tabsList: [
         { label: '项目描述', name: '1', component: 'ComTinymceEditor', content: '' },
-        { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 2 },
+        { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 2, content: '' },
         { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 2 },
-        { label: '任务详情', name: '2', component: 'TaskInfo', tabsType: 1 },
+        { label: '任务列表', name: '2', component: 'TaskInfo', tabsType: 1 },
         { label: '文档附件', name: '3', component: 'DocAppendix' },
         { label: 'BOM清单', name: '4', component: 'BomList', tabsType: 1 },
         { label: '合同管理', name: '5', component: 'ContractManage', tabsType: 1 },
@@ -221,12 +221,15 @@ export default {
         const proType = parseInt(this.proType)
         this.tabList = this.tabsList.filter(tab => {
           if (proType === 0 || proType === 1) {
+            // 0:项目管理 1:生产管理
             return !tab.tabsType || tab.tabsType === 1
           } else {
+            // 2:设备维保
             return !tab.tabsType || tab.tabsType === 2
           }
         })
         this.tabList.find(tab => tab.name === '1').content = data.description || ''
+        this.tabList.find(tab => tab.name === '7').content = data
         this.projectLoading = false
       })
     },

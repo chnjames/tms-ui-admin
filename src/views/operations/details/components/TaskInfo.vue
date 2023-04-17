@@ -14,8 +14,8 @@
     </el-row>
 
     <!--切换状态-->
-    <el-tabs v-model="curTab">
-      <el-tab-pane v-for="item in tabList" :key="item.name" :label="item.title" :name="item.name" />
+    <el-tabs v-model="queryParams.status" @tab-click="bindTab">
+      <el-tab-pane v-for="item in tabList" :key="item.value" :label="item.label" :name="item.value" />
     </el-tabs>
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list">
@@ -45,10 +45,19 @@
               </el-tooltip>
             </template>
           </template>
-          <template v-else-if="item.prop === 'createTime'">
+          <template v-else-if="item.prop === 'blameName'">
+            <span>{{ row.blame.nickname }}</span>
+          </template>
+          <template v-else-if="item.prop === 'estimatedHours'">
+            <span>{{ row.extra.plannedWorkMinute }}</span>
+          </template>
+          <template v-else-if="item.prop === 'consumedHours'">
+            <span>{{ row.extra.consumedWorkMinute }}</span>
+          </template>
+          <template v-else-if="item.prop === 'beginTime'">
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
-          <template v-else-if="item.prop === 'updateTime'">
+          <template v-else-if="item.prop === 'completedTime'">
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
@@ -133,9 +142,10 @@ import {
   getFactoryArea,
   updateFactoryArea
 } from '@/api/config/factoryArea'
-import { getCustomerPage } from "@/api/config/customer";
+import { getTaskPage } from '@/api/operations/overview'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: 'TaskInfo',
@@ -152,21 +162,13 @@ export default {
       userList: [],
       // 子任务列表
       taskOptions: [],
-      // 任务详情类型(项目管理/生产管理)
-      taskType: 1, // 1:项目管理 2:生产管理
       // tabs列表
-      tabList: [
-        { name: '1', title: '全部任务' },
-        { name: '2', title: '已完成' },
-        { name: '3', title: '延期未完成' }
-      ],
+      tabList: getDictDatas(DICT_TYPE.OPERATIONS_TASK_STATUS),
       // 生效方式Options
       modeOptions: [
         { type: 1, label: '选择开始时间' },
         { type: 2, label: '选择任务触发' }
       ],
-      // 当前tab
-      curTab: '1',
       // 任务详情列表
       list: [],
       // 弹出层标题
@@ -176,16 +178,12 @@ export default {
       // 查询参数
       queryParams: {
         name: null,
+        status: '0',
         pageNo: 1,
         pageSize: 10
       },
       // 基础表头
-      tableHeader: [
-        { prop: 'name', label: '子任务名称', width: '200' },
-        { prop: 'executorName', label: '执行人' },
-        { prop: 'internalNames', label: '内部关注人' },
-        { prop: 'externalNames', label: '外部关注人' }
-      ],
+      tableHeader: [],
       // 表单参数
       form: {
         id: undefined,
@@ -223,31 +221,42 @@ export default {
     this.getList()
     this.getUserList()
   },
+  computed: {
+    // 任务类型 0:项目管理 1:生产管理 2:设备维保
+    taskType() {
+      return this.$route.query.type
+    },
+  },
   mounted() {
-    // 根据任务详情类型设置表头
-    let secondHead = []
-    if (this.taskType === 1) {
-      secondHead = [
-        { prop: 'hours', label: '预计工时' },
-        { prop: 'hours', label: '消耗工时' },
-        { prop: 'outsourceCost', label: '委外费用(¥)' },
+    // 根据任务类型设置表头
+    let typeHead = []
+    const parType = parseInt(this.taskType)
+    if (parType === 0) {
+      // 项目管理
+      typeHead = [
+        { prop: 'name', label: '任务名称', width: 200 },
+        { prop: 'blameName', label: '执行人' },
+        { prop: 'estimatedHours', label: '预计工时' },
+        { prop: 'consumedHours', label: '消耗工时' },
+        { prop: 'outsourcingCost', label: '委外费用(¥)' },
         { prop: 'status', label: '状态' },
-        { prop: 'createTime', label: '开始时间', width: '160' },
-        { prop: 'updateTime', label: '完成时间', width: '160' },
-        { prop: 'operation', label: '操作' }
+        { prop: 'beginTime', label: '开始时间', width: 160 },
+        { prop: 'completedTime', label: '完成时间', width: 160 }
       ]
-    } else {
-      secondHead = [
+    } else if (parType === 1) {
+      // 生产管理
+      typeHead = [
+        { prop: 'name', label: '子任务名称', width: 200 },
+        { prop: 'blameName', label: '执行人' },
         { prop: 'hours', label: '计划数量' },
         { prop: 'hours', label: '已完成数量' },
         { prop: 'outsourceCost', label: '不合格数量' },
         { prop: 'status', label: '状态' },
-        { prop: 'createTime', label: '开始时间', width: '160' },
-        { prop: 'updateTime', label: '完成时间', width: '160' },
-        { prop: 'operation', label: '操作' }
+        { prop: 'beginTime', label: '开始时间', width: 160 },
+        { prop: 'completedTime', label: '完成时间', width: 160 },
       ]
     }
-    this.tableHeader = this.tableHeader.concat(secondHead)
+    this.tableHeader = typeHead
   },
   methods: {
     /** 用户列表 */
@@ -260,11 +269,17 @@ export default {
     getList() {
       this.loading = true;
       // 执行查询
-      getCustomerPage(this.queryParams).then(response => {
-        this.list = response.data.list;
-        this.total = response.data.total;
+      getTaskPage(this.queryParams).then(response => {
+        const { list, total } = response.data;
+        this.list = list;
+        this.total = total;
         this.loading = false;
       });
+    },
+    /* 切换状态 */
+    bindTab(tab) {
+      this.queryParams.status = tab.name
+      this.getList()
     },
     /** 取消按钮 */
     cancel() {

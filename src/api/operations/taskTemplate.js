@@ -12,6 +12,14 @@ export function getTaskTemplatePage(query) {
     params: query
   })
 }
+// 获取模版精简信息列表
+export function getTaskTemplateList(query) {
+  return request({
+    url: '/operations/template/list-all-simple',
+    method: 'get',
+    params: query
+  })
+}
 // 创建模版
 export function createTaskTemplate(data) {
   return request({

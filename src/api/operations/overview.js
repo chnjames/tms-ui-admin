@@ -195,4 +195,86 @@ export function uploadFile(data) {
     data
   })
 }
-
+/**
+ * 任务列表/执行记录
+ */
+// 获得任务附件列表
+export function getTaskFileList(query) {
+  return request({
+    url: '/operations/task/attachment/list',
+    method: 'get',
+    params: query
+  })
+}
+// 创建任务
+export function createTask(data) {
+  return request({
+    url: '/operations/task/create',
+    method: 'post',
+    data
+  })
+}
+// 获得任务
+export function getTask(id) {
+  return request({
+    url: '/operations/task/get?id=' + id,
+    method: 'get'
+  })
+}
+// 获得任务分页
+export function getTaskPage(query) {
+  return request({
+    url: '/operations/task/page',
+    method: 'get',
+    params: query
+  })
+}
+// 上传附件
+export function uploadTaskFile(data) {
+  return request({
+    url: '/operations/task/attachment/create',
+    method: 'post',
+    data
+  })
+}
+/**
+ * 任务计划
+ */
+// 创建任务计划
+export function createTaskPlan(data) {
+  return request({
+    url: '/operations/task-plan/create',
+    method: 'post',
+    data
+  })
+}
+// 删除任务计划
+export function deleteTaskPlan(id) {
+  return request({
+    url: '/operations/task-plan/delete?id=' + id,
+    method: 'delete'
+  })
+}
+// 获得任务计划
+export function getTaskPlan(id) {
+  return request({
+    url: '/operations/task-plan/get?id=' + id,
+    method: 'get'
+  })
+}
+// 获得任务计划分页
+export function getTaskPlanPage(query) {
+  return request({
+    url: '/operations/task-plan/page',
+    method: 'get',
+    params: query
+  })
+}
+// 更新任务计划
+export function updateTaskPlan(data) {
+  return request({
+    url: '/operations/task-plan/update',
+    method: 'put',
+    data
+  })
+}

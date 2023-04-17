@@ -80,6 +80,9 @@ export const DICT_TYPE = {
   WAREHOUSE_MATERIAL_DEMAND_STATUS: 'warehouse_material_demand_status', // 物料需求状态
   // ========== TASK 模块 ==========
   OPERATIONS_TEMPLATE_TYPE: 'operations_template_type', // 任务模板类型
+  OPERATIONS_TASK_STATUS: 'operations_task_status', // 任务状态
+  OPERATIONS_TASK_PLAN_TYPE: 'operations_task_plan_type', // 任务计划类型
+  OPERATIONS_TASK_PLAN_PERIOD: 'operations_task_plan_period', // 任务计划周期
 }
 
 /**
