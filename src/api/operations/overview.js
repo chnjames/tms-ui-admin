@@ -229,6 +229,14 @@ export function getTaskPage(query) {
     params: query
   })
 }
+// 获取任务精简信息列表
+export function getTaskSimpleList(query) {
+  return request({
+    url: '/operations/task/list-all-simple',
+    method: 'get',
+    params: query
+  })
+}
 // 上传附件
 export function uploadTaskFile(data) {
   return request({

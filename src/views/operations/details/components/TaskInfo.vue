@@ -15,7 +15,7 @@
 
     <!--切换状态-->
     <el-tabs v-model="queryParams.status" @tab-click="bindTab">
-      <el-tab-pane v-for="item in tabList" :key="item.value" :label="item.label" :name="item.value" />
+      <el-tab-pane v-for="item in tabsList" :key="item.value" :label="item.label" :name="item.value" />
     </el-tabs>
     <!-- 列表 -->
     <el-table v-loading="loading" :data="list">
@@ -63,9 +63,9 @@
           <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
                           value-format="timestamp" placeholder="开始时间"/>
         </el-form-item>
-        <el-form-item label="选择任务" prop="taskId" v-if="taskType === 0 && form.mode === 2">
-          <el-select v-model="form.taskId" placeholder="选择任务" style="width: 100%">
-            <el-option v-for="(item, index) in taskOptions" :key="index" :label="item.name" :value="item.id" />
+        <el-form-item label="选择任务" prop="extra.preTaskId" v-if="taskType === 0 && form.mode === 2">
+          <el-select v-model="form.extra.preTaskId" placeholder="选择任务" style="width: 100%">
+            <el-option v-for="item in taskOptions" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="计划数量" prop="extra.plannedQty" v-if="taskType === 1">
@@ -80,10 +80,10 @@
                           value-format="timestamp" placeholder="结束时间"/>
         </el-form-item>
         <el-form-item label="是否紧急">
-          <el-switch v-model="form.urgent"></el-switch>
+          <el-switch v-model="form.urgent" :active-value="1" :inactive-value="0"></el-switch>
         </el-form-item>
-        <el-form-item label="委外费用(¥)" prop="outsourceCost">
-          <el-input-number v-model="form.outsourceCost" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        <el-form-item label="委外费用(¥)" prop="outsourcingCost">
+          <el-input-number v-model="form.outsourcingCost" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
       </el-form>
       <template slot="footer">
@@ -95,7 +95,7 @@
 </template>
 
 <script>
-import { getTaskPage, createTask } from '@/api/operations/overview'
+import { getTaskPage, createTask, getTaskSimpleList } from '@/api/operations/overview'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
@@ -143,7 +143,7 @@ export default {
       // 查询参数
       queryParams: {
         name: null,
-        status: '0',
+        status: 'all',
         projectId: null,
         pageNo: 1,
         pageSize: 10
@@ -159,11 +159,11 @@ export default {
         blameId: null, // 执行人
         extra: {
           plannedWorkMinute: null, // 预计工时(分钟)
-          plannedQty: 1 // 计划数量
+          plannedQty: 1, // 计划数量
+          preTaskId: null // 前置任务
         },
         mode: 1, // 生效方式
         beginTime: null, // 开始时间
-        taskId: null, // 选择任务
         endTime: null, // 结束时间
         urgent: false, // 是否紧急
         outsourceCost: 0 // 委外费用
@@ -180,12 +180,12 @@ export default {
             { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
             { validator: validatePlannedWorkMinute, trigger: 'blur' }
           ],
-          plannedQty: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' }
+          plannedQty: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' },
+          preTaskId: { required: true, message: '选择任务不能为空', trigger: 'change' }
         },
         mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
         beginTime: { required: true, type: 'date', message: '开始时间不能为空', trigger: 'change' },
         endTime: { required: true, type: 'date', message: '结束时间不能为空', trigger: 'change' },
-        taskId: { required: true, message: '选择任务不能为空', trigger: 'change' },
         outsourceCost: { required: true, type: 'number', message: '委外费用不能为空', trigger: 'blur' }
       }
     }
@@ -193,6 +193,7 @@ export default {
   created() {
     this.getUserList()
     this.getTaskTempList()
+    this.getTaskSimpleList()
     this.getList()
   },
   computed: {
@@ -202,6 +203,12 @@ export default {
     },
     proId() {
       return this.$route.query.id
+    },
+    tabsList() {
+      return [
+        { value: 'all', label: '全部' },
+        ...this.tabList
+      ]
     }
   },
   mounted() {
@@ -226,7 +233,7 @@ export default {
         { prop: 'blameName', label: '执行人' },
         { prop: 'hours', label: '计划数量' },
         { prop: 'hours', label: '已完成数量' },
-        { prop: 'outsourceCost', label: '不合格数量' },
+        { prop: 'outsourcingCost', label: '不合格数量' },
         { prop: 'status', label: '状态' },
         { prop: 'activatedTime', label: '开始时间', width: 160 },
         { prop: 'completedTime', label: '完成时间', width: 160 },
@@ -247,12 +254,22 @@ export default {
         this.taskTempList = response.data
       })
     },
+    /** 获取任务精简列表 */
+    getTaskSimpleList() {
+      getTaskSimpleList().then(response => {
+        this.taskOptions = response.data
+      })
+    },
     /** 查询列表 */
     getList() {
       this.loading = true;
       // 执行查询
-      this.queryParams.projectId = this.proId
-      getTaskPage(this.queryParams).then(response => {
+      const params = {
+        ...this.queryParams,
+        projectId: this.proId,
+        status: this.queryParams.status === 'all' ? null : this.queryParams.status
+      }
+      getTaskPage(params).then(response => {
         const { list, total } = response.data;
         list.map(item => {
           item.blameName = item.blame?.name || ''
@@ -262,6 +279,7 @@ export default {
           item.completedTime = parseTime(item.completedTime)
           item.statusDesc = this.tabList.find(i => parseInt(i.value) === item.status).label
           item.statusColor = this.tabList.find(i => parseInt(i.value) === item.status).colorType
+          item.outsourcingCost = (item.outsourcingCost / 100).toFixed(2)
         })
         this.list = list;
         this.total = total;
@@ -288,14 +306,14 @@ export default {
         blameId: null, // 执行人
         extra: {
           plannedWorkMinute: null, // 预计工时(分钟)
-          plannedQty: 1 // 计划数量
+          plannedQty: 1, // 计划数量
+          preTaskId: null // 前置任务
         },
         mode: 1, // 生效方式
         beginTime: null, // 开始时间
-        taskId: null, // 选择任务
         endTime: null, // 结束时间
         urgent: false, // 是否紧急
-        outsourceCost: 0 // 委外费用
+        outsourcingCost: 0 // 委外费用
       }
       this.resetForm('form')
     },
@@ -317,10 +335,15 @@ export default {
           return
         }
         // 添加的提交
+        const currentTime = new Date().getTime();
+        if (this.taskType === 0 && this.form.mode === 2) {
+          this.form.beginTime = currentTime
+        }
         const params = {
           ...this.form,
           projectId: this.proId,
           type: this.taskType,
+          outsourcingCost: this.form.outsourcingCost * 100,
           extra: {
             ...this.form.extra,
             plannedWorkMinute: this.form.extra.plannedWorkMinute * 60
