@@ -152,8 +152,8 @@ export default {
       tableHeader: [],
       // 表单参数
       form: {
-        id: null,
         projectId: null, // 项目id
+        type: null, // 项目类型
         templateId: null, // 任务模板id
         name: null, // 任务名称
         blameId: null, // 执行人
@@ -281,8 +281,8 @@ export default {
     /** 表单重置 */
     reset() {
       this.form = {
-        id: null,
         projectId: null, // 项目id
+        type: null, // 项目类型
         templateId: null, // 任务模板id
         name: null, // 任务名称
         blameId: null, // 执行人
@@ -320,6 +320,7 @@ export default {
         const params = {
           ...this.form,
           projectId: this.proId,
+          type: this.taskType,
           extra: {
             ...this.form.extra,
             plannedWorkMinute: this.form.extra.plannedWorkMinute * 60
