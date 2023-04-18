@@ -7,7 +7,7 @@
                    v-hasPermi="['config:factory-area:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button plain icon="el-icon-delete" size="mini" @click="handleAdd"
+        <el-button plain icon="el-icon-delete" size="mini"
                    v-hasPermi="['config:device:create']">批量删除</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -79,29 +79,25 @@
           </el-select>
         </el-form-item>
         <!--生效方式：周期生效-->
-        <template  v-if="form.mode === 2">
-          <el-form-item prop="period">
-            <el-select v-model="form.period" placeholder="周期" style="width: 100%">
-              <el-option v-for="item in taskPlanPeriodListFilter" :key="item.value" :label="item.label" :value="parseInt(item.value)" />
-            </el-select>
-          </el-form-item>
-          <!--跳过节假日 是否单选-->
-          <el-form-item label="跳过节假日">
-            <el-radio-group v-model="form.skipHolidays">
-              <el-radio v-for="item in statusList" :key="item.value" :label="parseInt(item.value)">{{ item.label }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item label="开始时间" prop="nextTriggerTime">
-            <el-date-picker clearable size="small" style="width: 100%" v-model="form.nextTriggerTime" type="datetime"
-                            value-format="timestamp" placeholder="选择开始时间"/>
-          </el-form-item>
-        </template>
-        <template v-if="form.mode === 3">
-          <el-form-item label="触发时间" prop="nextTriggerTime">
-            <el-date-picker clearable size="small" style="width: 100%" v-model="form.nextTriggerTime" type="datetime"
-                            value-format="timestamp" placeholder="选择时间"/>
-          </el-form-item>
-        </template>
+        <el-form-item prop="period" v-if="form.mode === 2">
+          <el-select v-model="form.period" placeholder="周期" style="width: 100%">
+            <el-option v-for="item in taskPlanPeriodListFilter" :key="item.value" :label="item.label" :value="parseInt(item.value)" />
+          </el-select>
+        </el-form-item>
+        <!--跳过节假日 是否单选-->
+        <el-form-item label="跳过节假日" v-if="form.mode === 2">
+          <el-radio-group v-model="form.skipHolidays">
+            <el-radio v-for="item in statusList" :key="item.value" :label="parseInt(item.value)">{{ item.label }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="开始时间" prop="nextTriggerTime" v-if="form.mode === 2">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.nextTriggerTime" type="datetime"
+                          value-format="timestamp" placeholder="选择开始时间"/>
+        </el-form-item>
+        <el-form-item label="触发时间" prop="nextTriggerTime" v-if="form.mode === 3">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.nextTriggerTime" type="datetime"
+                          value-format="timestamp" placeholder="选择时间"/>
+        </el-form-item>
       </el-form>
       <template slot="footer">
         <!--创建模板-->
@@ -110,15 +106,10 @@
         <el-button type="primary" @click="submitForm">确 定</el-button>
       </template>
     </drawer-plus>
-    <!--任务模板-->
-    <task-temp :visible.sync="taskTempVisible" title="任务模板" @cancel="bindTaskTempCancel" @submit="bindTaskTempSubmit"></task-temp>
   </div>
 </template>
 
 <script>
-import {
-  getFactoryArea,
-} from '@/api/config/factoryArea'
 import {
   getTaskPlanPage,
   createTaskPlan,
@@ -128,16 +119,14 @@ import {
 } from '@/api/operations/overview'
 import { getTaskTemplateList } from '@/api/operations/taskTemplate'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
-import TaskTemp from '@/components/TaskTemp/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
 import { getDevicePage } from '@/api/config/device'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 import { getMatchMaterialList } from '@/api/warehouse/material'
-import { number } from 'echarts/lib/export'
 
 export default {
   name: 'TaskPlan',
-  components: { DrawerPlus, TaskTemp },
+  components: { DrawerPlus },
   props: {
     content: {
       type: Object,
@@ -224,9 +213,7 @@ export default {
         mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
         period: { required: true, message: '周期不能为空', trigger: 'change' },
         nextTriggerTime: { required: true, type: 'date', message: '时间不能为空', trigger: 'change' }
-      },
-      // 任务模板弹出层
-      taskTempVisible: false
+      }
     }
   },
   created() {
@@ -352,7 +339,6 @@ export default {
     },
     /** 新增按钮操作 */
     handleAdd() {
-      console.log(this.content)
       this.reset()
       this.form.deviceName = this.content.name
       this.open = true
@@ -371,16 +357,11 @@ export default {
         } else {
           data.mode = 2
         }
-        console.log(data)
         this.form = data
+        this.form.deviceName = this.content.name
         this.open = true
         this.title = '修改'
       })
-    },
-    /** 置顶按钮操作 */
-    handleTop(row) {
-      const id = row.id
-      console.log(id)
     },
     /** 提交按钮 */
     submitForm() {
@@ -408,17 +389,7 @@ export default {
     },
     /** 创建模板按钮操作 */
     bindTaskTemp() {
-      this.$router.push({ name: 'TaskTemplate' })
-    },
-    /** 任务模板取消 */
-    bindTaskTempCancel() {
-      console.log('任务模板取消')
-      this.taskTempVisible = false
-    },
-    /** 任务模板提交 */
-    bindTaskTempSubmit() {
-      console.log('任务模板提交')
-      this.taskTempVisible = false
+      this.$router.push({ path: '/operations/taskTemplate' })
     },
     /** 删除按钮操作 */
     handleDelete(row) {
@@ -435,9 +406,3 @@ export default {
   }
 }
 </script>
-<style lang="scss" scoped>
-.operate {
-  padding-left: 10px;
-  cursor: pointer;
-}
-</style>

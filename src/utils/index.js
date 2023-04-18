@@ -468,6 +468,7 @@ export function timeFormat(time) {
  * 文件大小格式化
  * @param {Number} size 文件大小
  * @param {Number} pointLength 保留的小数点长度
+ * @param unitArr
  * @returns {String} 格式化后的文件大小
  * @example
  * formatFileSize(1024) // => 1KB
@@ -512,4 +513,11 @@ export function arrayNotEqual(arr1, arr2) {
     if (arr1[i] !== arr2[i]) return true;
   }
   return false;
+}
+
+/**
+ * 分钟转成小时(x.xxh)
+ */
+export function formatMinuteToHour(minute) {
+  return `${(minute / 60).toFixed(2)}h`;
 }

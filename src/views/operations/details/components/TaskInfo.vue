@@ -27,38 +27,8 @@
         :fixed="item.fixed"
         :label="item.label">
         <template v-slot="{row}">
-          <template v-if="item.prop === 'operation'">
-            <template v-if="taskType === 1">
-              <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
-                         v-hasPermi="['config:factory-area:update']">编辑</el-button>
-              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
-                         v-hasPermi="['config:factory-area:delete']">删除</el-button>
-            </template>
-            <template v-else>
-              <el-button size="mini" type="text" icon="el-icon-upload2" @click="handleTop(row)"
-                         v-hasPermi="['config:factory-area:update']">置顶</el-button>
-              <el-tooltip content="上移一行">
-                <i class="el-icon-top operate" style="color: #E6A23C"></i>
-              </el-tooltip>
-              <el-tooltip content="下移一行">
-                <i class="el-icon-bottom operate" style="color: #409EFF"></i>
-              </el-tooltip>
-            </template>
-          </template>
-          <template v-else-if="item.prop === 'blameName'">
-            <span>{{ row.blame.nickname }}</span>
-          </template>
-          <template v-else-if="item.prop === 'estimatedHours'">
-            <span>{{ row.extra.plannedWorkMinute }}</span>
-          </template>
-          <template v-else-if="item.prop === 'consumedHours'">
-            <span>{{ row.extra.consumedWorkMinute }}</span>
-          </template>
-          <template v-else-if="item.prop === 'beginTime'">
-            <span>{{ parseTime(row[item.prop]) }}</span>
-          </template>
-          <template v-else-if="item.prop === 'completedTime'">
-            <span>{{ parseTime(row[item.prop]) }}</span>
+          <template v-if="item.prop === 'status'">
+            <el-tag size="mini" :type="row.statusColor">{{row.statusDesc}}</el-tag>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
         </template>
@@ -67,63 +37,52 @@
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="130px">
+        <el-form-item label="任务模板" prop="templateId">
+          <el-select v-model="form.templateId" filterable placeholder="请选择" style="width: 100%">
+            <el-option v-for="item in taskTempList" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="子任务名称" prop="name">
-          <el-input v-model="form.name" placeholder="给目标起个名字"/>
+          <el-input v-model="form.name" placeholder="子任务名称"/>
         </el-form-item>
         <el-form-item label="执行人">
-          <el-select v-model="form.executorId" style="width: 100%" filterable placeholder="请选择">
+          <el-select v-model="form.blameId" style="width: 100%" filterable placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="计划数量" prop="planQuantity" v-if="taskType === 2">
-          <el-input-number v-model="form.planQuantity" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+        <el-form-item label="预估工时(h)" prop="extra.plannedWorkMinute" v-if="taskType === 0">
+          <el-input-number v-model="form.extra.plannedWorkMinute" :precision="1" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
-        <el-form-item label="预估工时(h)" prop="hours" v-if="taskType === 1">
-          <el-input-number v-model="form.hours" controls-position="right" :min="0" style="width: 100%"></el-input-number>
-        </el-form-item>
-        <el-form-item label="内部关注人">
-          <el-select v-model="form.internalIds" style="width: 100%" :multiple-limit="10" filterable multiple placeholder="请选择">
-            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="外部关注人">
-          <el-select v-model="form.externalIds" style="width: 100%" :multiple-limit="10" filterable multiple placeholder="请选择">
-            <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
-                       :value="parseInt(item.id)"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="首任务开始时间" prop="firstBeginTime" v-if="taskType === 2">
-          <el-date-picker clearable size="small" style="width: 100%" v-model="form.firstBeginTime" type="date"
-                          value-format="timestamp" placeholder="选择首任务开始时间"/>
-        </el-form-item>
-        <el-form-item label="生效方式" prop="mode" v-if="taskType === 1">
+        <el-form-item label="生效方式" prop="mode" v-if="taskType === 0">
           <el-select v-model="form.mode" placeholder="生效方式" style="width: 100%">
             <el-option v-for="(item, index) in modeOptions" :key="index" :label="item.label" :value="item.type" />
           </el-select>
         </el-form-item>
-        <template v-if="taskType === 1">
-          <template  v-if="form.mode === 1">
-            <el-form-item label="计划开始时间" prop="beginTime">
-              <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
-                              value-format="timestamp" placeholder="选择开始时间"/>
-            </el-form-item>
-            <el-form-item label="计划结束时间" prop="endTime">
-              <el-date-picker clearable size="small" style="width: 100%" v-model="form.endTime" type="date"
-                              value-format="timestamp" placeholder="选择结束时间"/>
-            </el-form-item>
-          </template>
-          <el-form-item label="选择任务触发" prop="taskId" v-else>
-            <el-select v-model="form.taskId" placeholder="选择任务触发" style="width: 100%">
-              <el-option v-for="(item, index) in taskOptions" :key="index" :label="item.name" :value="item.id" />
-            </el-select>
-          </el-form-item>
-        </template>
-        <el-form-item label="是否紧急">
-          <el-switch v-model="form.emergency"></el-switch>
+        <el-form-item label="开始时间" prop="beginTime" v-if="taskType === 0 && form.mode === 1">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
+                          value-format="timestamp" placeholder="开始时间"/>
         </el-form-item>
-        <el-form-item label="委外费用(¥)">
+        <el-form-item label="选择任务" prop="taskId" v-if="taskType === 0 && form.mode === 2">
+          <el-select v-model="form.taskId" placeholder="选择任务" style="width: 100%">
+            <el-option v-for="(item, index) in taskOptions" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="计划数量" prop="extra.plannedQty" v-if="taskType === 1">
+          <el-input-number v-model="form.extra.plannedQty" controls-position="right" :min="1" style="width: 100%"></el-input-number>
+        </el-form-item>
+        <el-form-item label="开始时间" prop="beginTime" v-if="taskType === 1">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
+                          value-format="timestamp" placeholder="开始时间"/>
+        </el-form-item>
+        <el-form-item label="结束时间" prop="endTime">
+          <el-date-picker clearable size="small" style="width: 100%" v-model="form.endTime" type="date"
+                          value-format="timestamp" placeholder="结束时间"/>
+        </el-form-item>
+        <el-form-item label="是否紧急">
+          <el-switch v-model="form.urgent"></el-switch>
+        </el-form-item>
+        <el-form-item label="委外费用(¥)" prop="outsourceCost">
           <el-input-number v-model="form.outsourceCost" controls-position="right" :min="0" style="width: 100%"></el-input-number>
         </el-form-item>
       </el-form>
@@ -136,21 +95,25 @@
 </template>
 
 <script>
-import {
-  createFactoryArea,
-  deleteFactoryArea,
-  getFactoryArea,
-  updateFactoryArea
-} from '@/api/config/factoryArea'
-import { getTaskPage } from '@/api/operations/overview'
+import { getTaskPage, createTask } from '@/api/operations/overview'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
+import { parseTime } from '@/utils/ruoyi'
+import { formatMinuteToHour } from '@/utils'
+import { getTaskTemplateList } from '@/api/operations/taskTemplate'
 
 export default {
   name: 'TaskInfo',
   components: { DrawerPlus },
   data() {
+    const validatePlannedWorkMinute = (rule, value, callback) => {
+      if (value <= 0) {
+        callback(new Error('预估工时必须大于0'))
+      } else {
+        callback()
+      }
+    }
     return {
       // 遮罩层
       loading: true,
@@ -162,6 +125,8 @@ export default {
       userList: [],
       // 子任务列表
       taskOptions: [],
+      // 任务模板列表
+      taskTempList: [],
       // tabs列表
       tabList: getDictDatas(DICT_TYPE.OPERATIONS_TASK_STATUS),
       // 生效方式Options
@@ -179,6 +144,7 @@ export default {
       queryParams: {
         name: null,
         status: '0',
+        projectId: null,
         pageNo: 1,
         pageSize: 10
       },
@@ -186,52 +152,62 @@ export default {
       tableHeader: [],
       // 表单参数
       form: {
-        id: undefined,
-        name: undefined,
-        executorId: undefined, // 执行人
-        planQuantity: undefined, // 计划数量(生产管理)
-        hours: undefined, // 预计工时
-        internalIds: [],
-        externalIds: [],
-        firstBeginTime: undefined, // 首任务开始时间(生产管理)
-        mode: undefined,
-        beginTime: undefined,
-        endTime: undefined,
-        taskId: undefined,
-        emergency: false,
-        outsourceCost: 0
+        id: null,
+        projectId: null, // 项目id
+        templateId: null, // 任务模板id
+        name: null, // 任务名称
+        blameId: null, // 执行人
+        extra: {
+          plannedWorkMinute: null, // 预计工时(分钟)
+          plannedQty: 1 // 计划数量
+        },
+        mode: 1, // 生效方式
+        beginTime: null, // 开始时间
+        taskId: null, // 选择任务
+        endTime: null, // 结束时间
+        urgent: false, // 是否紧急
+        outsourceCost: 0 // 委外费用
       },
       // 表单校验
       rules: {
+        templateId: { required: true, message: '任务模板不能为空', trigger: 'change' },
         name: [
-          { required: true, message: '名称不能为空', trigger: 'blur' },
-          { max: 30, message: '名称不能超过30个字', trigger: 'blur' }
+          { required: true, message: '子任务名称不能为空', trigger: 'blur' },
+          { max: 30, message: '子任务名称不能超过30个字', trigger: 'blur' }
         ],
-        planQuantity: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' },
-        hours: { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
-        firstBeginTime: { required: true, type: 'date', message: '首任务开始时间不能为空', trigger: 'change' },
+        extra: {
+          plannedWorkMinute: [
+            { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
+            { validator: validatePlannedWorkMinute, trigger: 'blur' }
+          ],
+          plannedQty: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' }
+        },
         mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
-        beginTime: { required: true, type: 'date', message: '计划开始时间不能为空', trigger: 'change' },
-        endTime: { required: true, type: 'date', message: '计划结束时间不能为空', trigger: 'change' },
-        taskId: { required: true, message: '选择任务触发不能为空', trigger: 'change' }
+        beginTime: { required: true, type: 'date', message: '开始时间不能为空', trigger: 'change' },
+        endTime: { required: true, type: 'date', message: '结束时间不能为空', trigger: 'change' },
+        taskId: { required: true, message: '选择任务不能为空', trigger: 'change' },
+        outsourceCost: { required: true, type: 'number', message: '委外费用不能为空', trigger: 'blur' }
       }
     }
   },
   created() {
-    this.getList()
     this.getUserList()
+    this.getTaskTempList()
+    this.getList()
   },
   computed: {
     // 任务类型 0:项目管理 1:生产管理 2:设备维保
     taskType() {
-      return this.$route.query.type
+      return Number(this.$route.query.type)
     },
+    proId() {
+      return this.$route.query.id
+    }
   },
   mounted() {
     // 根据任务类型设置表头
     let typeHead = []
-    const parType = parseInt(this.taskType)
-    if (parType === 0) {
+    if (this.taskType === 0) {
       // 项目管理
       typeHead = [
         { prop: 'name', label: '任务名称', width: 200 },
@@ -240,19 +216,19 @@ export default {
         { prop: 'consumedHours', label: '消耗工时' },
         { prop: 'outsourcingCost', label: '委外费用(¥)' },
         { prop: 'status', label: '状态' },
-        { prop: 'beginTime', label: '开始时间', width: 160 },
+        { prop: 'activatedTime', label: '开始时间', width: 160 },
         { prop: 'completedTime', label: '完成时间', width: 160 }
       ]
-    } else if (parType === 1) {
+    } else if (this.taskType === 1) {
       // 生产管理
       typeHead = [
-        { prop: 'name', label: '子任务名称', width: 200 },
+        { prop: 'name', label: '任务名称', width: 200 },
         { prop: 'blameName', label: '执行人' },
         { prop: 'hours', label: '计划数量' },
         { prop: 'hours', label: '已完成数量' },
         { prop: 'outsourceCost', label: '不合格数量' },
         { prop: 'status', label: '状态' },
-        { prop: 'beginTime', label: '开始时间', width: 160 },
+        { prop: 'activatedTime', label: '开始时间', width: 160 },
         { prop: 'completedTime', label: '完成时间', width: 160 },
       ]
     }
@@ -265,12 +241,28 @@ export default {
         this.userList = response.data
       })
     },
+    /** 获取任务模板列表 */
+    getTaskTempList() {
+      getTaskTemplateList().then(response => {
+        this.taskTempList = response.data
+      })
+    },
     /** 查询列表 */
     getList() {
       this.loading = true;
       // 执行查询
+      this.queryParams.projectId = this.proId
       getTaskPage(this.queryParams).then(response => {
         const { list, total } = response.data;
+        list.map(item => {
+          item.blameName = item.blame?.name || ''
+          item.estimatedHours = formatMinuteToHour(item.extra?.plannedWorkMinute || 0)
+          item.consumedHours = formatMinuteToHour(item.extra?.consumedWorkMinute || 0)
+          item.activatedTime = parseTime(item.activatedTime)
+          item.completedTime = parseTime(item.completedTime)
+          item.statusDesc = this.tabList.find(i => parseInt(i.value) === item.status).label
+          item.statusColor = this.tabList.find(i => parseInt(i.value) === item.status).colorType
+        })
         this.list = list;
         this.total = total;
         this.loading = false;
@@ -289,18 +281,21 @@ export default {
     /** 表单重置 */
     reset() {
       this.form = {
-        id: undefined,
-        name: undefined,
-        executorId: undefined, // 执行人
-        hours: undefined, // 预计工时
-        internalIds: [],
-        externalIds: [],
-        mode: undefined,
-        beginTime: undefined,
-        endTime: undefined,
-        taskId: undefined,
-        emergency: false,
-        outsourceCost: 0
+        id: null,
+        projectId: null, // 项目id
+        templateId: null, // 任务模板id
+        name: null, // 任务名称
+        blameId: null, // 执行人
+        extra: {
+          plannedWorkMinute: null, // 预计工时(分钟)
+          plannedQty: 1 // 计划数量
+        },
+        mode: 1, // 生效方式
+        beginTime: null, // 开始时间
+        taskId: null, // 选择任务
+        endTime: null, // 结束时间
+        urgent: false, // 是否紧急
+        outsourceCost: 0 // 委外费用
       }
       this.resetForm('form')
     },
@@ -315,62 +310,28 @@ export default {
       this.open = true
       this.title = '添加'
     },
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.reset()
-      const id = row.id
-      getFactoryArea(id).then(response => {
-        this.form = response.data
-        this.open = true
-        this.title = '修改'
-      })
-    },
-    /** 置顶按钮操作 */
-    handleTop(row) {
-      const id = row.id
-      console.log(id)
-    },
     /** 提交按钮 */
     submitForm() {
       this.$refs['form'].validate(valid => {
         if (!valid) {
           return
         }
-        // 修改的提交
-        if (this.form.id != null) {
-          updateFactoryArea(this.form).then(response => {
-            this.$modal.msgSuccess('修改成功')
-            this.open = false
-            this.getList()
-          })
-          return
-        }
         // 添加的提交
-        createFactoryArea(this.form).then(response => {
+        const params = {
+          ...this.form,
+          projectId: this.proId,
+          extra: {
+            ...this.form.extra,
+            plannedWorkMinute: this.form.extra.plannedWorkMinute * 60
+          }
+        }
+        createTask(params).then(response => {
           this.$modal.msgSuccess('新增成功')
           this.open = false
           this.getList()
         })
       })
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const name = row.name
-      const id = row.id
-      this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {
-        return deleteFactoryArea(id)
-      }).then(() => {
-        this.getList()
-        this.$modal.msgSuccess('删除成功')
-      }).catch(() => {
-      })
     }
   }
 }
 </script>
-<style lang="scss" scoped>
-.operate {
-  padding-left: 10px;
-  cursor: pointer;
-}
-</style>

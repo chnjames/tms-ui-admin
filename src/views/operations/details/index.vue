@@ -229,7 +229,9 @@ export default {
           }
         })
         this.tabList.find(tab => tab.name === '1').content = data.description || ''
-        this.tabList.find(tab => tab.name === '7').content = data
+        if (this.tabList.find(tab => tab.name === '7')) {
+          this.tabList.find(tab => tab.name === '7').content = data
+        }
         this.projectLoading = false
       })
     },

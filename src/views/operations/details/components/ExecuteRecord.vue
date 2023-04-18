@@ -53,7 +53,7 @@ export default {
       list: [],
       // 查询参数
       queryParams: {
-        projectId: undefined,
+        projectId: null,
         pageNo: 1,
         pageSize: 10
       },
