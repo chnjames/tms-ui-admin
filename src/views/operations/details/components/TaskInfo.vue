@@ -331,6 +331,7 @@ export default {
     },
     /** 表单重置 */
     reset() {
+      this.currentIndex = 0
       this.params = {
         form: [{
           projectId: null, // 项目id
@@ -375,13 +376,13 @@ export default {
         }
         // 添加的提交
         const currentTime = new Date().getTime();
-        const paramsArr = this.params.form;
+        const paramsArr = JSON.parse(JSON.stringify(this.params.form))
         paramsArr.map(item => {
           if (this.taskType === 0 && item.mode === 2) {
             item.beginTime = currentTime
           }
           item.projectId = this.proId
-          item.type = this.taskType
+          item.type = this.taskType === 0 ? 0 : 10
           item.outsourcingCost = item.outsourcingCost * 100
           item.extra = {
             ...item.extra,
