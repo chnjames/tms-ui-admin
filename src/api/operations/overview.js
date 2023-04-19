@@ -61,6 +61,14 @@ export function exportOverviewExcel(query) {
     responseType: 'blob'
   })
 }
+// 获取项目精简信息列表
+export function getProjectSimpleList(query) {
+  return request({
+    url: '/operations/project/list-all-simple',
+    method: 'get',
+    params: query
+  })
+}
 
 // 创建项目合同
 export function createContract(data) {
@@ -210,6 +218,14 @@ export function getTaskFileList(query) {
 export function createTask(data) {
   return request({
     url: '/operations/task/create',
+    method: 'post',
+    data
+  })
+}
+// 批量创建任务
+export function createTaskBatch(data) {
+  return request({
+    url: '/operations/task/create/batch',
     method: 'post',
     data
   })

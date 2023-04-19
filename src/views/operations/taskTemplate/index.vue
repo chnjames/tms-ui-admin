@@ -172,7 +172,7 @@ export default {
         name: undefined, // 模板名称
         type: 0, // 模板类型 默认项目模板类型
         extras: [{
-          name: undefined, // 设备部位
+          name: undefined, // 设备部位 或者 工序/项目
           url: undefined, // 图片
           blameId: undefined, // 执行人 --- 生产管理类型
           tasks: [{
