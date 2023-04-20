@@ -2,19 +2,20 @@
   <div class="sidebar-logo-container" :class="{'collapse':collapse}" :style="{ backgroundColor: sideTheme === 'theme-dark' ? variables.menuBackground : variables.menuLightBackground }">
     <transition name="sidebarLogoFade">
       <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/">
-        <!--<img v-if="logo" :src="logo" class="sidebar-logo" />-->
-        <h1 class="sidebar-title" :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">{{ title }} </h1>
+        <img v-if="logoMini" :src="logoMini" class="sidebar-logo" />
+        <h1 v-else class="sidebar-title" :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">1{{ title }} </h1>
       </router-link>
       <router-link v-else key="expand" class="sidebar-logo-link" to="/">
-        <!--<img v-if="logo" :src="logo" class="sidebar-logo" />-->
-        <h1 class="sidebar-title" :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">{{ title }} </h1>
+        <img v-if="logo" :src="logo" class="collapse-sidebar-logo" />
+        <h1 v-else class="sidebar-title" :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">2{{ title }} </h1>
       </router-link>
     </transition>
   </div>
 </template>
 
 <script>
-import logoImg from '@/assets/logo/logo.png'
+import logoImg from '@/assets/logo/menu-logo.png'
+import logoImgMini from '@/assets/logo/icon-logo-mini.png'
 import variables from '@/assets/styles/variables.scss'
 
 export default {
@@ -36,7 +37,8 @@ export default {
   data() {
     return {
       title: '益哒创新',
-      logo: logoImg
+      logo: logoImg,
+      logoMini: logoImgMini
     }
   }
 }
@@ -65,6 +67,11 @@ export default {
     height: 100%;
     width: 100%;
 
+    & .collapse-sidebar-logo {
+      width: 90%;
+      height: 90%;
+      vertical-align: middle;
+    }
     & .sidebar-logo {
       width: 32px;
       height: 32px;
