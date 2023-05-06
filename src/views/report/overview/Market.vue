@@ -1,16 +1,12 @@
 <template>
   <div>
     <el-table v-loading="loading" :data="list">
-      <el-table-column label="客户名称" prop="name"/>
-      <el-table-column label="项目名称" prop="address"/>
-      <el-table-column label="合同金额" align="center" prop="contactName"/>
-      <el-table-column label="已收款金额" align="center" prop="contactMobile"/>
-      <el-table-column label="待收金额" prop="email"/>
-      <el-table-column label="销售负责人" align="center" prop="updateTime" width="180">
-        <template v-slot="scope">
-          <span>{{ parseTime(scope.row.updateTime) }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column label="客户名称" prop="contactId"/>
+      <el-table-column label="项目名称" prop="projectId"/>
+      <el-table-column label="合同金额" align="center" prop="totalAmount"/>
+      <el-table-column label="已收款金额" align="center" prop="receivedAmount"/>
+      <el-table-column label="待收金额" prop="timeoutAmount"/>
+      <el-table-column label="销售负责人" align="center" prop="blameId" width="180"/>
     </el-table>
     <!-- 分页组件 -->
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNo" :limit.sync="queryParams.pageSize"
@@ -19,9 +15,7 @@
 </template>
 
 <script>
-import {
-  getCustomerPage,
-} from '@/api/config/customer'
+import { getSalesOverview } from '@/api/report/operations'
 export default {
   name: 'Market',
   data() {
@@ -48,9 +42,10 @@ export default {
     getList() {
       this.loading = true
       // 执行查询
-      getCustomerPage(this.queryParams).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total
+      getSalesOverview(this.queryParams).then(response => {
+        const {list, total} = response.data
+        this.list = list
+        this.total = total
         this.loading = false
       })
     },

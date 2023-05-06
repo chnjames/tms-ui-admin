@@ -1,5 +1,5 @@
 <template>
-  <charts :options="options" height="400px" />
+  <charts ref="monthLine" :options="options" height="400px" />
 </template>
 
 <script>
@@ -7,6 +7,36 @@ import Charts from '@/components/Charts/index.vue'
 export default {
   name: 'MonthLineChart',
   components: { Charts },
+  props: {
+    taskQty: {
+      type: Object,
+      default: () => {}
+    }
+  },
+  watch: {
+    taskQty: {
+      handler(val) {
+        let { totalQty, finishQty, unFinishQty } = val
+        totalQty = totalQty.map(item => item || null)
+        finishQty = finishQty.map(item => item || null)
+        unFinishQty = unFinishQty.map(item => item || null)
+        this.$nextTick(()=>{
+          this.$refs.monthLine.chart.setOption({
+            series: [
+              {
+                data: totalQty
+              }, {
+                data: finishQty
+              }, {
+                data: unFinishQty
+              }
+            ]
+          })
+        })
+      },
+      deep: true
+    }
+  },
   data() {
     return {
       options: {
@@ -64,22 +94,19 @@ export default {
           {
             name: '总任务数量',
             type: 'line',
-            smooth: false,
-            data: [12, 56, 23, 63, 93, 47, 73, 23, 56, 56, 18, 43]
+            smooth: false
           }, {
             name: '已完成数量',
             type: 'line',
-            smooth: false,
-            data: [8, 48, 20, 58, 79, 16, 52, 21, 49, 43, 17, 21]
+            smooth: false
           }, {
             name: '未完成数量',
             type: 'line',
-            smooth: false,
-            data: [4, 8, 3, 5, 14, 31, 21, 2, 7, 13, 1, 22]
+            smooth: false
           }
         ]
       }
     }
-  },
+  }
 }
 </script>

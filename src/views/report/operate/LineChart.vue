@@ -1,5 +1,5 @@
 <template>
-  <charts :options="options" />
+  <charts ref="LineChart" :options="options" />
 </template>
 
 <script>
@@ -7,6 +7,33 @@ import Charts from '@/components/Charts/index.vue'
 export default {
   name: 'LineChart',
   components: { Charts },
+  props: {
+    salesAndArrears: {
+      type: Object,
+      default: () => {}
+    }
+  },
+  watch: {
+    salesAndArrears: {
+      handler(val) {
+        let { customerOwe, projectIncome } = val
+        customerOwe = customerOwe.map(item => item / 100 || null)
+        projectIncome = projectIncome.map(item => item / 100 || null)
+        this.$nextTick(()=>{
+          this.$refs.LineChart.chart.setOption({
+            series: [
+              {
+                data: projectIncome
+              }, {
+                data: customerOwe
+              }
+            ]
+          })
+        })
+      },
+      deep: true
+    }
+  },
   data() {
     return {
       options: {
@@ -64,13 +91,11 @@ export default {
           {
             name: '销售收入',
             type: 'line',
-            smooth: false,
-            data: [7, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
+            smooth: false
           }, {
             name: '客户欠款',
             type: 'line',
-            smooth: false,
-            data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17, 16.6, 14.2, 10.3, 6.6, 4.8]
+            smooth: false
           }
         ]
       }

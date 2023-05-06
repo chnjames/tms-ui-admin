@@ -5,14 +5,14 @@
         <el-col :xs="24" :sm="12" :lg="6">
           <el-date-picker
             v-model="missionDate"
-            value-format="yyyy-MM-dd"
+            value-format="yyyy-MM-dd HH:mm:ss"
             type="daterange"
             align="right"
             style="width: 100%"
-            unlink-panels
             range-separator="-"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
+            :default-time="['00:00:00', '23:59:59']"
             :picker-options="pickerOptions">
           </el-date-picker>
         </el-col>
@@ -22,7 +22,7 @@
       <el-row :gutter="20">
         <el-col :xs="24" :sm="24" :lg="12">
           <div class="chart-wrapper">
-            <month-line-chart/>
+            <month-line-chart :taskQty="taskQty"/>
           </div>
         </el-col>
         <el-col :xs="24" :sm="24" :lg="12">
@@ -50,6 +50,7 @@ import MonthLineChart from '@/views/report/mission/MonthLineChart.vue'
 import StaffBarChart from '@/views/report/mission/StaffBarChart.vue'
 import KPIBarChart from '@/views/report/mission/KPIBarChart.vue'
 import StaffLineChart from '@/views/report/mission/StaffLineChart.vue'
+import { getTaskQty } from '@/api/report/task'
 
 export default {
   name: 'Mission',
@@ -91,12 +92,26 @@ export default {
           }
         }]
       },
-      missionDate: ''
+      missionDate: [],
+      taskQty: null // 任务数
     }
   },
   watch: {
-    missionDate(val) {
-      console.log(val)
+    missionDate: {
+      handler() {
+        this.getTaskQty()
+      },
+      immediate: true
+    }
+  },
+  methods: {
+    /** 查询任务数(表1) */
+    getTaskQty() {
+      getTaskQty({
+        time: this.missionDate
+      }).then(response => {
+        this.taskQty = response.data
+      });
     }
   }
 }

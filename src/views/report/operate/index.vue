@@ -12,7 +12,7 @@
             <div class="icon expenditure">
               <i class="el-icon-upload2"></i>
             </div>
-            <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num"/>
+            <count-to :start-val="0" :end-val="lastMonthMaterialBuyingPay" :duration="3000" class="card-panel-num"/>
           </div>
         </el-card>
       </el-col>
@@ -26,7 +26,7 @@
             <div class="icon income">
               <i class="el-icon-download"></i>
             </div>
-            <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num"/>
+            <count-to :start-val="0" :end-val="lastMonthProjectPaymentIncome" :duration="3000" class="card-panel-num"/>
           </div>
         </el-card>
       </el-col>
@@ -39,7 +39,7 @@
             <div class="icon receivable">
               <i class="el-icon-wallet"></i>
             </div>
-            <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num"/>
+            <count-to :start-val="0" :end-val="projectPaymentNeed" :duration="3000" class="card-panel-num"/>
           </div>
         </el-card>
       </el-col>
@@ -52,7 +52,7 @@
             <div class="icon extension">
               <i class="el-icon-money"></i>
             </div>
-            <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num"/>
+            <count-to :start-val="0" :end-val="projectPaymentTimeout" :duration="3000" class="card-panel-num"/>
           </div>
         </el-card>
       </el-col>
@@ -66,7 +66,7 @@
             <div class="icon expenditure">
               <i class="el-icon-upload2"></i>
             </div>
-            <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num"/>
+            <count-to :start-val="0" :end-val="stockValve" :duration="3000" class="card-panel-num"/>
           </div>
         </el-card>
       </el-col>
@@ -108,12 +108,12 @@
     <el-row :gutter="20">
       <el-col :xs="24" :sm="24" :lg="12">
         <div class="chart-wrapper">
-          <line-chart height="400px"/>
+          <line-chart :salesAndArrears="salesAndArrears" height="400px"/>
         </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="12">
         <div class="chart-wrapper">
-          <bar-chart height="400px"/>
+          <bar-chart :purchaseAndStock="purchaseAndStock" height="400px"/>
         </div>
       </el-col>
     </el-row>
@@ -151,6 +151,11 @@ import CountTo from 'vue-count-to'
 import BarChart from './BarChart.vue'
 import LineChart from './LineChart.vue'
 import GanttTask from '@/views/report/operate/GanttTask.vue'
+import {
+  getSalesAndArrears,
+  getFinanceOverview,
+  getPurchaseAndStock
+} from '@/api/report/operations'
 
 export default {
   name: 'Operate',
@@ -197,6 +202,13 @@ export default {
           }
         }]
       },
+      lastMonthMaterialBuyingPay: 0, // 上月物料采购付款
+      lastMonthProjectPaymentIncome: 0, // 上月项目收款
+      projectPaymentNeed: 0, // 项目收款需求
+      projectPaymentTimeout: 0, // 项目收款逾期
+      stockValve: 0, // 库存阀值
+      salesAndArrears: null, // 销售收入和客户欠款
+      purchaseAndStock: null, // 采购支出和库存
       // 财务分析时间
       financeTime: '',
       // 遮罩层
@@ -205,7 +217,43 @@ export default {
       list: []
     }
   },
+  created() {
+    this.getSalesAndArrears()
+    this.getFinanceOverview()
+    this.getPurchaseAndStock()
+  },
   methods: {
+    /** 获取销售收入和客户欠款 */
+    getSalesAndArrears() {
+      getSalesAndArrears().then(response => {
+        const {data} = response
+        this.salesAndArrears = data
+      })
+    },
+    /** 获取财务概览 */
+    getFinanceOverview() {
+      getFinanceOverview().then(response => {
+        const {
+          lastMonthMaterialBuyingPay,
+          lastMonthProjectPaymentIncome,
+          projectPaymentNeed,
+          projectPaymentTimeout,
+          stockValve
+        } = response.data
+        this.lastMonthMaterialBuyingPay = lastMonthMaterialBuyingPay / 100
+        this.lastMonthProjectPaymentIncome = lastMonthProjectPaymentIncome / 100
+        this.projectPaymentNeed = projectPaymentNeed / 100
+        this.projectPaymentTimeout = projectPaymentTimeout / 100
+        this.stockValve = stockValve / 100
+      })
+    },
+    /** 获取采购支出和库存 */
+    getPurchaseAndStock() {
+      getPurchaseAndStock().then(response => {
+        const {data} = response
+        this.purchaseAndStock = data
+      })
+    },
     handleDetails() {
       this.$router.push({
         path: "/report/overview",

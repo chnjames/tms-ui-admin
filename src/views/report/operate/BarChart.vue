@@ -1,5 +1,5 @@
 <template>
-  <charts :options="options" />
+  <charts ref="barChart" :options="options" />
 </template>
 
 <script>
@@ -8,6 +8,33 @@ import Charts from '@/components/Charts/index.vue'
 export default {
   name: 'BarChart',
   components: { Charts },
+  props: {
+    purchaseAndStock: {
+      type: Object,
+      default: () => {}
+    }
+  },
+  watch: {
+    purchaseAndStock: {
+      handler(val) {
+        let { buyingQty, stockQty } = val
+        buyingQty = buyingQty.map(item => item || null)
+        stockQty = stockQty.map(item => item || null)
+        this.$nextTick(()=>{
+          this.$refs.barChart.chart.setOption({
+            series: [
+              {
+                data: buyingQty
+              }, {
+                data: stockQty
+              }
+            ]
+          })
+        })
+      },
+      deep: true
+    }
+  },
   data() {
     return {
       options: {
@@ -69,14 +96,12 @@ export default {
             name: '物料采购',
             type: 'bar',
             barWidth: '30%',
-            barGap: 0, // 表示柱子之间的距离
-            data: [7, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
+            barGap: 0 // 表示柱子之间的距离
           }, {
             name: '资产存货',
             type: 'bar',
             barWidth: '30%',
-            barGap: 0, // 表示柱子之间的距离
-            data: [12, 14, 12, 54, 22, 44, 34, 11, 19, 4, 34, 65]
+            barGap: 0 // 表示柱子之间的距离
           }
         ]
       }
