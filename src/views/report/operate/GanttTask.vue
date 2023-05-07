@@ -1,5 +1,28 @@
 <template>
   <div class="warpper">
+    <el-row :gutter="20" type="flex" justify="end" align="middle">
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-date-picker
+          v-model="queryParams.time"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          type="daterange"
+          align="right"
+          style="width: 100%"
+          unlink-panels
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :default-time="['00:00:00', '23:59:59']"
+          :picker-options="pickerOptions">
+        </el-date-picker>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-select v-model="queryParams.projectId" placeholder="请选择项目" style="width: 100%">
+          <el-option v-for="item in projectSimpleList" :key="item.id" :label="item.name" :value="item.id"/>
+        </el-select>
+      </el-col>
+    </el-row>
+    <el-divider/>
     <div ref="gantt" class="gantt-container"/>
   </div>
 </template>
@@ -8,72 +31,94 @@
 import gantt from 'dhtmlx-gantt'
 import 'dhtmlx-gantt/codebase/dhtmlxgantt.css'
 import { parseTime } from '@/utils/ruoyi'
+import { getProjectSimpleList } from '@/api/operations/overview'
+import { getTaskGantt } from '@/api/report/operations'
 
 export default {
   name: 'GanttTask',
   data() {
     return {
+      // 查询参数
+      queryParams: {
+        projectId: null,
+        time: null
+      },
+      projectSimpleList: [], // 项目列表
+      pickerOptions: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近一个月',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近三个月',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近一年',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 365)
+            picker.$emit('pick', [start, end])
+          }
+        }]
+      },
       // 甘特图配置
       tasks: {
-        data: [
-          {
-            id: 11, // 任务标识
-            text: '任务1', // 文本，任务的显示文字
-            start_date: '18-04-2018', // 开始时间
-            end_date: '19-04-2018', // 结束时间
-            type: gantt.config.types.task, // 任务类型，有三种，object，task，milestone
-            progress: 1 // 项目的进度，用颜色深浅显示
-          }, {
-            id: 12,
-            text: '任务2',
-            type: gantt.config.types.task,
-            start_date: '19-04-2018',
-            end_date: '22-04-2018',
-            progress: 0.6
-          }, {
-            id: 13,
-            text: '任务3',
-            start_date: '22-04-2018',
-            end_date: '30-04-2018',
-            type: gantt.config.types.task,
-            progress: 0
-          }, {
-            id: 14,
-            text: '任务4',
-            type: gantt.config.types.task,
-            start_date: '25-04-2018',
-            end_date: '28-04-2018',
-            progress: 0.8
-          }, {
-            id: 15,
-            text: '任务5',
-            type: gantt.config.types.task,
-            start_date: '29-04-2018',
-            end_date: '02-05-2018',
-            progress: 0.2
-          }, {
-            id: 16,
-            text: '任务6',
-            start_date: '02-05-2018', // 开始时间
-            end_date: '03-05-2018', // 结束时间
-            type: gantt.config.types.task,
-            progress: 0
-          }, {
-            id: 17,
-            text: '任务7',
-            start_date: '02-05-2023', // 开始时间
-            end_date: '03-05-2023', // 结束时间
-            type: gantt.config.types.task,
-            progress: 0
-          }
-        ]
+        data: [{
+          id: 11, // 任务标识
+          text: '任务1', // 文本，任务的显示文字
+          start_date: '18-04-2018', // 开始时间
+          end_date: '19-04-2018', // 结束时间
+          type: gantt.config.types.task, // 任务类型，有三种，object，task，milestone
+          progress: 1 // 项目的进度，用颜色深浅显示
+        }]
       }
     }
   },
   mounted() {
-    this.init()
+    this.getProjectSimpleList()
+    this.getTaskGantt()
   },
   methods: {
+    /** 获取项目精简信息列表 */
+    getProjectSimpleList() {
+      getProjectSimpleList().then(response => {
+        this.projectSimpleList = response.data;
+      });
+    },
+    /** 获取甘特图数据 */
+    getTaskGantt() {
+      getTaskGantt(this.queryParams).then(response => {
+        const {data} = response
+        data.map(item => {
+          console.log('Before conversion:', item)
+          item.text = item.name
+          item.type = gantt.config.types.task
+          item.start_date = item.activatedTime ? parseTime(new Date(item.activatedTime), '{d}-{m}-{y} {h}:{i}:{s}') : parseTime(new Date(), '{d}-{m}-{y} {h}:{i}:{s}')
+          item.end_date = item.completedTime ? parseTime(new Date(item.completedTime), '{d}-{m}-{y} {h}:{i}:{s}') : parseTime(new Date(), '{d}-{m}-{y} {h}:{i}:{s}')
+          console.log('After conversion:', item)
+        })
+        this.tasks.data = data
+        this.init()
+      });
+    },
     // 初始化
     init() {
       // 自动延长时间刻度
@@ -116,8 +161,8 @@ export default {
       gantt.templates.tooltip_text = function(start, end, task) {
         return `<div>
           <div>任务：${task.text}</div>
-          <div>开始时间：${parseTime(task.start_date, '{y}-{m}-{d}')}</div>
-          <div>结束时间：${parseTime(task.end_date, '{y}-{m}-{d}')}</div>
+          <div>开始时间：${parseTime(task.start_date, '{y}-{m}-{d} {h}:{i}:{s}')}</div>
+          <div>结束时间：${parseTime(task.end_date, '{y}-{m}-{d} {h}:{i}:{s}')}</div>
           <div>进度：${task.progress * 100}%</div>
         </div>`
       }

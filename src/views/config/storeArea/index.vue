@@ -128,8 +128,6 @@ export default {
       isEdit: false,
       // 查询参数
       queryParams: {
-        pageNo: 1,
-        pageSize: 10,
         name: null
       },
       // 表单参数
@@ -215,7 +213,6 @@ export default {
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.queryParams.pageNo = 1
       this.getList()
     },
     /** 新增按钮操作 */

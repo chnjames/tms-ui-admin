@@ -52,8 +52,8 @@
                          :value="parseInt(i.id)"/>
             </el-select>
           </el-form-item>
-          <el-form-item label="预估工时(h)" :prop="'form.'+ index + '.extra.plannedWorkMinute'" :rules="rules.extra.plannedWorkMinute" v-if="taskType === 0">
-            <el-input-number v-model="item.extra.plannedWorkMinute" :precision="1" controls-position="right" :min="0" style="width: 100%"></el-input-number>
+          <el-form-item label="预估工时(h)" :prop="'form.'+ index + '.plannedWorkMinute'" :rules="rules.plannedWorkMinute" v-if="taskType === 0">
+            <el-input-number v-model="item.plannedWorkMinute" :precision="1" controls-position="right" :min="0" style="width: 100%"></el-input-number>
           </el-form-item>
           <el-form-item label="生效方式" :prop="'form.'+ index + '.mode'" :rules="rules.mode" v-if="taskType === 0">
             <el-select v-model="item.mode" placeholder="生效方式" style="width: 100%">
@@ -168,8 +168,8 @@ export default {
           templateId: null, // 任务模板id
           name: null, // 任务名称
           blameId: null, // 执行人
+          plannedWorkMinute: null, // 预计工时(分钟)
           extra: {
-            plannedWorkMinute: null, // 预计工时(分钟)
             plannedQty: 1, // 计划数量
             preTaskId: null // 前置任务
           },
@@ -186,11 +186,11 @@ export default {
           { required: true, message: '子任务名称不能为空', trigger: 'blur' },
           { max: 30, message: '子任务名称不能超过30个字', trigger: 'blur' }
         ],
+        plannedWorkMinute: [
+          { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
+          { validator: validatePlannedWorkMinute, trigger: 'blur' }
+        ],
         extra: {
-          plannedWorkMinute: [
-            { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
-            { validator: validatePlannedWorkMinute, trigger: 'blur' }
-          ],
           plannedQty: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' },
           preTaskId: { required: true, message: '选择任务不能为空', trigger: 'change' }
         },
@@ -302,8 +302,8 @@ export default {
         const { list, total } = response.data;
         list.map(item => {
           item.blameName = item.blame?.nickname || ''
-          item.estimatedHours = formatMinuteToHour(item.extra?.plannedWorkMinute || 0)
-          item.consumedHours = formatMinuteToHour(item.extra?.consumedWorkMinute || 0)
+          item.estimatedHours = formatMinuteToHour(item?.plannedWorkMinute || 0)
+          item.consumedHours = formatMinuteToHour(item?.consumedWorkMinute || 0)
           item.activatedTime = parseTime(item.activatedTime)
           item.completedTime = parseTime(item.completedTime)
           item.statusDesc = this.tabList.find(i => parseInt(i.value) === item.status).label
@@ -339,8 +339,8 @@ export default {
           templateId: null, // 任务模板id
           name: null, // 任务名称
           blameId: null, // 执行人
+          plannedWorkMinute: null, // 预计工时(分钟)
           extra: {
-            plannedWorkMinute: null, // 预计工时(分钟)
             plannedQty: 1, // 计划数量
             preTaskId: null // 前置任务
           },
@@ -386,7 +386,7 @@ export default {
           item.outsourcingCost = item.outsourcingCost * 100
           item.extra = {
             ...item.extra,
-            plannedWorkMinute: item.extra.plannedWorkMinute * 60
+            plannedWorkMinute: item.plannedWorkMinute * 60
           }
         })
         createTaskBatch(paramsArr).then(response => {

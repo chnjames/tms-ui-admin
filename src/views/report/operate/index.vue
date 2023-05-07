@@ -77,7 +77,7 @@
         <el-col :xs="24" :sm="12" :lg="6">
           <el-date-picker
             v-model="financeTime"
-            value-format="yyyy-MM-dd"
+            value-format="yyyy-MM-dd HH:mm:ss"
             type="daterange"
             align="right"
             unlink-panels
@@ -85,24 +85,24 @@
             range-separator="-"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            :picker-options="pickerOptions"
-          >
+            :default-time="['00:00:00', '23:59:59']"
+            :picker-options="pickerOptions">
           </el-date-picker>
         </el-col>
       </el-row>
       <el-divider/>
       <!-- 列表 -->
       <el-table v-loading="loading" :data="list" show-summary>
-        <el-table-column label="项目名称" align="center" prop="name"/>
-        <el-table-column label="项目状态" align="center" prop="address"/>
-        <el-table-column label="订单总金额(元)" width="140" sortable align="center" prop="contactName"/>
-        <el-table-column label="待收款金额(元)" width="140" sortable align="center" prop="contactMobile"/>
-        <el-table-column label="物料成本(元)" width="120" sortable align="center" prop="email"/>
-        <el-table-column label="委外成本(元)" align="center" prop="email"/>
-        <el-table-column label="耗费人力(人天)" align="center" prop="email"/>
-        <el-table-column label="人力投入(元)" sortable align="center" prop="email"/>
-        <el-table-column label="盈亏(元)" sortable align="center" prop="email"/>
-        <el-table-column label="利润率" sortable align="center" prop="email"/>
+        <el-table-column label="项目名称" align="center" prop="projectName"/>
+        <el-table-column label="项目状态" align="center" prop="projectStatus"/>
+        <el-table-column label="订单总金额(元)" width="140" sortable align="center" prop="paymentTotalAmount"/>
+        <el-table-column label="待收款金额(元)" width="140" sortable align="center" prop="paymentWaitAmount"/>
+        <el-table-column label="物料成本(元)" width="120" sortable align="center" prop="materialCost"/>
+        <el-table-column label="委外成本(元)" align="center" prop="outsourcingCost"/>
+        <el-table-column label="耗费人力(人天)" align="center" prop="consumedWorkMinute"/>
+        <el-table-column label="人力投入(元)" sortable align="center" prop="humanInputCost"/>
+        <el-table-column label="盈亏(元)" sortable align="center" prop="profitAndLoss"/>
+        <el-table-column label="利润率" sortable align="center" prop="profitRate"/>
       </el-table>
     </div>
     <el-row :gutter="20">
@@ -118,29 +118,6 @@
       </el-col>
     </el-row>
     <div class="card">
-      <el-row :gutter="20" type="flex" justify="end" align="middle">
-        <el-col :xs="24" :sm="12" :lg="6">
-          <el-date-picker
-            v-model="financeTime"
-            value-format="yyyy-MM-dd"
-            type="daterange"
-            align="right"
-            style="width: 100%"
-            unlink-panels
-            range-separator="-"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            :picker-options="pickerOptions"
-          >
-          </el-date-picker>
-        </el-col>
-        <el-col :xs="24" :sm="12" :lg="6">
-          <el-select v-model="financeTime" placeholder="请选择项目" style="width: 100%">
-            <el-option v-for="item in 5" :key="item" :label="'项目'+item" :value="item"/>
-          </el-select>
-        </el-col>
-      </el-row>
-      <el-divider/>
       <gantt-task/>
     </div>
   </div>
@@ -154,7 +131,8 @@ import GanttTask from '@/views/report/operate/GanttTask.vue'
 import {
   getSalesAndArrears,
   getFinanceOverview,
-  getPurchaseAndStock
+  getPurchaseAndStock,
+  getFinanceAnalysis
 } from '@/api/report/operations'
 
 export default {
@@ -210,7 +188,7 @@ export default {
       salesAndArrears: null, // 销售收入和客户欠款
       purchaseAndStock: null, // 采购支出和库存
       // 财务分析时间
-      financeTime: '',
+      financeTime: null,
       // 遮罩层
       loading: false,
       // 财务分析列表
@@ -221,6 +199,7 @@ export default {
     this.getSalesAndArrears()
     this.getFinanceOverview()
     this.getPurchaseAndStock()
+    this.getFinanceAnalysis()
   },
   methods: {
     /** 获取销售收入和客户欠款 */
@@ -252,6 +231,17 @@ export default {
       getPurchaseAndStock().then(response => {
         const {data} = response
         this.purchaseAndStock = data
+      })
+    },
+    /** 获取财务分析 */
+    getFinanceAnalysis() {
+      this.loading = true
+      getFinanceAnalysis({
+        time: this.financeTime
+      }).then(response => {
+        const {data} = response
+        this.list = data
+        this.loading = false
       })
     },
     handleDetails() {

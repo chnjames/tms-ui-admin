@@ -43,3 +43,27 @@ export function getMaterialPurchasePage(query) {
     params: query
   })
 }
+// 获得库存分页
+export function getStockPage(query) {
+  return request({
+    url: '/warehouse/stock/page',
+    method: 'get',
+    params: query
+  })
+}
+// 获取财务分析
+export function getFinanceAnalysis(query) {
+  return request({
+    url: '/report/operations/finance-analysis',
+    method: 'get',
+    params: query
+  })
+}
+// 获取任务甘特图
+export function getTaskGantt(query) {
+  return request({
+    url: '/report/operations/task-gantt',
+    method: 'get',
+    params: query
+  })
+}
