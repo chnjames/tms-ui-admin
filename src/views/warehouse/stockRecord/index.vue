@@ -47,9 +47,9 @@
       <el-table-column label="物料类别" align="center" prop="materialCategory"/>
       <el-table-column label="所在库区" align="center" prop="storeArea"/>
       <el-table-column label="所在库位" align="center" prop="storeAreaLocation"/>
-      <el-table-column label="关联任务" align="center" prop="taskId"/>
-      <el-table-column label="需求发起人" align="center" prop="executorId" width="100"/>
-      <el-table-column label="需求发起时间" align="center" prop="createTime" width="180" />
+      <el-table-column label="关联项目" align="center" prop="projectName"/>
+      <el-table-column label="需求发起人" align="center" prop="taskCreatorName" width="100"/>
+      <el-table-column label="需求发起时间" align="center" prop="taskCreateTime" width="180" />
       <el-table-column label="操作" align="center" prop="typeDesc"/>
       <el-table-column label="数量" align="center" prop="quantity"/>
       <el-table-column label="执行人" align="center" prop="executorName"/>
@@ -69,6 +69,7 @@ import { listSimpleUsers } from '@/api/system/user'
 import { getStoreAreaPage } from '@/api/config/storeArea'
 import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 import { parseTime } from '@/utils/ruoyi'
+import { getProjectSimpleList } from '@/api/operations/overview'
 
 export default {
   name: 'StockRecord',
@@ -82,6 +83,8 @@ export default {
       showSearch: true,
       // 厂区未分组列表
       scatteredStoreArea: [],
+      // 项目列表
+      projectSimpleList: [],
       // 总条数
       total: 0,
       // 用户列表
@@ -102,9 +105,10 @@ export default {
     }
   },
   async created() {
-    const [storeAreaData, userListData] = await Promise.all([getStoreAreaPage(), listSimpleUsers()])
+    const [storeAreaData, userListData, projectListData] = await Promise.all([getStoreAreaPage(), listSimpleUsers(), getProjectSimpleList()])
     this.scatteredStoreArea = storeAreaData.data
     this.userList = userListData.data
+    this.projectSimpleList = projectListData.data
     await this.getList()
   },
   methods: {
@@ -123,7 +127,10 @@ export default {
           item.storeArea = this.scatteredStoreArea.find(i => i.id === item.storeAreaId)?.name || ''
           item.typeDesc = this.libraryOptions.find(i => parseInt(i.value) === item.type)?.label || ''
           item.executorName = this.userList.find(i => parseInt(i.id) === item.executorId)?.nickname || ''
+          item.projectName = this.projectSimpleList.find(i => i.id === item.projectId)?.name || ''
+          item.taskCreatorName = this.userList.find(i => parseInt(i.id) === parseInt(item.taskCreatorId))?.nickname || ''
           item.createTime = parseTime(item.createTime)
+          item.taskCreateTime = parseTime(item.taskCreateTime)
         })
         this.list = list
         this.total = total
