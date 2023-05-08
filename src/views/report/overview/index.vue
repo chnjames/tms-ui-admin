@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- tab切换 -->
-    <el-tabs v-model="activeName" lazy>
+    <el-tabs v-model="activeName">
       <el-tab-pane label="销售总览" name="market">
         <market />
       </el-tab-pane>
@@ -29,8 +29,15 @@ export default {
   },
   data() {
     return {
-      // tab选项
-      activeName: 'market'
+      activeName: ''
+    }
+  },
+  watch: {
+    '$route.query': {
+      handler (val) {
+        this.activeName = val.type
+      },
+      immediate: true
     }
   }
 }

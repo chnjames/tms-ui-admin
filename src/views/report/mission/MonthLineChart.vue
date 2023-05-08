@@ -17,9 +17,6 @@ export default {
     taskQty: {
       handler(val) {
         let { totalQty, finishQty, unFinishQty } = val
-        totalQty = totalQty.map(item => item || null)
-        finishQty = finishQty.map(item => item || null)
-        unFinishQty = unFinishQty.map(item => item || null)
         this.$nextTick(()=>{
           this.$refs.monthLine.chart.setOption({
             series: [
@@ -43,6 +40,15 @@ export default {
         tooltip: {
           trigger: 'axis'
         },
+        title: {
+          text: '按月份统计',
+          textAlign: 'left',
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 'normal',
+            color: '#333'
+          }
+        },
         color: ['#409EFF', '#67C23A', '#E6A23C'],
         legend: {
           left: 'center',
@@ -53,7 +59,7 @@ export default {
           left: '3%',
           right: '4%',
           bottom: '10%',
-          top: '3%',
+          top: '10%',
           containLabel: true
         },
         xAxis: {

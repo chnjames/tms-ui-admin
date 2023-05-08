@@ -13,6 +13,7 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             :default-time="['00:00:00', '23:59:59']"
+            @change="bindDateChange"
             :picker-options="pickerOptions">
           </el-date-picker>
         </el-col>
@@ -27,17 +28,17 @@
         </el-col>
         <el-col :xs="24" :sm="24" :lg="12">
           <div class="chart-wrapper">
-            <staff-bar-chart/>
+            <staff-bar-chart :taskWorkTime="taskWorkTime"/>
           </div>
         </el-col>
         <el-col :xs="24" :sm="24" :lg="12">
           <div class="chart-wrapper">
-            <k-p-i-bar-chart/>
+            <k-p-i-bar-chart :taskKpi="taskKpi"/>
           </div>
         </el-col>
         <el-col :xs="24" :sm="24" :lg="12">
           <div class="chart-wrapper">
-            <staff-line-chart/>
+            <staff-line-chart :taskReceive="taskReceive"/>
           </div>
         </el-col>
       </el-row>
@@ -50,7 +51,12 @@ import MonthLineChart from '@/views/report/mission/MonthLineChart.vue'
 import StaffBarChart from '@/views/report/mission/StaffBarChart.vue'
 import KPIBarChart from '@/views/report/mission/KPIBarChart.vue'
 import StaffLineChart from '@/views/report/mission/StaffLineChart.vue'
-import { getTaskQty } from '@/api/report/task'
+import {
+  getTaskQty,
+  getTaskReceive,
+  getTaskWorkTime,
+  getTaskKpi
+} from '@/api/report/task'
 
 export default {
   name: 'Mission',
@@ -92,26 +98,50 @@ export default {
           }
         }]
       },
-      missionDate: [],
-      taskQty: null // 任务数
+      missionDate: null,
+      taskQty: null, // 任务数
+      taskReceive: null, // 任务领取数
+      taskWorkTime: null, // 任务工时
+      taskKpi: null // 任务KPI
     }
   },
-  watch: {
-    missionDate: {
-      handler() {
-        this.getTaskQty()
-      },
-      immediate: true
-    }
+  created() {
+    this.getTaskQty()
+    this.getTaskReceive()
+    this.getTaskWorkTime()
+    this.getTaskKpi()
   },
   methods: {
     /** 查询任务数(表1) */
     getTaskQty() {
-      getTaskQty({
-        time: this.missionDate
-      }).then(response => {
+      getTaskQty({ time: this.missionDate }).then(response => {
         this.taskQty = response.data
       });
+    },
+    /** 查询任务领取数(表2) */
+    getTaskReceive() {
+      getTaskReceive({ time: this.missionDate }).then(response => {
+        this.taskReceive = response.data
+      });
+    },
+    /** 查询任务工时(表3) */
+    getTaskWorkTime() {
+      getTaskWorkTime({ time: this.missionDate }).then(response => {
+        this.taskWorkTime = response.data
+      });
+    },
+    /** 查询任务KPI(表4) */
+    getTaskKpi() {
+      getTaskKpi({ time: this.missionDate }).then(response => {
+        this.taskKpi = response.data
+      });
+    },
+    /** 日期选择 */
+    bindDateChange() {
+      this.getTaskQty()
+      this.getTaskReceive()
+      this.getTaskWorkTime()
+      this.getTaskKpi()
     }
   }
 }

@@ -83,6 +83,7 @@ export const DICT_TYPE = {
   OPERATIONS_TASK_STATUS: 'operations_task_status', // 任务状态
   OPERATIONS_TASK_PLAN_TYPE: 'operations_task_plan_type', // 任务计划类型
   OPERATIONS_TASK_PLAN_PERIOD: 'operations_task_plan_period', // 任务计划周期
+  WAREHOUSE_STOCK_RECORD_TYPE: 'warehouse_stock_record_type', // 出入库记录类型
 }
 
 /**

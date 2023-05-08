@@ -169,7 +169,7 @@ export default {
       this.loading = true;
       // 执行查询
       getMerchantPage(this.queryParams).then(response => {
-        console.log(response.data);
+        // console.log(response.data);
         this.list = response.data.list;
         this.total = response.data.total;
         this.loading = false;

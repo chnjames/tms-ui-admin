@@ -252,7 +252,7 @@ export default {
     },
     /** 删除任务项操作 */
     deleteInterItems(task, idx) {
-      console.log(task, idx)
+      // console.log(task, idx)
       this.form.partsList[idx].taskList.splice(task, 1)
     },
     /** 添加部位&任务项操作 */

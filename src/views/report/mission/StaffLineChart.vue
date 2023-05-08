@@ -1,17 +1,64 @@
 <template>
-  <charts :options="options" height="400px" />
+  <charts ref="staffLine" :options="options" height="400px" />
 </template>
 
 <script>
 import Charts from '@/components/Charts/index.vue'
+import { listSimpleUsers } from '@/api/system/user'
 export default {
   name: 'StaffLineChart',
   components: { Charts },
+  props: {
+    taskReceive: {
+      type: Object,
+      default: () => {}
+    },
+  },
+  async created() {
+    await this.getUserList();
+  },
+  watch: {
+    taskReceive: {
+      async handler(val) {
+        const isUserListExist = await this.getUserList();
+        if (isUserListExist) {
+          const {active, blameIds, passive, total } = val
+          const blameNames = blameIds.map(id => this.userList.find(user => user.id === id)?.nickname || '')
+          this.$nextTick(()=>{
+            this.$refs.staffLine.chart.setOption({
+              xAxis: {
+                data: blameNames
+              },
+              series: [
+                {
+                  data: total
+                }, {
+                  data: active
+                }, {
+                  data: passive
+                }
+              ]
+            })
+          })
+        }
+      },
+      deep: true
+    }
+  },
   data() {
     return {
       options: {
         tooltip: {
           trigger: 'axis'
+        },
+        title: {
+          text: '按人员统计',
+          textAlign: 'left',
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 'normal',
+            color: '#333'
+          }
         },
         color: ['#409EFF', '#67C23A', '#E6A23C'],
         legend: {
@@ -23,7 +70,7 @@ export default {
           left: '3%',
           right: '4%',
           bottom: '10%',
-          top: '3%',
+          top: '10%',
           containLabel: true
         },
         xAxis: {
@@ -35,8 +82,7 @@ export default {
           },
           axisTick: {
             alignWithLabel: true
-          },
-          data: ['Floppy', 'Jill', 'Chen', 'Eric', 'Linda', 'Li', 'ChenYL', 'LiuYIN', 'Qu', 'Fish']
+          }
         },
         yAxis: {
           type: 'value',
@@ -64,22 +110,33 @@ export default {
           {
             name: '总数量',
             type: 'line',
-            smooth: false,
-            data: [12, 56, 23, 63, 93, 47, 73, 23, 56, 56, 18, 43]
+            smooth: false
           }, {
             name: '主动领取数量',
             type: 'line',
-            smooth: false,
-            data: [8, 48, 20, 58, 79, 16, 52, 21, 49, 43, 17, 21]
+            smooth: false
           }, {
             name: '被指派数量',
             type: 'line',
-            smooth: false,
-            data: [4, 8, 3, 5, 14, 31, 21, 2, 7, 13, 1, 22]
+            smooth: false
           }
         ]
-      }
+      },
+      userList: [] // 用户列表
     }
   },
+  methods: {
+    /** 用户列表 */
+    getUserList() {
+      return new Promise((resolve, reject) => {
+        listSimpleUsers().then(response => {
+          this.userList = response.data
+          resolve(true);
+        }).catch(error => {
+          reject(error);
+        })
+      })
+    }
+  }
 }
 </script>

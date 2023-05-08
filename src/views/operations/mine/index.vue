@@ -120,7 +120,7 @@ export default {
       }
       getTaskPage(params).then(response => {
         const { list, total } = response.data;
-        console.log(this.projectSimpleList)
+        // console.log(this.projectSimpleList)
         list.map(item => {
           item.blameName = item.blame?.nickname || ''
           item.proName = this.projectSimpleList.find(i => i.id === item.projectId)?.name || ''

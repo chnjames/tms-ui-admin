@@ -127,7 +127,7 @@ export default {
             formData.append('file', blobInfo.blob())
             formData.append('projectId', projectId)
             uploadFile(formData).then(res => {
-              console.log(res)
+              // console.log(res)
               if (res.code === 0) {
                 success(res.data)
               } else {

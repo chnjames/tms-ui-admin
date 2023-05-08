@@ -13,17 +13,18 @@
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           :default-time="['00:00:00', '23:59:59']"
+          @change="getTaskGantt"
           :picker-options="pickerOptions">
         </el-date-picker>
       </el-col>
       <el-col :xs="24" :sm="12" :lg="6">
-        <el-select v-model="queryParams.projectId" placeholder="请选择项目" style="width: 100%">
+        <el-select v-model="queryParams.projectId" clearable placeholder="请选择项目" @change="getTaskGantt" style="width: 100%">
           <el-option v-for="item in projectSimpleList" :key="item.id" :label="item.name" :value="item.id"/>
         </el-select>
       </el-col>
     </el-row>
     <el-divider/>
-    <div ref="gantt" class="gantt-container"/>
+    <div ref="gantt" v-loading="loading" class="gantt-container"/>
   </div>
 </template>
 
@@ -43,6 +44,8 @@ export default {
         projectId: null,
         time: null
       },
+      // 加载中
+      loading: false,
       projectSimpleList: [], // 项目列表
       pickerOptions: {
         shortcuts: [{
@@ -92,31 +95,27 @@ export default {
       }
     }
   },
-  mounted() {
-    this.getProjectSimpleList()
-    this.getTaskGantt()
+  async created() {
+    const [projectListData] = await Promise.all([getProjectSimpleList()])
+    this.projectSimpleList = projectListData.data
+    await this.getTaskGantt()
   },
   methods: {
-    /** 获取项目精简信息列表 */
-    getProjectSimpleList() {
-      getProjectSimpleList().then(response => {
-        this.projectSimpleList = response.data;
-      });
-    },
     /** 获取甘特图数据 */
     getTaskGantt() {
+      this.loading = true
       getTaskGantt(this.queryParams).then(response => {
         const {data} = response
-        data.map(item => {
-          console.log('Before conversion:', item)
+        const filterData = data.filter(item => item.projectId)
+        filterData.map(item => {
           item.text = item.name
           item.type = gantt.config.types.task
           item.start_date = item.activatedTime ? parseTime(new Date(item.activatedTime), '{d}-{m}-{y} {h}:{i}:{s}') : parseTime(new Date(), '{d}-{m}-{y} {h}:{i}:{s}')
           item.end_date = item.completedTime ? parseTime(new Date(item.completedTime), '{d}-{m}-{y} {h}:{i}:{s}') : parseTime(new Date(), '{d}-{m}-{y} {h}:{i}:{s}')
-          console.log('After conversion:', item)
         })
-        this.tasks.data = data
+        this.tasks.data = filterData
         this.init()
+        this.loading = false
       });
     },
     // 初始化
@@ -169,12 +168,12 @@ export default {
       // 时间线任务条样式自定义
       gantt.templates.task_class = function(start, end, task) {
         // task.state值为default/unfinished/finished/canceled其中一种
-        console.log(task.type, task.colorType, task.status, task.parent)
+        // console.log(task.type, task.colorType, task.status, task.parent)
         return `gantt_${task.type}`
       }
       // 日期网格配置
       gantt.templates.date_grid = function(date, task, column) {
-        console.log('日期网格', date, task, column)
+        // console.log('日期网格', date, task, column)
         if (task && gantt.isUnscheduled(task) && gantt.config.show_unscheduled) {
           return gantt.templates.task_unscheduled_time(task)
         } else {
@@ -184,7 +183,7 @@ export default {
 
       // 突出周末颜色
       gantt.templates.timeline_cell_class = function(item, date) {
-        console.log(item, date)
+        // console.log(item, date)
         if (date.getDay() === 0 || date.getDay() === 6) {
           return 'weekend'
         }
@@ -220,6 +219,8 @@ export default {
       ]
       // 初始化
       gantt.init(this.$refs.gantt)
+      // 清除数据
+      gantt.clearAll()
       // 数据解析
       gantt.parse(this.tasks)
     }

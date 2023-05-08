@@ -229,7 +229,7 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      console.log(row)
+      // console.log(row)
       const name = row.name
       const id = row.id
       this.$modal.confirm('是否确认删除名称为"' + name + '"的数据项?').then(function() {

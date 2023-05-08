@@ -4,37 +4,11 @@
 
 <script>
 import Charts from '@/components/Charts/index.vue'
+import { getPurchaseAndStock } from '@/api/report/operations'
 
 export default {
   name: 'BarChart',
   components: { Charts },
-  props: {
-    purchaseAndStock: {
-      type: Object,
-      default: () => {}
-    }
-  },
-  watch: {
-    purchaseAndStock: {
-      handler(val) {
-        let { buyingQty, stockQty } = val
-        buyingQty = buyingQty.map(item => item || null)
-        stockQty = stockQty.map(item => item || null)
-        this.$nextTick(()=>{
-          this.$refs.barChart.chart.setOption({
-            series: [
-              {
-                data: buyingQty
-              }, {
-                data: stockQty
-              }
-            ]
-          })
-        })
-      },
-      deep: true
-    }
-  },
   data() {
     return {
       options: {
@@ -105,6 +79,29 @@ export default {
           }
         ]
       }
+    }
+  },
+  created() {
+    this.getPurchaseAndStock()
+  },
+  methods: {
+    /** 获取采购支出和库存 */
+    getPurchaseAndStock() {
+      getPurchaseAndStock().then(response => {
+        const {data} = response
+        let { buyingQty, stockQty } = data
+        buyingQty = buyingQty.map(item => item || null)
+        stockQty = stockQty.map(item => item || null)
+        this.$nextTick(()=>{
+          this.$refs.barChart.chart.setOption({
+            series: [{
+              data: buyingQty
+            }, {
+              data: stockQty
+            }]
+          })
+        })
+      })
     }
   }
 }

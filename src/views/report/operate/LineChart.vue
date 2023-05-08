@@ -4,46 +4,23 @@
 
 <script>
 import Charts from '@/components/Charts/index.vue'
+import { getSalesAndArrears } from '@/api/report/operations'
 export default {
   name: 'LineChart',
   components: { Charts },
-  props: {
-    salesAndArrears: {
-      type: Object,
-      default: () => {}
-    }
-  },
-  watch: {
-    salesAndArrears: {
-      handler(val) {
-        let { customerOwe, projectIncome } = val
-        customerOwe = customerOwe.map(item => item / 100 || null)
-        projectIncome = projectIncome.map(item => item / 100 || null)
-        this.$nextTick(()=>{
-          this.$refs.LineChart.chart.setOption({
-            series: [
-              {
-                data: projectIncome
-              }, {
-                data: customerOwe
-              }
-            ]
-          })
-        })
-      },
-      deep: true
-    }
-  },
   data() {
     return {
       options: {
         tooltip: {
-          trigger: 'axis'
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
         },
         color: ['#409EFF', '#67C23A'],
         legend: {
           left: 'center',
-          bottom: '10',
+          bottom: 0,
           data: ['销售收入', '客户欠款']
         },
         grid: {
@@ -101,5 +78,30 @@ export default {
       }
     }
   },
+  created() {
+    this.getSalesAndArrears()
+  },
+  methods: {
+    /** 获取销售收入和客户欠款 */
+    getSalesAndArrears() {
+      getSalesAndArrears().then(response => {
+        const {data} = response
+        let { customerOwe, projectIncome } = data
+        customerOwe = customerOwe.map(item => item / 100 || null)
+        projectIncome = projectIncome.map(item => item / 100 || null)
+        this.$nextTick(()=>{
+          this.$refs.LineChart.chart.setOption({
+            series: [
+              {
+                data: projectIncome
+              }, {
+                data: customerOwe
+              }
+            ]
+          })
+        })
+      })
+    }
+  }
 }
 </script>

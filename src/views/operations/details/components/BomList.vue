@@ -383,7 +383,7 @@ export default {
         this.$refs.selectList.toggleRowSelection(selection[selection.length - 1]);
       }
       this.selectList = [selection[selection.length - 1]]
-      console.log(this.selectList)
+      // console.log(this.selectList)
       this.form.materialId = this.selectList.length > 0 ? this.selectList[0].id : ''
     },
     /** 提交按钮 */
