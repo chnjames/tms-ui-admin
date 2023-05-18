@@ -79,7 +79,7 @@
                 <el-form-item label="设备部位" :prop="'extras.'+ index + '.name'" :rules="extrasRules.name">
                   <el-input v-model="item.name" placeholder="请输入设备部位"/>
                 </el-form-item>
-                <el-form-item label="部位图片" :prop="'extras.' + index + '.url'" :rules="extrasRules.url">
+                <el-form-item label="部位图片" :prop="'extras.' + index + '.url'">
                   <imageUpload :upload-file-url="uploadFileUrl" v-model="item.url" :limit="1" :is-show-tip="false"/>
                 </el-form-item>
                 <el-row v-for="(task, idx) in item.tasks" :key="idx" :gutter="10" type="flex" justify="space-between">
@@ -193,7 +193,6 @@ export default {
           { required: true, message: '设备部位不能为空', trigger: 'blur' },
           { max: 30, message: '设备部位不能超过30个字', trigger: 'blur' }
         ],
-        url: { required: true, message: '部位图片不能为空', trigger: 'blur' },
         blameId: { required: true, message: '执行人不能为空', trigger: 'change' }
       },
       tasksRules: {

@@ -53,10 +53,10 @@
           <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
                      v-hasPermi="['operations:project:create']">新增</el-button>
         </el-col>
-        <el-col :span="1.5">
+        <!--<el-col :span="1.5">
           <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport"
                      :loading="exportLoading" v-hasPermi="['warehouse:material:export']">导出</el-button>
-        </el-col>
+        </el-col>-->
         <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
       </el-row>
 
@@ -422,20 +422,20 @@ export default {
       })
     },
     /** 导出按钮操作 */
-    handleExport() {
-      // 处理查询参数
-      let params = { ...this.queryParams }
-      params.pageNo = undefined
-      params.pageSize = undefined
-      this.$modal.confirm('是否确认导出所有物料基础数据数据项?').then(() => {
-        this.exportLoading = true
-        return exportOverviewExcel(params)
-      }).then(response => {
-        this.$download.excel(response, '物料基础数据.xls')
-        this.exportLoading = false
-      }).catch(() => {
-      })
-    }
+    // handleExport() {
+    //   // 处理查询参数
+    //   let params = { ...this.queryParams }
+    //   params.pageNo = undefined
+    //   params.pageSize = undefined
+    //   this.$modal.confirm('是否确认导出所有物料基础数据数据项?').then(() => {
+    //     this.exportLoading = true
+    //     return exportOverviewExcel(params)
+    //   }).then(response => {
+    //     this.$download.excel(response, '物料基础数据.xls')
+    //     this.exportLoading = false
+    //   }).catch(() => {
+    //   })
+    // }
   }
 }
 </script>

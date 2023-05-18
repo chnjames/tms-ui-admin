@@ -69,12 +69,12 @@
                 <el-input v-model="item.title" placeholder="请输入" style="width: 100%"></el-input>
               </el-form-item>
               <el-row>
-                <el-col :span="12">
+                <el-col :span="13">
                   <el-form-item label="收款日期" :prop="'items.'+ index + '.startTime'" :rules="rules.startTime">
                     <el-date-picker v-model="item.startTime" type="date" value-format="timestamp" style="width: 100%" placeholder="请选择" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :span="11">
                   <el-form-item label="收款比例" :prop="'items.'+ index + '.scale'" :rules="rules.scale">
                     <el-input-number placeholder="请输入" v-model="item.scale" controls-position="right" :min="0" :max="100" style="width: 100%"></el-input-number>
                   </el-form-item>
@@ -177,7 +177,7 @@ export default {
   watch: {
     form: {
       handler(val) {
-        if (val.items && val.items.length > 1) {
+        if (val.items && val.items.length >= 1) {
           let sum = 0
           val.items.forEach(item => {
             sum += item.scale

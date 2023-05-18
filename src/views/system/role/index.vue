@@ -40,7 +40,7 @@
     <el-table v-loading="loading" :data="roleList">
       <el-table-column label="角色编号" prop="id" width="120" />
       <el-table-column label="角色名称" prop="name" :show-overflow-tooltip="true" width="150" />
-      <el-table-column label="角色标识" prop="code" :show-overflow-tooltip="true" width="150" />
+      <el-table-column label="角色标识" prop="code" :show-overflow-tooltip="true" width="180" />
       <el-table-column label="角色类型" prop="type" width="80">
         <template slot-scope="scope">
           <dict-tag :type="DICT_TYPE.SYSTEM_ROLE_TYPE" :value="scope.row.type"/>

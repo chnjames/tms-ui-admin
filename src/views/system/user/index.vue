@@ -66,7 +66,7 @@
               <el-switch v-model="scope.row.status" :active-value="0" :inactive-value="1" @change="handleStatusChange(scope.row)" />
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" width="160">
+          <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" width="170">
             <template v-slot="scope">
               <span>{{ parseTime(scope.row.createTime) }}</span>
             </template>
