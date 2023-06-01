@@ -62,26 +62,26 @@
 
       <!-- 列表 -->
       <el-table v-loading="loading" :data="list">
-        <el-table-column label="项目名称" prop="name">
+        <el-table-column label="项目名称" prop="name" min-width="280">
           <template v-slot="{row}">
             <div class="project-name" @click.stop="bindProject(row)">{{ row.name }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="负责人" align="center" prop="header"/>
-        <el-table-column label="项目类型" align="center" prop="typeDesc"/>
-        <el-table-column label="开始时间" align="center" prop="beginTime"/>
-        <el-table-column label="结束时间" align="center" prop="endTime"/>
-        <el-table-column label="状态" align="center" prop="status">
+        <el-table-column label="负责人" align="center" prop="header" width="180"/>
+        <el-table-column label="项目类型" align="center" prop="typeDesc" width="180"/>
+        <el-table-column label="开始时间" align="center" prop="beginTime" width="180"/>
+        <el-table-column label="结束时间" align="center" prop="endTime" width="180"/>
+        <el-table-column label="状态" align="center" prop="status" width="180">
           <template v-slot="{row}">
             <el-tag size="mini" :type="row.statusColor">{{row.statusDesc}}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="项目进度" align="center" prop="progress">
+        <el-table-column label="项目进度" align="center" prop="progress" width="200">
           <template v-slot="{row}">
             <el-progress :percentage="row.progress > 100 ? 100 : row.progress" :color="row.progressColor" :format="progressFormat(row.progress)"></el-progress>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
           <template v-slot="{row}">
             <el-button size="mini" type="text" icon="el-icon-view" @click="bindProject(row)"
                        v-hasPermi="['warehouse:material:delete']">详情</el-button>

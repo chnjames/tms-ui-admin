@@ -59,7 +59,7 @@ export default {
       },
       // 表头
       tableHeader: [
-        { prop: 'name', label: '任务名称' },
+        { prop: 'name', label: '任务名称', width: 300 },
         { prop: 'blameName', label: '执行人' },
         { prop: 'status', label: '状态' },
         { prop: 'createTime', label: '触发时间' },

@@ -175,7 +175,7 @@ export default {
       },
       // 表头
       tableHeader: [
-        { prop: 'taskName', label: '任务名称' },
+        { prop: 'taskName', label: '任务名称', width: 300 },
         { prop: 'typeDesc', label: '任务类型' },
         { prop: 'periodDesc', label: '周期' },
         { prop: 'blameName', label: '执行人' },

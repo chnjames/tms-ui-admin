@@ -28,6 +28,14 @@
                    v-hasPermi="['warehouse:material:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
+        <el-button type="primary" plain icon="el-icon-upload2" size="mini"
+                   v-hasPermi="['warehouse:material:create']">批量上传</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button plain icon="el-icon-download" size="mini"
+                   v-hasPermi="['warehouse:material:create']">模板下载</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
                    v-hasPermi="['warehouse:material:export']">导出</el-button>
       </el-col>

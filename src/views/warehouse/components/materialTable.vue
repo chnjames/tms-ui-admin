@@ -38,6 +38,7 @@
               <span>{{row.demander || '-'}}</span>
             </template>
           </el-table-column>
+          <el-table-column label="收货状态" align="center" prop="status" :width="100" />
           <el-table-column label="历史平均价格" align="center" :width="100">
             <template v-slot="{row}">
               <span>{{row.historyPrice || '-'}}</span>

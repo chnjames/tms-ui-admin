@@ -158,6 +158,13 @@
           </el-col>
         </el-row>
         <el-row>
+          <el-col :span="12">
+            <el-form-item label="入职时间" prop="entryTime">
+              <el-date-picker style="width: 100%" v-model="form.entryTime" type="date" value-format="timestamp" placeholder="选择入职时间" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
           <el-col :span="24">
             <el-form-item label="备注">
               <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
@@ -322,6 +329,9 @@ export default {
         username: [
           { required: true, message: "用户名称不能为空", trigger: "blur" }
         ],
+        deptId: [
+          {required: true, message: "归属部门不能为空", trigger: "change" }
+        ],
         nickname: [
           { required: true, message: "用户昵称不能为空", trigger: "blur" }
         ],
@@ -341,7 +351,15 @@ export default {
             message: "请输入正确的手机号码",
             trigger: "blur"
           }
-        ]
+        ],
+        entryTime: [
+          {
+            type: "date",
+            required: true,
+            message: "请选择入职时间",
+            trigger: "change"
+          }
+        ],
       },
       // 是否显示弹出层（角色权限）
       openRole: false,
