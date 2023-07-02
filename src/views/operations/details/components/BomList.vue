@@ -195,7 +195,8 @@ export default {
       initiateForm: {
         ids: undefined,
         deptId: undefined, // 指定部门
-        blameId: undefined // 指定负责人
+        blameId: undefined, // 指定负责人
+        projectId: undefined // 项目id
       },
       // 表单校验
       initiateRules: {
@@ -324,7 +325,8 @@ export default {
       this.initiateForm = {
         ids: undefined,
         deptId: undefined, // 指定部门
-        blameId: undefined // 指定负责人
+        blameId: undefined, // 指定负责人
+        projectId: undefined // 项目id
       }
       this.resetForm('initiateForm')
     },
@@ -363,6 +365,7 @@ export default {
         if (valid) {
           const initiateList = this.$refs.multipleTable.selection
           this.initiateForm.ids = initiateList.map(item => item.id)
+          this.initiateForm.projectId = this.proId
           createOutbound(this.initiateForm).then(response => {
             this.$message.success('发起出库成功')
             this.initiateOpen = false
