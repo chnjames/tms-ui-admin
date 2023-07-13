@@ -176,7 +176,7 @@ export default {
           mode: 1, // 生效方式
           beginTime: null, // 开始时间
           endTime: null, // 结束时间
-          urgent: false, // 是否紧急
+          urgent: 0, // 是否紧急
           outsourcingCost: 0 // 委外费用
         }]
       },
@@ -347,7 +347,7 @@ export default {
           mode: 1, // 生效方式
           beginTime: null, // 开始时间
           endTime: null, // 结束时间
-          urgent: false, // 是否紧急
+          urgent: 0, // 是否紧急
           outsourcingCost: 0 // 委外费用
         }]
       }

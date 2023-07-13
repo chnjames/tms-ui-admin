@@ -123,7 +123,7 @@
         <el-form-item v-if="form.type !== 2" label="标题" prop="name">
           <el-input v-model="form.name" placeholder="给目标起个名字"/>
         </el-form-item>
-        <el-form-item label="负责人" prop="blameId">
+        <el-form-item label="负责人" :prop="form.type === 0 || form.type === 1 ? '': 'blameId'">
           <el-select v-model="form.blameId" style="width: 100%" filterable placeholder="请选择">
             <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname"
                        :value="parseInt(item.id)"/>
@@ -137,7 +137,7 @@
         </el-form-item>
         <el-form-item label="开始时间" prop="beginTime">
           <el-date-picker clearable size="small" style="width: 100%" v-model="form.beginTime" type="date"
-                          value-format="timestamp" placeholder="选择开始时间"/>
+                          value-format="timestamp" placeholder="选择开始时间" @change="updateEndTime"/>
         </el-form-item>
         <el-form-item label="任务周期" prop="period">
           <el-select v-model="form.period" placeholder="选择任务周期" clearable style="width: 100%">
@@ -293,6 +293,12 @@ export default {
       listSimpleUsers().then(response => {
         this.userList = response.data
       })
+    },
+    /** 更新结束时间 */
+    updateEndTime() {
+      if (this.form.period === 0 && this.form.type === 1) {
+        this.form.endTime = this.form.beginTime;
+      }
     },
     /** 查询列表 */
     getList() {
