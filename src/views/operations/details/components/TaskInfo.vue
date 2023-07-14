@@ -177,7 +177,8 @@ export default {
           beginTime: null, // 开始时间
           endTime: null, // 结束时间
           urgent: 0, // 是否紧急
-          outsourcingCost: 0 // 委外费用
+          outsourcingCost: 0, // 委外费用
+          isFilled: false
         }]
       },
       // 表单校验
@@ -377,6 +378,7 @@ export default {
         // 添加的提交
         const currentTime = new Date().getTime();
         const paramsArr = JSON.parse(JSON.stringify(this.params.form))
+        console.log(paramsArr)
         paramsArr.map(item => {
           if (this.taskType === 0 && item.mode === 2) {
             item.beginTime = currentTime
@@ -384,11 +386,12 @@ export default {
           item.projectId = this.proId
           item.type = this.taskType === 0 ? 0 : 10
           item.outsourcingCost = item.outsourcingCost * 100
+          item.plannedWorkMinute = item.plannedWorkMinute * 60
           item.extra = {
-            ...item.extra,
-            plannedWorkMinute: item.plannedWorkMinute * 60
+            ...item.extra
           }
         })
+        debugger
         createTaskBatch(paramsArr).then(response => {
           this.$modal.msgSuccess('新增成功')
           this.open = false

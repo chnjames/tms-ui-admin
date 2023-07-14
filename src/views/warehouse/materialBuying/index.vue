@@ -46,7 +46,11 @@
           <el-tag :type="row.statusType" size="small">{{row.statusDesc}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" prop="status" />
+      <el-table-column label="收货状态" align="center" prop="receivedStatus">
+        <template v-slot="{row}">
+          <el-tag v-if="row.receivedStatus" :type="row.receivedStatusType" size="small">{{row.receivedStatusDesc}}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="{row}">
           <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row, 1)"
@@ -73,6 +77,7 @@ import {
   getPurchase } from '@/api/warehouse/materialBuying'
 import { listSimpleUsers } from '@/api/system/user'
 import MaterialTable from '@/views/warehouse/components/materialTable.vue'
+import { DICT_TYPE, getDictDatas } from '@/utils/dict'
 
 export default {
   name: "MaterialBuying",
@@ -95,12 +100,6 @@ export default {
       open: false,
       // 用户列表
       userList: [],
-      // 采购状态列表
-      materialBuyList: [
-        { label: "未发起采购", value: 0, type: 'warning' },
-        { label: "未上传合同", value: 1, type: 'danger' },
-        { label: "已上传合同", value: 2, type: 'success' }
-      ],
       // 查询参数
       queryParams: {
         pageNo: 1,
@@ -109,7 +108,10 @@ export default {
         createTime: null
       },
       // 传递给子组件的参数
-      transfer: null
+      transfer: null,
+      // 数据字典
+      statusDictDatas: getDictDatas(DICT_TYPE.WAREHOUSE_BUYING_STATUS),
+      receivedStatusDictDatas: getDictDatas(DICT_TYPE.WAREHOUSE_BUYING_RECEIVED_STATUS)
     };
   },
   created() {
@@ -130,8 +132,12 @@ export default {
       getPurchasePage(this.queryParams).then(response => {
         const { list, total } = response.data;
         list.map(item => {
-          item.statusDesc = this.materialBuyList.find(i => i.value === item.status).label
-          item.statusType = this.materialBuyList.find(i => i.value === item.status).type
+          item.statusDesc = this.statusDictDatas.find(i => parseInt(i.value) === item.status).label
+          item.statusType = this.statusDictDatas.find(i => parseInt(i.value) === item.status).colorType
+          if (item.receivedStatus) {
+            item.receivedStatusDesc = this.receivedStatusDictDatas.find(i => parseInt(i.value) === item.receivedStatus).label
+            item.receivedStatusType = this.receivedStatusDictDatas.find(i => parseInt(i.value) === item.receivedStatus).colorType
+          }
           item.totalPrice = item.items.reduce((total, item) => {
             return total + item.price * item.count
           }, 0) / 100

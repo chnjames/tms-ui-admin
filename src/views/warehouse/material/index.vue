@@ -91,6 +91,9 @@
         <el-form-item label="物料库存预警" prop="warnStock">
           <el-input-number style="width: 100%" v-model="form.warnStock" controls-position="right" :min="0"></el-input-number>
         </el-form-item>
+        <el-form-item label="触发采购数量" prop="qty">
+          <el-input-number style="width: 100%" v-model="form.qty" controls-position="right" :min="0"></el-input-number>
+        </el-form-item>
       </el-form>
       <template slot="footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -159,7 +162,8 @@ export default {
         brand: null,
         category: null,
         specs: null,
-        warnStock: 0
+        warnStock: 0,
+        qty: 0
       },
       // 表单校验
       rules: {
@@ -169,6 +173,7 @@ export default {
         category: [{ required: true, message: "物料类别不能为空", trigger: "blur" }],
         specs: [{ required: true, message: "物料规格型号不能为空", trigger: "blur" }],
         warnStock: [{ required: true, message: "物料库存预警不能为空", trigger: "blur", type: "number" }],
+        qty: [{ required: true, message: "触发采购数量不能为空", trigger: "blur", type: "number" }]
       }
     };
   },
@@ -242,7 +247,8 @@ export default {
         brand: undefined,
         category: undefined,
         specs: undefined,
-        warnStock: 0
+        warnStock: 0,
+        qty: 0
       };
       this.resetForm("form");
     },

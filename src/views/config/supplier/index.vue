@@ -60,10 +60,10 @@
         <el-form-item label="联系人" prop="contactName">
           <el-input v-model="form.contactName" placeholder="请输入联系人" />
         </el-form-item>
-        <el-form-item label="联系电话" prop="contactMobile">
+        <el-form-item label="联系电话">
           <el-input v-model="form.contactMobile" placeholder="请输入联系电话" />
         </el-form-item>
-        <el-form-item label="邮箱地址" prop="email">
+        <el-form-item label="邮箱地址">
           <el-input v-model="form.email" placeholder="请输入邮箱地址" />
         </el-form-item>
       </el-form>
@@ -134,14 +134,14 @@ export default {
           { required: true, message: "联系人不能为空", trigger: "blur" },
           { max: 30, message: '联系人不能超过30个字符', trigger: 'blur' }
         ],
-        contactMobile: [
-          { required: true, message: "联系电话不能为空", trigger: "blur" },
-          { pattern: /^1\d{10}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: "邮箱地址不能为空", trigger: "blur" },
-          { pattern: /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/, message: '请输入正确的邮箱地址', trigger: 'blur' }
-        ]
+        // contactMobile: [
+        //   { required: true, message: "联系电话不能为空", trigger: "blur" },
+        //   { pattern: /^1\d{10}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+        // ],
+        // email: [
+        //   { required: true, message: "邮箱地址不能为空", trigger: "blur" },
+        //   { pattern: /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/, message: '请输入正确的邮箱地址', trigger: 'blur' }
+        // ]
       }
     };
   },

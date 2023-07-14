@@ -49,8 +49,8 @@
           <el-table-column label="设备编码" prop="code"/>
           <el-table-column label="设备名称" prop="name" show-overflow-tooltip/>
           <el-table-column label="设备类型" align="center" prop="type"/>
-          <el-table-column label="设备规格" align="center" prop="description"/>
-          <el-table-column label="上级名称" align="center" prop="factoryAreaName"/>
+          <el-table-column label="设备规格" align="center" prop="description" width="260"/>
+          <el-table-column label="所在位置" align="center" prop="factoryAreaName"/>
           <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
             <template v-slot="scope">
               <span>{{ parseTime(scope.row.updateTime) }}</span>

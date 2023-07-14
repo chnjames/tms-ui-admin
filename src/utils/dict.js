@@ -71,6 +71,8 @@ export const DICT_TYPE = {
 
   // ========== CONFIG 模块 ==========
   CONFIG_STORE_TYPE: 'config_store_type', // 配置仓库类型
+  WAREHOUSE_BUYING_RECEIVED_STATUS: 'warehouse_buying_received_status', // 验收收货状态
+  WAREHOUSE_BUYING_STATUS: 'warehouse_buying_status', // 采购合同状态
   // ========== OPERATIONS 模块 ==========
   OPERATIONS_PROJECT_TYPE: 'operations_project_type', // 项目类型
   OPERATIONS_PROJECT_STATUS: 'operations_project_status', // 项目状态

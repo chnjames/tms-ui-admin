@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog :title="`${title}物料采购清单`" :visible.sync="open" width="900px" :append-to-body="appendToBody">
+    <el-dialog :title="`${title}物料采购清单`" :visible.sync="open" width="900px" :append-to-body="appendToBody" :show-close="false">
       <el-form ref="form" :model="form" :rules="rules" inline inline-message>
         <el-form-item v-if="form.action === 1 || form.action === 2" label="采购(PN)单号：" prop="pnCode">
           <div>{{form.pnCode}}</div>
@@ -38,7 +38,11 @@
               <span>{{row.demander || '-'}}</span>
             </template>
           </el-table-column>
-          <el-table-column label="收货状态" align="center" prop="status" :width="100" />
+          <el-table-column label="收货状态" align="center" prop="received" :width="100">
+            <template v-slot="{row}">
+              <span>{{row.received ? '已收货': '未收货'}}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="历史平均价格" align="center" :width="100">
             <template v-slot="{row}">
               <span>{{row.historyPrice || '-'}}</span>
