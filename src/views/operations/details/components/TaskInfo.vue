@@ -64,8 +64,8 @@
             <el-date-picker clearable size="small" style="width: 100%" v-model="item.beginTime" type="date"
                             value-format="timestamp" placeholder="开始时间"/>
           </el-form-item>
-          <el-form-item label="选择任务" :prop="'form.'+ index + '.extra.preTaskId'" :rules="rules.extra.preTaskId" v-if="taskType === 0 && item.mode === 2">
-            <el-select v-model="item.extra.preTaskId" placeholder="选择任务" style="width: 100%">
+          <el-form-item label="选择任务" :prop="'form.'+ index + '.preTaskId'" :rules="rules.preTaskId" v-if="taskType === 0 && item.mode === 2">
+            <el-select v-model="item.preTaskId" placeholder="选择任务" style="width: 100%">
               <el-option v-for="i in taskOptions" :key="i.id" :label="i.name" :value="i.id" />
             </el-select>
           </el-form-item>
@@ -170,9 +170,9 @@ export default {
           blameId: null, // 执行人
           plannedWorkMinute: null, // 预计工时(分钟)
           extra: {
-            plannedQty: 1, // 计划数量
-            preTaskId: null // 前置任务
+            plannedQty: 1 // 计划数量
           },
+          preTaskId: null, // 前置任务
           mode: 1, // 生效方式
           beginTime: null, // 开始时间
           endTime: null, // 结束时间
@@ -192,9 +192,9 @@ export default {
           { validator: validatePlannedWorkMinute, trigger: 'blur' }
         ],
         extra: {
-          plannedQty: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' },
-          preTaskId: { required: true, message: '选择任务不能为空', trigger: 'change' }
+          plannedQty: { required: true, type: 'number', message: '计划数量不能为空', trigger: 'blur' }
         },
+        preTaskId: { required: true, message: '选择任务不能为空', trigger: 'change' },
         mode: { required: true, message: '生效方式不能为空', trigger: 'change' },
         beginTime: { required: true, type: 'date', message: '开始时间不能为空', trigger: 'change' },
         endTime: { required: true, type: 'date', message: '结束时间不能为空', trigger: 'change' },
@@ -342,9 +342,9 @@ export default {
           blameId: null, // 执行人
           plannedWorkMinute: null, // 预计工时(分钟)
           extra: {
-            plannedQty: 1, // 计划数量
-            preTaskId: null // 前置任务
+            plannedQty: 1 // 计划数量
           },
+          preTaskId: null, // 前置任务
           mode: 1, // 生效方式
           beginTime: null, // 开始时间
           endTime: null, // 结束时间
