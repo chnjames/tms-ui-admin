@@ -38,7 +38,7 @@
                        v-hasPermi="['config:device:create']">模板下载</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="el-icon-upload2" size="mini" @click="handleAdd"
+            <el-button type="primary" plain icon="el-icon-upload2" size="mini" @click="handleUpload"
                        v-hasPermi="['config:device:create']">批量上传</el-button>
           </el-col>
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -60,8 +60,8 @@
             <template v-slot="scope">
               <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
                          v-hasPermi="['config:device:update']">编辑</el-button>
-              <el-button size="mini" type="text" icon="el-icon-document" @click="handleLogs(scope.row)"
-                         v-hasPermi="['config:device:update']">设备日志</el-button>
+              <!--<el-button size="mini" type="text" icon="el-icon-document" @click="handleLogs(scope.row)"
+                         v-hasPermi="['config:device:update']">设备日志</el-button>-->
               <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
                          v-hasPermi="['config:device:delete']">删除</el-button>
             </template>
@@ -280,15 +280,11 @@ export default {
     },
     /** 模板下载操作 */
     handleDownload() {
-      let arr = this.$refs.multipleTable.selection
-      if (arr.length === 0) {
-        this.$message({
-          type: 'warning',
-          message: '请选择要下载的数据'
-        })
-        return
-      }
-      console.log(arr)
+      console.log('模板下载操作')
+    },
+    /** 批量上传操作 */
+    handleUpload() {
+      console.log('批量上传操作')
     },
     /** 修改按钮操作 */
     handleUpdate(row) {

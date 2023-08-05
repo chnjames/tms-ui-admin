@@ -9,11 +9,12 @@ $rowH: 56;
 $buttonH: 50;
 
 // container
-$containerBgColor: #e6ebf2;
-$containerBgImage: '../assets/images/bg.png';
+//$containerBgColor: #e6ebf2;
+$containerBgColor: transparent;
+$containerBgImage: '../assets/images/bg-world.png';
 // container-logo
-$logoWidth: 500px;
-$logoHeight: 110px;
+$logoWidth: 400px;
+$logoHeight: 88px;
 $logoImage: '../assets/logo/icon-logo.png';
 // container-content
 $contentWidth: round($W / $H * 100) * 1vw;
@@ -72,39 +73,40 @@ $buttonHeight: $buttonH * 1px;
     text-align: center;
     // 定位
     position: absolute;
-    top: 50px;
+    top: 100px;
     left: 50%;
     margin-left: -$logoWidth/2;
   }
   .content {
     // 元素
-    width: $contentWidth;
-    height: $contentHeight;
+    //width: $contentWidth;
+    width: calc(710px - 314px);
+    height: 397px;
     background-color: #ffffff;
     box-shadow: 0px 16px 40px rgba(0, 0, 0, 0.07);
     border-radius: 20px;
     // 定位
     position: relative;
-    .pic {
-      // 元素
-      width: $picWidth;
-      height: $picHeight;
-      background-image: url($picImage);
-      background-repeat: no-repeat;
-      background-size: cover;
-      border-radius: 20px 0 0 20px;
-      // 定位
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
+    //.pic {
+    //  // 元素
+    //  width: $picWidth;
+    //  height: $picHeight;
+    //  background-image: url($picImage);
+    //  background-repeat: no-repeat;
+    //  background-size: cover;
+    //  border-radius: 20px 0 0 20px;
+    //  // 定位
+    //  position: absolute;
+    //  top: 0;
+    //  left: 0;
+    //}
     .field {
-      width: $fieldWidth;
+      width: calc(710px - 314px);
       height: $fieldHeight;
       // 定位
       position: absolute;
       top: 0;
-      left: $picWidth;
+      left: 0;
       display:flex;
       justify-content: center;
       align-items: center;
@@ -239,14 +241,14 @@ $buttonHeight: $buttonH * 1px;
 @media screen and (min-width: 599px) and (max-width: 1366px) {
   .container {
     .content {
-      width: 710px;
+      width: calc(710px - 314px);
       height: 397px;
-      .pic {
-        width: 314px;
-      }
+      //.pic {
+      //  width: 314px;
+      //}
       .field {
         width: calc(710px - 314px);
-        left: 314px;
+        left: 0;
         .form {
           width: 320px;
           :deep(.el-input__inner) {
@@ -308,9 +310,9 @@ $iconBgImage: '../assets/images/icon.png';
       display: flex;
       justify-content: center;
       align-items: center;
-      .pic {
-        display: none;
-      }
+      //.pic {
+      //  display: none;
+      //}
       .field {
         // 元素
         width: inherit;

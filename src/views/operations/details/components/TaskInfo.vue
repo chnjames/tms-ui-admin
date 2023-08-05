@@ -391,7 +391,6 @@ export default {
             ...item.extra
           }
         })
-        debugger
         createTaskBatch(paramsArr).then(response => {
           this.$modal.msgSuccess('新增成功')
           this.open = false

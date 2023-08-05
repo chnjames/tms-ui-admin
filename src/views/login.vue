@@ -4,7 +4,7 @@
     <!-- 登录区域 -->
     <div class="content">
       <!-- 配图 -->
-      <div class="pic"></div>
+      <!--<div class="pic"></div>-->
       <!-- 表单 -->
       <div class="field">
         <!-- [移动端]标题 -->
