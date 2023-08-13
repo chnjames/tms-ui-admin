@@ -69,3 +69,22 @@ export function getCustomerContactSimpleList() {
     method: 'get'
   })
 }
+// 客户模板下载
+export function downloadCustomerTemplate() {
+  return request({
+    url: '/config/customer/import-excel-template',
+    method: 'get',
+    responseType: 'blob',
+    header: {
+      headers: { 'Content-Type': 'application/x-download' }
+    }
+  })
+}
+// 客户批量导入excel
+export function importCustomerExcel(data) {
+  return request({
+    url: '/config/customer/import-excel',
+    method: 'post',
+    data
+  })
+}

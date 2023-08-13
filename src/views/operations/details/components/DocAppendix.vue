@@ -1,60 +1,67 @@
 <template>
   <div>
     <!-- 搜索工作栏 -->
-    <el-form v-show="showSearch" :model="queryParams" ref="queryForm" size="small" :inline="true">
+    <!--<el-form v-show="showSearch" :model="queryParams" ref="queryForm" size="small" :inline="true">
       <el-form-item>
-        <el-input v-show="showSearch" v-model="queryParams.name" placeholder="请输入名称" clearable
+        <el-input v-show="showSearch" size="mini" v-model="queryParams.name" placeholder="请输入名称" clearable
                   @keyup.enter.native="handleQuery"/>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">查询</el-button>
       </el-form-item>
-    </el-form>
-    <!-- 操作工具栏 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:factory-area:create']">新增附件</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button plain icon="el-icon-delete" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:device:create']">批量删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-download" size="mini"
-                   v-hasPermi="['config:device:create']">批量下载</el-button>
-      </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
-    <!-- 列表 -->
-    <el-table v-loading="loading" :data="list">
-      <el-table-column type="selection" :width="60" align="center" />
-      <el-table-column
-        v-for="(item, index) in tableHeader"
-        :key="index"
-        :prop="item.prop"
-        :width="item.width"
-        :fixed="item.fixed"
-        :label="item.label">
-        <template v-slot="{row}">
-          <template v-if="item.prop === 'operation'">
-            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
-                       v-hasPermi="['config:factory-area:delete']">删除</el-button>
+    </el-form>-->
+    <el-card style="margin-bottom: 15px">
+      <!-- 操作工具栏 -->
+      <el-row :gutter="10">
+        <el-col :span="1.5">
+          <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                     v-hasPermi="['operations:document:create']">新增附件</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button plain icon="el-icon-delete" size="mini" @click="handleBatchDel"
+                     v-hasPermi="['operations:document:delete']">批量删除</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button type="primary" plain icon="el-icon-download" size="mini" @click="handleBatchDownload"
+                     v-hasPermi="['operations:document:query']">批量下载</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-input v-show="showSearch" size="mini" v-model="queryParams.name" placeholder="请输入名称" clearable
+                    @keyup.enter.native="handleQuery"/>
+        </el-col>
+        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!-- 列表 -->
+      <el-table ref="table" v-loading="loading" :data="list">
+        <el-table-column type="selection" :width="60" align="center" />
+        <el-table-column
+          v-for="(item, index) in tableHeader"
+          :key="index"
+          :prop="item.prop"
+          :width="item.width"
+          :fixed="item.fixed"
+          :label="item.label">
+          <template v-slot="{row}">
+            <template v-if="item.prop === 'operation'">
+              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                         v-hasPermi="['operations:document:delete']">删除</el-button>
+            </template>
+            <template v-else-if="item.prop === 'executorName'">
+              <span>{{ row.creator.nickname || '-' }}</span>
+            </template>
+            <template v-else-if="item.prop === 'size'">
+              <span>{{ formatFileSize(row[item.prop]) }}</span>
+            </template>
+            <template v-else-if="item.prop === 'createTime'">
+              <span>{{ parseTime(row[item.prop]) }}</span>
+            </template>
+            <span v-else>{{ row[item.prop] }}</span>
           </template>
-          <template v-else-if="item.prop === 'executorName'">
-            <span>{{ row.creator.nickname || '-' }}</span>
-          </template>
-          <template v-else-if="item.prop === 'size'">
-            <span>{{ formatFileSize(row[item.prop]) }}</span>
-          </template>
-          <template v-else-if="item.prop === 'createTime'">
-            <span>{{ parseTime(row[item.prop]) }}</span>
-          </template>
-          <span v-else>{{ row[item.prop] }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-table-column>
+      </el-table>
+    </el-card>
     <!-- 上传附件 -->
     <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
@@ -71,7 +78,11 @@
 </template>
 
 <script>
-import { getDocumentPage, deleteDocument, createDocument } from '@/api/operations/overview'
+import {
+  getDocumentPage,
+  deleteDocument,
+  createDocument,
+  deleteDocumentBatch } from '@/api/operations/overview'
 import { formatFileSize } from '@/utils'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import FileUpload from '@/components/FileUpload/index.vue'
@@ -169,6 +180,36 @@ export default {
       this.reset()
       this.open = true
       this.title = '添加'
+    },
+    /** 批量删除按钮操作 */
+    handleBatchDel() {
+      const ids = this.$refs.table.selection.map(item => item.id)
+      if (ids.length === 0) {
+        this.$modal.msgWarning('请选择要删除的数据')
+        return
+      }
+      const idsStr = ids.join(',')
+      this.$confirm('确定删除选中的数据吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteDocumentBatch({ids: idsStr}).then(() => {
+          this.$modal.msgSuccess('删除成功')
+          this.getList()
+        })
+      })
+    },
+    /** 批量下载按钮操作 */
+    handleBatchDownload() {
+      const urls = this.$refs.table.selection.map(item => item.url)
+      if (urls.length === 0) {
+        this.$modal.msgWarning('请选择要下载的数据')
+        return
+      }
+      urls.forEach(item => {
+        window.open(item)
+      })
     },
     /** 提交按钮 */
     submitForm() {

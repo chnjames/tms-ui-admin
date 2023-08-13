@@ -9,7 +9,7 @@
                             type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
           </el-form-item>
           <el-form-item>
-            <el-input v-model="queryParams.name" placeholder="请输入名称" clearable @keyup.enter.native="handleQuery"/>
+            <el-input v-model="queryParams.name" placeholder="请输入任务名称" clearable @keyup.enter.native="handleQuery"/>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
@@ -31,8 +31,11 @@
         :fixed="item.fixed"
         :label="item.label">
         <template v-slot="{row}">
-          <template v-if="item.prop === 'status'">
+          <template v-if="item.prop === 'progress'">
             <el-progress :percentage="row.rate > 100 ? 100 : row.rate" :color="row.progressColor" :format="progressFormat(row.rate)"></el-progress>
+          </template>
+          <template v-else-if="item.prop === 'status'">
+            <el-tag size="mini" :type="row.statusColor">{{row.statusDesc}}</el-tag>
           </template>
           <span v-else>{{ row[item.prop] }}</span>
         </template>
@@ -69,6 +72,8 @@ export default {
       list: [],
       // tabs列表
       tabList: getDictDatas(DICT_TYPE.OPERATIONS_TASK_STATUS),
+      // 任务类型列表
+      taskTypeList: getDictDatas(DICT_TYPE.OPERATIONS_TASK_TYPE),
       // 项目列表
       projectSimpleList: [],
       // 基础表头
@@ -78,6 +83,7 @@ export default {
         { prop: 'activatedTime', label: '计划开始' },
         { prop: 'endTime', label: '计划结束' },
         { prop: 'completedTime', label: '实际结束' },
+        { prop: 'progress', label: '任务进度' },
         { prop: 'status', label: '任务状态' },
         { prop: 'blameName', label: '执行人' }
       ],
@@ -120,13 +126,18 @@ export default {
       }
       getTaskPage(params).then(response => {
         const { list, total } = response.data;
-        // console.log(this.projectSimpleList)
         list.map(item => {
           item.blameName = item.blame?.nickname || ''
-          item.proName = this.projectSimpleList.find(i => i.id === item.projectId)?.name || ''
+          if (item.projectId) {
+            item.proName = this.projectSimpleList.find(i => i.id === item.projectId)?.name || ''
+          } else {
+            item.proName = this.taskTypeList.find(i => parseInt(i.value) === item.type)?.label || ''
+          }
           item.activatedTime = parseTime(item.activatedTime)
           item.endTime = parseTime(item.endTime)
           item.completedTime = parseTime(item.completedTime)
+          item.statusDesc = this.tabList.find(i => parseInt(i.value) === item.status).label
+          item.statusColor = this.tabList.find(i => parseInt(i.value) === item.status).colorType
           if (item.rate < 100) {
             if (item.endTime > new Date().getTime()) {
               item.progressColor = '#409EFF'

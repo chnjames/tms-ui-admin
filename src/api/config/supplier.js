@@ -62,3 +62,23 @@ export function getSupplierSimpleList(query) {
     params: query
   })
 }
+// 供应商模板下载
+export function downloadSupplierTemplate() {
+  return request({
+    url: '/config/supplier/import-excel-template',
+    method: 'get',
+    responseType: 'blob',
+    header: {
+      headers: { 'Content-Type': 'application/x-download' }
+    }
+  })
+}
+// 供应商批量导入excel
+export function importSupplierExcel(data) {
+  return request({
+    url: '/config/supplier/import-excel',
+    method: 'post',
+    data
+  })
+}
+

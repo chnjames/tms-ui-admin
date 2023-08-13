@@ -1,75 +1,79 @@
 <template>
   <div class="app-container" v-loading="projectLoading">
-    <el-form :model="form" ref="infosRef" label-width="110px">
-      <el-form-item label="名称:" class="item-name">
-        <div class="item-name-flex">
-          <div v-if="!isEditing" class="item-name-content cursor" @click="bindIsEdit">{{form.name}}</div>
-          <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
-          <el-select size="mini" v-model="form.status" placeholder="请选择" style="width: 100px;">
-            <template slot="prefix">
-              <!--<span class="tag" :class="form.colorType"></span>-->
-            </template>
-            <el-option-group label="更改项目状态" style="width: 160px">
-              <el-option class="option" v-for="item in statusList" :key="item.value" :label="item.label" :value="parseInt(item.value)">
-                <span class="option-tag">{{ item.label }}</span>
-                <i v-if="form.status === parseInt(item.value)" class="el-icon-check"></i>
-              </el-option>
-            </el-option-group>
-          </el-select>
-        </div>
-      </el-form-item>
-      <el-row :gutter="10">
-        <el-col :md="16" :xs="24">
-          <el-col :span="12">
-            <el-form-item label="负责人:" prop="blameId">
-              <el-select v-model="form.blameId" style="width: 100%;max-width: 300px" filterable placeholder="请选择">
-                <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="计划起止日期:">
-              <el-date-picker v-model="form.beginEndTime" style="width: 100%;max-width: 300px" value-format="timestamp"
-                              type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="项目类型:">
-              <div>{{ form.typeDesc }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="内部关注人:" prop="followerIds">
-              <el-select v-model="form.followerIds" collapse-tags style="width: 100%;max-width: 300px" :multiple-limit="10" filterable multiple placeholder="请选择">
-                <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-col>
-        <el-col :md="8" :xs="24">
-          <div class="progress">
-            <el-col :span="8">
-              <div class="progress-label">当前进展</div>
-              <count-to :style="{color: form.progressColor}" :start-val="0" :end-val="form.progress" suffix="%" />
-            </el-col>
-            <el-col :span="8">
-              <div class="progress-label">已消耗工时(h)</div>
-              <count-to :start-val="0" :end-val="form.current" />
-            </el-col>
-            <el-col :span="8">
-              <div class="progress-label">预估工时(h)</div>
-              <count-to :start-val="0" :end-val="form.total" />
-            </el-col>
+    <el-card style="margin-bottom: 15px">
+      <el-form :model="form" ref="infosRef" label-width="110px">
+        <el-form-item label="名称:" class="item-name">
+          <div class="item-name-flex">
+            <div v-if="!isEditing" class="item-name-content cursor" @click="bindIsEdit">{{form.name}}</div>
+            <el-input v-else class="item-name-content" v-model="form.name" v-auto-focus="isEditing" @blur="bindSaveName" placeholder="请输入名称"/>
+            <el-select size="mini" v-model="form.status" placeholder="请选择" style="width: 100px;">
+              <template slot="prefix">
+                <!--<span class="tag" :class="form.colorType"></span>-->
+              </template>
+              <el-option-group label="更改项目状态" style="width: 160px">
+                <el-option class="option" v-for="item in statusList" :key="item.value" :label="item.label" :value="parseInt(item.value)">
+                  <span class="option-tag">{{ item.label }}</span>
+                  <i v-if="form.status === parseInt(item.value)" class="el-icon-check"></i>
+                </el-option>
+              </el-option-group>
+            </el-select>
           </div>
-        </el-col>
-      </el-row>
-    </el-form>
-    <el-tabs v-model="activeTab" @tab-click="bindTab">
-      <el-tab-pane v-for="(tab, i) in tabList" :key="`tab${i}`" :label="tab.label" :name="tab.name">
-        <component v-if="activeTab === tab.name" :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />
-        <!--<component :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />-->
-      </el-tab-pane>
-    </el-tabs>
+        </el-form-item>
+        <el-row :gutter="10">
+          <el-col :md="16" :xs="24">
+            <el-col :span="12">
+              <el-form-item label="负责人:" prop="blameId">
+                <el-select v-model="form.blameId" style="width: 100%;max-width: 300px" filterable placeholder="请选择">
+                  <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="计划起止日期:">
+                <el-date-picker v-model="form.beginEndTime" style="width: 100%;max-width: 300px" value-format="timestamp"
+                                type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="项目类型:">
+                <div>{{ form.typeDesc }}</div>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="内部关注人:" prop="followerIds">
+                <el-select v-model="form.followerIds" collapse-tags style="width: 100%;max-width: 300px" :multiple-limit="10" filterable multiple placeholder="请选择">
+                  <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-col>
+          <el-col :md="8" :xs="24">
+            <div class="progress">
+              <el-col :span="8">
+                <div class="progress-label">当前进展</div>
+                <count-to :style="{color: form.progressColor}" :start-val="0" :end-val="form.progress" suffix="%" />
+              </el-col>
+              <el-col :span="8">
+                <div class="progress-label">已消耗工时(h)</div>
+                <count-to :start-val="0" :end-val="form.current" />
+              </el-col>
+              <el-col :span="8">
+                <div class="progress-label">预估工时(h)</div>
+                <count-to :start-val="0" :end-val="form.total" />
+              </el-col>
+            </div>
+          </el-col>
+        </el-row>
+      </el-form>
+    </el-card>
+    <el-card>
+      <el-tabs v-model="activeTab" @tab-click="bindTab">
+        <el-tab-pane :v-hasPermi="[tab.permission]" v-for="(tab, i) in tabList" :key="`tab${i}`" :label="tab.label" :name="tab.name">
+          <component v-if="activeTab === tab.name" :is="tab.component" :ref="tab.component" :beginEndTime="form.beginEndTime" :content="tab.content" @content-change="bindContentChange" />
+          <!--<component :is="tab.component" :ref="tab.component" :content="tab.content" @content-change="bindContentChange" />-->
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
   </div>
 </template>
 
@@ -115,16 +119,16 @@ export default {
       isEditing: false,
       // tab列表
       tabList: [],
-      // tab列表 tabsType: 2: 设备维保 1: 项目管理 & 生产管理
+      // tab列表 tabsType: 2: 设备维保 1: 项目管理 & 生产管理 控制权限：permission
       tabsList: [
-        { label: '项目描述', name: '1', component: 'ComTinymceEditor', content: '' },
-        { label: '任务计划', name: '7', component: 'TaskPlan', tabsType: 2, content: '' },
-        { label: '执行记录', name: '8', component: 'ExecuteRecord', tabsType: 2 },
-        { label: '任务列表', name: '2', component: 'TaskInfo', tabsType: 1 },
-        { label: '文档附件', name: '3', component: 'DocAppendix' },
-        { label: 'BOM清单', name: '4', component: 'BomList', tabsType: 1 },
-        { label: '合同管理', name: '5', component: 'ContractManage', tabsType: 1 },
-        { label: '收款管理', name: '6', component: 'PayManage', tabsType: 1 }
+        { label: '项目描述', name: '1', permission: 'operations:project:query', component: 'ComTinymceEditor', content: '' },
+        { label: '任务计划', name: '7', permission: 'operations:task-plan:query', component: 'TaskPlan', tabsType: 2, content: '' },
+        { label: '执行记录', name: '8', permission: 'operations:task:query', component: 'ExecuteRecord', tabsType: 2 },
+        { label: '任务列表', name: '2', permission: 'operations:task:query', component: 'TaskInfo', tabsType: 1 },
+        { label: '文档附件', name: '3', permission: 'operations:document:query', component: 'DocAppendix' },
+        { label: 'BOM清单', name: '4', permission: 'operations:bom:query', component: 'BomList', tabsType: 1 },
+        { label: '合同管理', name: '5', permission: 'operations:contract:query', component: 'ContractManage', tabsType: 1 },
+        { label: '收款管理', name: '6', permission: 'operations:payment:query', component: 'PayManage', tabsType: 1 }
       ],
       // 用户列表
       userList: [],
@@ -167,15 +171,25 @@ export default {
     formAndCopyForm: {
       handler(val) {
         const { form, copyForm } = val
-        const { name, blameId, beginEndTime, type, followerIds, description, status } = form
+        const { blameId, beginEndTime, type, followerIds, description, status } = form
         const [beginTime, endTime] = beginEndTime
-        const { name: copyName, blameId: copyBlameId, beginEndTime: copyBeginEndTime, type: copyType, followerIds: copyFollowerIds, description: copyDescription, status: copyStatus } = copyForm
+        const { blameId: copyBlameId, beginEndTime: copyBeginEndTime, type: copyType, followerIds: copyFollowerIds, description: copyDescription, status: copyStatus } = copyForm
         const [copyBeginTime, copyEndTime] = copyBeginEndTime
-        if (name !== copyName || blameId !== copyBlameId || beginTime !== copyBeginTime || endTime !== copyEndTime || type !== copyType || arrayNotEqual(followerIds, copyFollowerIds) || description !== copyDescription || status !== copyStatus) {
+        if (blameId !== copyBlameId || beginTime !== copyBeginTime || endTime !== copyEndTime || type !== copyType || arrayNotEqual(followerIds, copyFollowerIds) || description !== copyDescription || status !== copyStatus) {
           this.updateOverview()
         }
       },
       deep: true
+    },
+    proType: {
+      handler(val) {
+        if (val === '0' || val === '1') {
+          this.activeTab = '2'
+        } else if (val === '2') {
+          this.activeTab = '8'
+        }
+      },
+      immediate: true
     }
   },
   async created() {
@@ -262,6 +276,7 @@ export default {
     /** 失焦保存名称 */
     bindSaveName() {
       this.isEditing = false
+      this.updateOverview()
     },
     /** 切换Tab */
     bindTab(tab) {

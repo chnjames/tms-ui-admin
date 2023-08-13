@@ -19,19 +19,19 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:factory-area:create']">新增</el-button>
+                   v-hasPermi="['operations:template:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button plain icon="el-icon-delete" size="mini"
-                   v-hasPermi="['config:device:create']">批量删除</el-button>
+                   v-hasPermi="['operations:template:delete']">批量删除</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button plain icon="el-icon-download" size="mini"
-                   v-hasPermi="['config:device:create']">模板下载</el-button>
+                   v-hasPermi="['operations:template:export']">模板下载</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-upload2" size="mini"
-                   v-hasPermi="['config:device:create']">批量上传</el-button>
+                   v-hasPermi="['operations:template:export']">批量上传</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -51,9 +51,9 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-                     v-hasPermi="['config:factory-area:update']">编辑</el-button>
+                     v-hasPermi="['operations:template:update']">编辑</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-                     v-hasPermi="['config:factory-area:delete']">删除</el-button>
+                     v-hasPermi="['operations:template:delete']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

@@ -1,8 +1,8 @@
 {
   "name": "tms-ui-admin",
   "version": "1.6.5-snapshot",
-  "description": "益哒创新",
-  "author": "芋道",
+  "description": "任务引擎",
+  "author": "James",
   "license": "MIT",
   "scripts": {
     "local": "vue-cli-service serve --mode local",

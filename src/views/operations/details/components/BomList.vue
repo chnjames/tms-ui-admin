@@ -1,53 +1,56 @@
 <template>
   <div>
-    <!-- 操作工具栏 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:factory-area:create']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="bindInitiate"
-                   v-hasPermi="['config:factory-area:create']">发起出库</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入物料名称" clearable
-                  @keyup.enter.native="handleQuery"/>
-      </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-    <!-- 列表 -->
-    <el-table ref="multipleTable" v-loading="loading" :data="list">
-      <el-table-column type="selection" :selectable="compSelection" :width="55" align="center" />
-      <el-table-column
-        v-for="(item, index) in tableHeader"
-        :key="index"
-        :prop="item.prop"
-        :width="item.width"
-        :fixed="item.fixed"
-        :label="item.label">
-        <template v-slot="{row}">
-          <template v-if="item.prop === 'operation'">
-            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
-                       v-hasPermi="['config:factory-area:delete']"
-                       :disabled="!(row.status === 0 || row.status === 3)">删除</el-button>
-            <el-button size="mini" type="text" icon="el-icon-s-promotion" @click="bindPurchase(row)"
-                       v-hasPermi="['config:factory-area:update']"
-                       :disabled="row.status !== 3">发起采购</el-button>
-          </template>
-          <template v-else-if="item.prop === 'createTime'">
-            <span>{{ parseTime(row[item.prop]) }}</span>
-          </template>
-          <template v-else-if="item.prop === 'count'">
-            <el-input v-if="row.isSelected" v-model="row.count" @focus="handleFocus(row)" @blur="handleBlur(row)" v-auto-focus></el-input>
-            <template v-else>
-              <el-link :type="(row.status === 0 || row.status === 3)  ? 'primary': ''" :underline="(row.status === 0 || row.status === 3)" @click="handleDemand(row)">{{row.count}}</el-link>
+    <el-card style="margin-bottom: 15px">
+      <!-- 操作工具栏 -->
+      <el-row :gutter="10">
+        <el-col :span="1.5">
+          <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                     v-hasPermi="['operations:bom:create']">新增</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button type="primary" icon="el-icon-plus" size="mini" @click="bindInitiate"
+                     >发起出库</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入物料名称" clearable
+                    @keyup.enter.native="handleQuery"/>
+        </el-col>
+        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!-- 列表 -->
+      <el-table ref="multipleTable" v-loading="loading" :data="list">
+        <el-table-column type="selection" :selectable="compSelection" :width="55" align="center" />
+        <el-table-column
+          v-for="(item, index) in tableHeader"
+          :key="index"
+          :prop="item.prop"
+          :width="item.width"
+          :fixed="item.fixed"
+          :label="item.label">
+          <template v-slot="{row}">
+            <template v-if="item.prop === 'operation'">
+              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                         v-hasPermi="['operations:bom:delete']"
+                         :disabled="!(row.status === 0 || row.status === 3)">删除</el-button>
+              <el-button size="mini" type="text" icon="el-icon-s-promotion" @click="bindPurchase(row)"
+                         :disabled="row.status !== 3">发起采购</el-button>
             </template>
+            <template v-else-if="item.prop === 'createTime'">
+              <span>{{ parseTime(row[item.prop]) }}</span>
+            </template>
+            <template v-else-if="item.prop === 'count'">
+              <el-input v-if="row.isSelected" v-model="row.count" @focus="handleFocus(row)" @blur="handleBlur(row)" v-auto-focus></el-input>
+              <template v-else>
+                <el-link :type="(row.status === 0 || row.status === 3)  ? 'primary': ''" :underline="(row.status === 0 || row.status === 3)" @click="handleDemand(row)">{{row.count}}</el-link>
+              </template>
+            </template>
+            <span v-else>{{ row[item.prop] }}</span>
           </template>
-          <span v-else>{{ row[item.prop] }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-table-column>
+      </el-table>
+    </el-card>
     <!-- 对话框BOM(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">

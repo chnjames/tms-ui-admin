@@ -1,45 +1,49 @@
 <template>
   <div>
-    <!-- 操作工具栏 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:factory-area:create']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button plain icon="el-icon-delete" size="mini"
-                   v-hasPermi="['config:device:create']">批量删除</el-button>
-      </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-    <!-- 列表 -->
-    <el-table v-loading="loading" :data="list">
-      <el-table-column type="selection" :width="60" align="center" />
-      <el-table-column
-        v-for="(item, index) in tableHeader"
-        :key="index"
-        :prop="item.prop"
-        :width="item.width"
-        :fixed="item.fixed"
-        :align="item.align"
-        :label="item.label">
-        <template v-slot="{row}">
-          <template v-if="item.prop === 'operation'">
-            <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
-                       v-hasPermi="['config:factory-area:update']">编辑</el-button>
-            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
-                       v-hasPermi="['config:factory-area:delete']">删除</el-button>
+    <el-card style="margin-bottom: 15px">
+      <!-- 操作工具栏 -->
+      <el-row :gutter="10">
+        <el-col :span="1.5">
+          <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                     v-hasPermi="['operations:task-plan:create']">新增</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button plain icon="el-icon-delete" size="mini"
+                     v-hasPermi="['operations:task-plan:delete']">批量删除</el-button>
+        </el-col>
+        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!-- 列表 -->
+      <el-table v-loading="loading" :data="list">
+        <el-table-column type="selection" :width="60" align="center" />
+        <el-table-column
+          v-for="(item, index) in tableHeader"
+          :key="index"
+          :prop="item.prop"
+          :width="item.width"
+          :fixed="item.fixed"
+          :align="item.align"
+          :label="item.label">
+          <template v-slot="{row}">
+            <template v-if="item.prop === 'operation'">
+              <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
+                         v-hasPermi="['operations:task-plan:update']">编辑</el-button>
+              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                         v-hasPermi="['operations:task-plan:delete']">删除</el-button>
+            </template>
+            <template v-else-if="item.prop === 'nextTriggerTime'">
+              <span>{{ parseTime(row[item.prop]) }}</span>
+            </template>
+            <template v-else-if="item.prop === 'status'">
+              <el-switch v-model="row.status" :active-value="0" :inactive-value="1" />
+            </template>
+            <span v-else>{{ row[item.prop] }}</span>
           </template>
-          <template v-else-if="item.prop === 'nextTriggerTime'">
-            <span>{{ parseTime(row[item.prop]) }}</span>
-          </template>
-          <template v-else-if="item.prop === 'status'">
-            <el-switch v-model="row.status" :active-value="0" :inactive-value="1" />
-          </template>
-          <span v-else>{{ row[item.prop] }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-table-column>
+      </el-table>
+    </el-card>
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="130px">
@@ -225,6 +229,10 @@ export default {
     },
     taskPlanPeriodListFilter() {
       return this.taskPlanPeriodList.filter(item => parseInt(item.status) !== 1)
+    },
+    // 任务类型 0:项目管理 1:生产管理 2:设备维保
+    taskType() {
+      return Number(this.$route.query.type)
     }
   },
   methods: {
@@ -275,7 +283,8 @@ export default {
     async getTaskTempList() {
       try {
         const response = await getTaskTemplateList();
-        this.taskTempList = response.data;
+        const taskTempList = response.data;
+        this.taskTempList = taskTempList.filter(item => item.type === this.taskType);
       } catch (error) {
         console.error('获取任务模版列表失败', error);
         throw error;

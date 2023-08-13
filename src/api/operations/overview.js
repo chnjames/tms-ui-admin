@@ -237,6 +237,21 @@ export function getTask(id) {
     method: 'get'
   })
 }
+// 更新任务
+export function updateTask(data) {
+  return request({
+    url: '/operations/task/update',
+    method: 'put',
+    data
+  })
+}
+// 删除任务
+export function deleteTask(id) {
+  return request({
+    url: '/operations/task/delete?id=' + id,
+    method: 'delete'
+  })
+}
 // 获得任务分页
 export function getTaskPage(query) {
   return request({
@@ -300,5 +315,13 @@ export function updateTaskPlan(data) {
     url: '/operations/task-plan/update',
     method: 'put',
     data
+  })
+}
+// 项目文档批量删除
+export function deleteDocumentBatch(query) {
+  return request({
+    url: '/operations/document/batch/delete',
+    method: 'delete',
+    params: query
   })
 }

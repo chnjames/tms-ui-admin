@@ -2,17 +2,17 @@
   <div class="app-container">
     <!-- 搜索工作栏 -->
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
-      <el-form-item>
-        <el-select v-model="queryParams.blameId" placeholder="执行人" clearable @change="handleQuery">
+      <el-form-item prop="executorId">
+        <el-select v-model="queryParams.executorId" placeholder="执行人" clearable @change="handleQuery">
           <el-option v-for="item in userList" :key="parseInt(item.id)" :label="item.nickname" :value="parseInt(item.id)"/>
         </el-select>
       </el-form-item>
-      <el-form-item>
+      <el-form-item prop="type">
         <el-select v-model="queryParams.type" placeholder="出入库" clearable @change="handleQuery">
           <el-option v-for="item in libraryOptions" :key="item.value" :label="item.label" :value="item.value"/>
         </el-select>
       </el-form-item>
-      <el-form-item>
+      <el-form-item prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
           style="width: 240px"
@@ -24,11 +24,12 @@
           @change="handleQuery"
           :default-time="['00:00:00', '23:59:59']" />
       </el-form-item>
-      <el-form-item>
+      <el-form-item prop="name">
         <el-input v-model="queryParams.name" placeholder="请输入名称/编号" clearable @keyup.enter.native="handleQuery"/>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
+        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
@@ -97,7 +98,7 @@ export default {
       queryParams: {
         pageNo: 1,
         pageSize: 10,
-        blameId: null, // 执行人
+        executorId: null, // 执行人
         type: null, // 出入库 0出库 1入库
         name: null,
         createTime: null
@@ -141,6 +142,12 @@ export default {
     handleQuery() {
       this.queryParams.pageNo = 1
       this.getList()
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.resetForm("queryForm");
+      this.queryParams.createTime = null;
+      this.handleQuery();
     }
   }
 }

@@ -36,7 +36,7 @@ export default {
   },
   data() {
     return {
-      title: '益哒创新',
+      title: '任务引擎',
       logo: logoImg,
       logoMini: logoImgMini
     }

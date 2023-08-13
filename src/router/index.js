@@ -67,12 +67,13 @@ export const constantRoutes = [
   {
     path: '',
     component: Layout,
-    redirect: 'index',
+    hidden: true,
+    redirect: 'operations/overview',
     children: [{
-        path: 'index',
-        component: (resolve) => require(['@/views/index'], resolve),
-        name: '首页',
-        meta: {title: '首页', icon: 'dashboard', affix: true}
+        path: 'overview',
+        component: (resolve) => require(['@/views/operations/overview/index.vue'], resolve),
+        name: '任务引擎',
+        meta: {title: '任务引擎', icon: 'dashboard', affix: true}
       }
     ]
   }, {

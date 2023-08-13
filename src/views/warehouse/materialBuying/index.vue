@@ -21,7 +21,7 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button plain icon="el-icon-delete" size="mini" @click="handleDeleteBatch"
-                   v-hasPermi="['config:device:create']">批量删除</el-button>
+                   v-hasPermi="['warehouse:material-buying:delete']">批量删除</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -54,11 +54,11 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="{row}">
           <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row, 1)"
-                     v-hasPermi="['warehouse:material:update']">编辑</el-button>
+                     v-hasPermi="['warehouse:material-buying:update']">编辑</el-button>
           <el-button :disabled="row.status === 0" size="mini" type="text" icon="el-icon-edit" @click="handleDetail(row, 2)"
-                     v-hasPermi="['warehouse:material:update']">详情</el-button>
+                     v-hasPermi="['warehouse:material-buying:update']">详情</el-button>
           <el-button :disabled="row.status !== 0" size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
-                     v-hasPermi="['warehouse:material:delete']">删除</el-button>
+                     v-hasPermi="['warehouse:material-buying:delete']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -134,7 +134,7 @@ export default {
         list.map(item => {
           item.statusDesc = this.statusDictDatas.find(i => parseInt(i.value) === item.status).label
           item.statusType = this.statusDictDatas.find(i => parseInt(i.value) === item.status).colorType
-          if (item.receivedStatus) {
+          if (item.receivedStatus !== '' && item.receivedStatus !== null) {
             item.receivedStatusDesc = this.receivedStatusDictDatas.find(i => parseInt(i.value) === item.receivedStatus).label
             item.receivedStatusType = this.receivedStatusDictDatas.find(i => parseInt(i.value) === item.receivedStatus).colorType
           }

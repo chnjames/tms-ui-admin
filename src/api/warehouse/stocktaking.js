@@ -9,3 +9,11 @@ export function getStocktakingPage(query) {
     params: query
   })
 }
+// 盘点
+export function stocktakingExec(data) {
+  return request({
+    url: '/warehouse/stocktaking/exec',
+    method: 'post',
+    data: data
+  })
+}

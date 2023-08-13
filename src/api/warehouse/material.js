@@ -108,3 +108,22 @@ export function getDemandPage(query) {
     params: query
   })
 }
+// 物料基础数据模板下载
+export function downloadMaterialTemplate() {
+  return request({
+    url: '/warehouse/material/import-excel-template',
+    method: 'get',
+    responseType: 'blob',
+    header: {
+      headers: { 'Content-Type': 'application/x-download' }
+    }
+  })
+}
+// 物料基础数据批量导入excel
+export function importMaterialExcel(data) {
+  return request({
+    url: '/warehouse/material/import-excel',
+    method: 'post',
+    data
+  })
+}

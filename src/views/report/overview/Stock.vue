@@ -98,7 +98,7 @@ export default {
       queryParams: {
         pageNo: 1,
         pageSize: 10,
-        storeAreaId: 16,
+        storeAreaId: null,
         name: null
       }
     }

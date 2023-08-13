@@ -25,11 +25,11 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleCreatePurchase"
-                   v-hasPermi="['warehouse:material:create']">创建采购单</el-button>
+                   v-hasPermi="['warehouse:material-demand:create']">创建采购单</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
-                   v-hasPermi="['warehouse:material:export']">导出</el-button>
+                   v-hasPermi="['warehouse:material-demand:export']">导出</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>

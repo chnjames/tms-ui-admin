@@ -4,7 +4,7 @@
     <!-- 搜索工作栏 -->
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
       <el-form-item prop="name">
-        <el-input v-model="queryParams.name" placeholder="请输入客户名称" clearable @keyup.enter.native="handleQuery"/>
+        <el-input v-model="queryParams.name" placeholder="请输入公司名称" clearable @keyup.enter.native="handleQuery"/>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
@@ -18,11 +18,13 @@
       </el-col>
       <el-col :span="1.5">
         <el-button plain icon="el-icon-download" size="mini" @click="handleDownload"
-                   v-hasPermi="['config:device:create']">模板下载</el-button>
+                   v-hasPermi="['config:customer:export']">模板下载</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-upload2" size="mini" @click="handleUpload"
-                   v-hasPermi="['config:device:create']">批量上传</el-button>
+        <el-upload accept=".xlsx, .xls" :action="upload.url" :headers="upload.headers" :show-file-list="false" :limit="1"
+          :on-success="handleFileSuccess">
+          <el-button type="primary" plain icon="el-icon-upload2" size="mini" v-hasPermi="['config:customer:export']">批量上传</el-button>
+        </el-upload>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -82,8 +84,17 @@
 </template>
 
 <script>
-import { createCustomer, updateCustomer, deleteCustomer, getCustomer, getCustomerPage, exportCustomerExcel, getCustomerSimpleList } from "@/api/config/customer";
+import {
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  getCustomer,
+  getCustomerPage,
+  exportCustomerExcel,
+  getCustomerSimpleList,
+  downloadCustomerTemplate } from "@/api/config/customer";
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { getBaseHeader } from '@/utils/request'
 
 export default {
   name: "Customer",
@@ -148,6 +159,11 @@ export default {
         //   { required: true, message: "邮箱地址不能为空", trigger: "blur" },
         //   { pattern: /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/, message: '请输入正确的邮箱地址', trigger: 'blur' }
         // ]
+      },
+      // 导入模板
+      upload: {
+        url: process.env.VUE_APP_BASE_API + '/admin-api/config/customer/import-excel',
+        headers: getBaseHeader()
       }
     };
   },
@@ -222,11 +238,16 @@ export default {
     },
     /** 模板下载操作 */
     handleDownload() {
-      console.log('模板下载操作')
+      downloadCustomerTemplate().then(res => {
+        this.$download.excel(res, '客户名册导入模版.xls');
+      });
     },
     /** 批量上传操作 */
-    handleUpload() {
-      console.log('批量上传操作')
+    /** 文件上传成功 */
+    handleFileSuccess() {
+      this.$modal.msgSuccess("导入成功");
+      this.getList();
+      this.getCustomerSimpleList();
     },
     /** 修改按钮操作 */
     handleUpdate(row) {

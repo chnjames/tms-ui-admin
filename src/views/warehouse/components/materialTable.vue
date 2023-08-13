@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog :title="`${title}物料采购清单`" :visible.sync="open" width="900px" :append-to-body="appendToBody" :show-close="false">
+    <el-dialog fullscreen :title="`${title}物料采购清单`" :visible.sync="open" :show-close="false">
       <el-form ref="form" :model="form" :rules="rules" inline inline-message>
         <el-form-item v-if="form.action === 1 || form.action === 2" label="采购(PN)单号：" prop="pnCode">
           <div>{{form.pnCode}}</div>
@@ -18,12 +18,12 @@
         </div>
         <el-divider />
         <el-table class="material" ref="materialRef" :show-summary="showSummary" :summary-method="getSumPrice" :data="form.items" style="width: 100%">
-          <el-table-column label="物料编号" align="center" prop="materialCode" :width="100" />
-          <el-table-column label="物料名称" align="center" prop="materialName" :width="100" />
-          <el-table-column label="规格型号" align="center" prop="materialSpecs" :width="160" />
+          <el-table-column label="物料编号" align="center" prop="materialCode" />
+          <el-table-column label="物料名称" align="center" prop="materialName" />
+          <el-table-column label="规格型号" align="center" prop="materialSpecs" />
           <el-table-column label="品牌" align="center" prop="materialBrand" :width="100" />
-          <el-table-column label="物料类别" align="center" prop="materialCategory" :width="100" />
-          <el-table-column label="供应商" align="center" :width="160">
+          <el-table-column label="物料类别" align="center" prop="materialCategory" :width="160" />
+          <el-table-column label="供应商" align="center">
             <template v-slot="{row, $index}">
               <el-form-item :prop="`items.${$index}.supplierId`" :rules="rules.supplierId">
                 <el-select v-if="form.action === 0 || form.action === 1" v-model="row.supplierId" placeholder="请选择">
@@ -33,17 +33,17 @@
               </el-form-item>
             </template>
           </el-table-column>
-          <el-table-column label="需求发起人" align="center" :width="100">
+          <el-table-column label="需求发起人" align="center" :width="120">
             <template v-slot="{row}">
               <span>{{row.demander || '-'}}</span>
             </template>
           </el-table-column>
-          <el-table-column label="收货状态" align="center" prop="received" :width="100">
+          <el-table-column label="收货状态" align="center" prop="received" :width="120">
             <template v-slot="{row}">
               <span>{{row.received ? '已收货': '未收货'}}</span>
             </template>
           </el-table-column>
-          <el-table-column label="历史平均价格" align="center" :width="100">
+          <el-table-column label="历史平均价格" align="center" :width="120">
             <template v-slot="{row}">
               <span>{{row.historyPrice || '-'}}</span>
             </template>
@@ -56,21 +56,21 @@
               <div v-else>{{row.price}}</div>
             </template>
           </el-table-column>
-          <el-table-column label="需求数量" align="center" prop="count" :width="100" />
-          <el-table-column label="总价" align="center" prop="totalPrice" :width="120">
+          <el-table-column label="需求数量" align="center" prop="count" :width="120" />
+          <el-table-column label="总价" align="center" prop="totalPrice" :width="140">
             <template v-slot="{row}">
               <span>{{row.totalPrice}}</span>
             </template>
           </el-table-column>
         </el-table>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-      <template v-if="form.action === 0 || form.action === 1">
-        <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="submitForm(0)">保 存</el-button>
-      </template>
-      <el-button v-else @click="cancel">关 闭</el-button>
-    </span>
+      <div slot="footer" class="dialog-footer">
+        <template v-if="form.action === 0 || form.action === 1">
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm(0)">保 存</el-button>
+        </template>
+        <el-button v-else @click="cancel">关 闭</el-button>
+      </div>
     </el-dialog>
     <!-- 上传附件 -->
     <el-dialog :title="uploadTitle" :visible.sync="uploadOpen" width="600px" append-to-body>

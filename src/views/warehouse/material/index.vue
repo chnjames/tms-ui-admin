@@ -28,12 +28,14 @@
                    v-hasPermi="['warehouse:material:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-upload2" size="mini"
-                   v-hasPermi="['warehouse:material:create']">批量上传</el-button>
+        <el-upload accept=".xlsx, .xls" :action="upload.url" :headers="upload.headers" :show-file-list="false" :limit="1"
+                   :on-success="handleFileSuccess">
+          <el-button type="primary" plain icon="el-icon-upload2" size="mini" v-hasPermi="['warehouse:material:export']">批量上传</el-button>
+        </el-upload>
       </el-col>
       <el-col :span="1.5">
-        <el-button plain icon="el-icon-download" size="mini"
-                   v-hasPermi="['warehouse:material:create']">模板下载</el-button>
+        <el-button plain icon="el-icon-download" size="mini" @click="handleDownload"
+                   v-hasPermi="['warehouse:material:export']">模板下载</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" :loading="exportLoading"
@@ -51,6 +53,7 @@
       <el-table-column label="物料类别" sortable align="center" prop="category" />
       <el-table-column label="规格型号" align="center" prop="specs" />
       <el-table-column label="预警数量" align="center" prop="warnStock" />
+      <el-table-column label="触发采购数量" align="center" prop="qty" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template v-slot="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
@@ -113,9 +116,11 @@ import {
   deleteMaterial,
   getMaterial,
   getMaterialPage,
-  exportMaterialExcel
+  exportMaterialExcel,
+  downloadMaterialTemplate
 } from '@/api/warehouse/material'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
+import { getBaseHeader } from '@/utils/request'
 
 export default {
   name: "Material",
@@ -174,6 +179,11 @@ export default {
         specs: [{ required: true, message: "物料规格型号不能为空", trigger: "blur" }],
         warnStock: [{ required: true, message: "物料库存预警不能为空", trigger: "blur", type: "number" }],
         qty: [{ required: true, message: "触发采购数量不能为空", trigger: "blur", type: "number" }]
+      },
+      // 导入模板
+      upload: {
+        url: process.env.VUE_APP_BASE_API + '/admin-api/warehouse/material/import-excel',
+        headers: getBaseHeader()
       }
     };
   },
@@ -263,6 +273,21 @@ export default {
       this.isReadonly = false;
       this.open = true;
       this.title = "添加物料";
+    },
+    /** 模板下载操作 */
+    handleDownload() {
+      downloadMaterialTemplate().then(res => {
+        this.$download.excel(res, '物料基础数据导入模版.xls');
+      });
+    },
+    /** 批量上传操作 */
+    /** 文件上传成功 */
+    handleFileSuccess() {
+      this.$modal.msgSuccess("导入成功");
+      this.getList();
+      this.getBrandList();
+      this.getCategoryList();
+      this.getSpecList();
     },
     /** 修改按钮操作 */
     handleUpdate(row) {

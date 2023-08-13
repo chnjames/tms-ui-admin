@@ -1,46 +1,49 @@
 <template>
   <div>
-    <!-- 操作工具栏 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:factory-area:create']">新增附件</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="primary" icon="el-icon-download" size="mini"
-                   v-hasPermi="['config:device:create']">批量下载</el-button>
-      </el-col>
-      <right-toolbar @queryTable="getList"></right-toolbar>
-    </el-row>
-
-    <!-- 列表 -->
-    <el-table v-loading="loading" :data="list">
-      <el-table-column type="selection" :width="60" align="center" />
-      <el-table-column
-        v-for="(item, index) in tableHeader"
-        :key="index"
-        :prop="item.prop"
-        :width="item.width"
-        :fixed="item.fixed"
-        :label="item.label">
-        <template v-slot="{row}">
-          <template v-if="item.prop === 'operation'">
-            <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
-                       v-hasPermi="['config:factory-area:delete']">删除</el-button>
+    <el-card style="margin-bottom: 15px">
+      <!-- 操作工具栏 -->
+      <el-row :gutter="10">
+        <el-col :span="1.5">
+          <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                     v-hasPermi="['operations:contract:create']">新增附件</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button type="primary" icon="el-icon-download" size="mini" @click="handleBatchDownload"
+                     v-hasPermi="['operations:contract:query']">批量下载</el-button>
+        </el-col>
+        <right-toolbar @queryTable="getList"></right-toolbar>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!-- 列表 -->
+      <el-table ref="table" v-loading="loading" :data="list">
+        <el-table-column type="selection" :width="60" align="center" />
+        <el-table-column
+          v-for="(item, index) in tableHeader"
+          :key="index"
+          :prop="item.prop"
+          :width="item.width"
+          :fixed="item.fixed"
+          :label="item.label">
+          <template v-slot="{row}">
+            <template v-if="item.prop === 'operation'">
+              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                         v-hasPermi="['operations:contract:delete']">删除</el-button>
+            </template>
+            <template v-else-if="item.prop === 'executorName'">
+              <span>{{ row.creator.nickname || '-' }}</span>
+            </template>
+            <template v-else-if="item.prop === 'size'">
+              <span>{{ formatFileSize(row[item.prop]) }}</span>
+            </template>
+            <template v-else-if="item.prop === 'createTime'">
+              <span>{{ parseTime(row[item.prop]) }}</span>
+            </template>
+            <span v-else>{{ row[item.prop] }}</span>
           </template>
-          <template v-else-if="item.prop === 'executorName'">
-            <span>{{ row.creator.nickname || '-' }}</span>
-          </template>
-          <template v-else-if="item.prop === 'size'">
-            <span>{{ formatFileSize(row[item.prop]) }}</span>
-          </template>
-          <template v-else-if="item.prop === 'createTime'">
-            <span>{{ parseTime(row[item.prop]) }}</span>
-          </template>
-          <span v-else>{{ row[item.prop] }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-table-column>
+      </el-table>
+    </el-card>
     <!-- 上传附件 -->
     <el-dialog custom-class="material" :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form :model="form" ref="form" :rules="rules">
@@ -152,6 +155,17 @@ export default {
       this.reset()
       this.open = true
       this.title = '添加'
+    },
+    /** 批量下载按钮操作 */
+    handleBatchDownload() {
+      const urls = this.$refs.table.selection.map(item => item.url)
+      if (urls.length === 0) {
+        this.$modal.msgWarning('请选择要下载的数据')
+        return
+      }
+      urls.forEach(item => {
+        window.open(item)
+      })
     },
     /** 提交按钮 */
     submitForm() {

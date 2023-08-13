@@ -4,11 +4,11 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button :disabled="payStatus === 1" type="primary" plain icon="el-icon-plus" size="mini" @click="handleAddEdit"
-                   v-hasPermi="['config:factory-area:create']">编辑</el-button>
+                   v-hasPermi="['operations:payment:create']">编辑</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button :disabled="!payInfo.blameId || payStatus === 1" type="primary" plain icon="el-icon-position" size="mini" @click="handleInitiate"
-                   v-hasPermi="['config:factory-area:create']">启动收款</el-button>
+                   v-hasPermi="['operations:payment:update']">启动收款</el-button>
       </el-col>
       <right-toolbar @queryTable="getReceipt"></right-toolbar>
     </el-row>

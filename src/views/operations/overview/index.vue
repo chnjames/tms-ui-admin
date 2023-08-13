@@ -81,10 +81,10 @@
             <el-progress :percentage="row.progress > 100 ? 100 : row.progress" :color="row.progressColor" :format="progressFormat(row.progress)"></el-progress>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
+        <el-table-column label="操作" align="center" fixed="right" class-name="small-padding fixed-width" width="200">
           <template v-slot="{row}">
             <el-button size="mini" type="text" icon="el-icon-view" @click="bindProject(row)"
-                       v-hasPermi="['warehouse:material:delete']">详情</el-button>
+                       v-hasPermi="['operations:project:query']">详情</el-button>
             <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
                        v-hasPermi="['operations:project:delete']">删除</el-button>
           </template>

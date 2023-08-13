@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div>
     <el-drawer v-bind="$attrs" v-on="$listeners">
       <el-scrollbar class="scrollbar">
         <div class="content">

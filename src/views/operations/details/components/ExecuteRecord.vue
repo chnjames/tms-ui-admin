@@ -24,7 +24,7 @@
             <span>{{ parseTime(row[item.prop]) }}</span>
           </template>
           <template v-else-if="item.prop === 'attachment'">
-            <el-image fit="cover" style="width: 50px;height: 50px" :preview-src-list="['https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg']" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
+            <el-image v-if="row.attachments" fit="cover" style="width: 50px;height: 50px" :preview-src-list="row.attachments" :src="row.attachment" />
           </template>
           <span v-else>{{ row[item.prop] }}</span>
         </template>
@@ -89,6 +89,12 @@ export default {
           item.blameName = item.blame?.nickname || '-'
           item.statusDesc = this.taskStatusList.find(i => parseInt(i.value) === item.status).label
           item.statusColor = this.taskStatusList.find(i => parseInt(i.value) === item.status).colorType
+          if (item.attachments && item.attachments.length > 0) {
+            const [attachment] = item.attachments
+            item.attachment = attachment
+          } else {
+            item.attachment = null
+          }
         })
         this.list = list;
         this.total = total;

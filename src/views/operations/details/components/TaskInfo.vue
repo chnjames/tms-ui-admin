@@ -1,44 +1,53 @@
 <template>
   <div>
-    <!-- 操作工具栏 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-                   v-hasPermi="['config:factory-area:create']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入任务名称" clearable
-                  @keyup.enter.native="handleQuery"/>
-      </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
-    <!--切换状态-->
-    <el-tabs v-model="queryParams.status" @tab-click="bindTab">
-      <el-tab-pane v-for="item in tabsList" :key="item.value" :label="item.label" :name="item.value" />
-    </el-tabs>
-    <!-- 列表 -->
-    <el-table v-loading="loading" :data="list">
-      <el-table-column
-        v-for="(item, index) in tableHeader"
-        :key="index"
-        :prop="item.prop"
-        :width="item.width"
-        :fixed="item.fixed"
-        :label="item.label">
-        <template v-slot="{row}">
-          <template v-if="item.prop === 'status'">
-            <el-tag size="mini" :type="row.statusColor">{{row.statusDesc}}</el-tag>
+    <el-card style="margin-bottom: 15px">
+      <!-- 操作工具栏 -->
+      <el-row :gutter="10">
+        <el-col :span="1.5">
+          <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
+                     v-hasPermi="['operations:task:create']">新增</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-input v-show="showSearch" v-model="queryParams.name" size="mini" placeholder="请输入任务名称" clearable
+                    @keyup.enter.native="handleQuery"/>
+        </el-col>
+        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!--切换状态-->
+      <el-tabs v-model="queryParams.status" @tab-click="bindTab">
+        <el-tab-pane v-for="item in tabsList" :key="item.value" :label="item.label" :name="item.value" />
+      </el-tabs>
+      <!-- 列表 -->
+      <el-table v-loading="loading" :data="list">
+        <el-table-column
+          v-for="(item, index) in tableHeader"
+          :key="index"
+          :prop="item.prop"
+          :width="item.width"
+          :fixed="item.fixed"
+          :label="item.label">
+          <template v-slot="{row}">
+            <template v-if="item.prop == 'operate'">
+              <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(row)"
+                         v-hasPermi="['operations:task:update']">编辑</el-button>
+              <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(row)"
+                         v-hasPermi="['operations:task:delete']">删除</el-button>
+            </template>
+            <template v-else-if="item.prop === 'status'">
+              <el-tag size="mini" :type="row.statusColor">{{row.statusDesc}}</el-tag>
+            </template>
+            <span v-else>{{ row[item.prop] }}</span>
           </template>
-          <span v-else>{{ row[item.prop] }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-table-column>
+      </el-table>
+    </el-card>
     <!-- 对话框(添加 / 修改) -->
     <drawer-plus :title="title" :visible.sync="open" :size="550" append-to-body>
       <el-form ref="params" :model="params" :rules="rules" label-width="130px">
         <div v-for="(item, index) in params.form" :key="index" v-show="index === currentIndex">
-          <el-form-item label="任务模板">
+          <el-form-item label="任务模板" v-if="!isEdit">
             <el-select v-model="item.templateId" filterable placeholder="请选择" style="width: 100%" @change="bindTempType">
               <el-option v-for="i in taskTempList" :key="i.id" :label="i.name" :value="i.id" />
             </el-select>
@@ -89,8 +98,8 @@
         </div>
       </el-form>
       <template slot="footer">
-        <el-button plain @click="preNextTask(-1)" :disabled="currentIndex <= 0">上一条</el-button>
-        <el-button plain @click="preNextTask(1)" :disabled="currentIndex >= params.form.length - 1" style="margin-right: 40px">下一条</el-button>
+        <el-button v-if="!isEdit" plain @click="preNextTask(-1)" :disabled="currentIndex <= 0">上一条</el-button>
+        <el-button v-if="!isEdit" plain @click="preNextTask(1)" :disabled="currentIndex >= params.form.length - 1" style="margin-right: 40px">下一条</el-button>
         <el-button @click="cancel">取 消</el-button>
         <el-button type="primary" @click="submitForm">确 定</el-button>
       </template>
@@ -102,7 +111,10 @@
 import {
   getTaskPage,
   createTaskBatch,
-  getTaskSimpleList
+  getTaskSimpleList,
+  getTask,
+  updateTask,
+  deleteTask
 } from '@/api/operations/overview'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 import { listSimpleUsers } from '@/api/system/user'
@@ -174,7 +186,7 @@ export default {
           },
           preTaskId: null, // 前置任务
           mode: 1, // 生效方式
-          beginTime: null, // 开始时间
+          beginTime: new Date().getTime(), // 开始时间
           endTime: null, // 结束时间
           urgent: 0, // 是否紧急
           outsourcingCost: 0, // 委外费用
@@ -189,6 +201,7 @@ export default {
         ],
         plannedWorkMinute: [
           { required: true, type: 'number', message: '预计工时不能为空', trigger: 'blur' },
+          { required: true, type: 'number', message: '预计工时不能为空', trigger: 'change' },
           { validator: validatePlannedWorkMinute, trigger: 'blur' }
         ],
         extra: {
@@ -199,13 +212,23 @@ export default {
         beginTime: { required: true, type: 'date', message: '开始时间不能为空', trigger: 'change' },
         endTime: { required: true, type: 'date', message: '结束时间不能为空', trigger: 'change' },
         outsourcingCost: { required: true, type: 'number', message: '委外费用不能为空', trigger: 'blur' }
+      },
+      // 是否是编辑
+      isEdit: false
+    }
+  },
+  props: {
+    beginEndTime: {
+      type: Array,
+      default: () => {
+        return []
       }
     }
   },
   created() {
     this.getUserList()
     this.getTaskTempList(this.taskType)
-    this.getTaskSimpleList()
+    this.getTaskSimpleList(this.proId)
     this.getList()
   },
   computed: {
@@ -236,7 +259,8 @@ export default {
         { prop: 'outsourcingCost', label: '委外费用(¥)' },
         { prop: 'status', label: '状态' },
         { prop: 'activatedTime', label: '开始时间', width: 160 },
-        { prop: 'completedTime', label: '完成时间', width: 160 }
+        { prop: 'completedTime', label: '完成时间', width: 160 },
+        { prop: 'operate', label: '操作', width: 120, fixed: 'right'}
       ]
     } else if (this.taskType === 1) {
       // 生产管理
@@ -249,6 +273,7 @@ export default {
         { prop: 'status', label: '状态' },
         { prop: 'activatedTime', label: '开始时间', width: 160 },
         { prop: 'completedTime', label: '完成时间', width: 160 },
+        { prop: 'operate', label: '操作', width: 120, fixed: 'right'}
       ]
     }
     this.tableHeader = typeHead
@@ -263,7 +288,8 @@ export default {
     /** 获取任务模板列表 */
     getTaskTempList(type) {
       getTaskTemplateList({type}).then(response => {
-        this.taskTempList = response.data
+        const taskTempList = response.data
+        this.taskTempList = taskTempList.filter(item => item.type === this.taskType)
       })
     },
     /** 获得任务模板详情 */
@@ -285,8 +311,8 @@ export default {
       })
     },
     /** 获取任务精简列表 */
-    getTaskSimpleList() {
-      getTaskSimpleList().then(response => {
+    getTaskSimpleList(projectId) {
+      getTaskSimpleList({projectId}).then(response => {
         this.taskOptions = response.data
       })
     },
@@ -321,9 +347,45 @@ export default {
       this.queryParams.status = tab.name
       this.getList()
     },
+    /** 修改按钮操作 */
+    handleUpdate(row) {
+      this.reset();
+      this.isEdit = true;
+      getTask(row.id).then(response => {
+        const { data } = response;
+        const modeValue = data.preTaskId ? 2 : 1;
+        this.params.form = new Array(this.params.form.length).fill(data);
+        this.params.form.forEach(item => {
+          if (item.outsourcingCost) {
+            item.outsourcingCost = (item.outsourcingCost / 100).toFixed(2);
+          }
+          if (item.plannedWorkMinute) {
+            item.plannedWorkMinute = (item.plannedWorkMinute / 60).toFixed(2);
+          }
+          item.mode = modeValue;
+        });
+        this.open = true;
+        this.title = '修改';
+      })
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const name = row.name;
+      this.$modal.confirm('是否确认删除任务名称为"' + name + '"的数据项?').then(function() {
+        return deleteTask(row.id);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
+    },
     /** 修改模板类型 */
     bindTempType(id) {
       this.getTaskTemplate(id)
+      const [beginTime, endTime] = this.beginEndTime
+      this.params.form.forEach(item => {
+        item.beginTime = beginTime
+        item.endTime = endTime
+      })
     },
     /** 取消按钮 */
     cancel() {
@@ -346,7 +408,7 @@ export default {
           },
           preTaskId: null, // 前置任务
           mode: 1, // 生效方式
-          beginTime: null, // 开始时间
+          beginTime: new Date().getTime(), // 开始时间
           endTime: null, // 结束时间
           urgent: 0, // 是否紧急
           outsourcingCost: 0 // 委外费用
@@ -362,12 +424,19 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset()
+      this.isEdit = false
       this.open = true
       this.title = '添加'
     },
     /** 上一条或者下一条任务 */
     preNextTask(step) {
       this.currentIndex = Math.max(0, Math.min(this.currentIndex + step, this.params.form.length - 1));
+      if (step === 1) {
+        this.params.form[this.currentIndex].beginTime = this.params.form[this.currentIndex - 1].beginTime
+        this.params.form[this.currentIndex].endTime = this.params.form[this.currentIndex - 1].endTime
+        this.taskType === 0 && (this.params.form[this.currentIndex].plannedWorkMinute = this.params.form[this.currentIndex - 1].plannedWorkMinute)
+        this.taskType === 1 && (this.params.form[this.currentIndex].extra.plannedQty = this.params.form[this.currentIndex - 1].extra.plannedQty)
+      }
     },
     /** 提交按钮 */
     submitForm() {
@@ -376,13 +445,12 @@ export default {
           return
         }
         // 添加的提交
-        const currentTime = new Date().getTime();
+        // const currentTime = new Date().getTime();
         const paramsArr = JSON.parse(JSON.stringify(this.params.form))
-        console.log(paramsArr)
         paramsArr.map(item => {
-          if (this.taskType === 0 && item.mode === 2) {
-            item.beginTime = currentTime
-          }
+          // if (this.taskType === 0 && item.mode === 2) {
+          //   item.beginTime = currentTime
+          // }
           item.projectId = this.proId
           item.type = this.taskType === 0 ? 0 : 10
           item.outsourcingCost = item.outsourcingCost * 100
@@ -391,11 +459,20 @@ export default {
             ...item.extra
           }
         })
-        createTaskBatch(paramsArr).then(response => {
-          this.$modal.msgSuccess('新增成功')
-          this.open = false
-          this.getList()
-        })
+        if (this.isEdit) {
+          const [params] = paramsArr
+          updateTask(params).then(response => {
+            this.$modal.msgSuccess('修改成功')
+            this.open = false
+            this.getList()
+          })
+        } else {
+          createTaskBatch(paramsArr).then(response => {
+            this.$modal.msgSuccess('新增成功')
+            this.open = false
+            this.getList()
+          })
+        }
       })
     }
   }
