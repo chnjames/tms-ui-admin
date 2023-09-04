@@ -66,7 +66,7 @@ export default {
         legend: {
           left: 'center',
           bottom: 10,
-          data: ['任务数量', '工时数量']
+          data: ['已分派工时', '已完成工时']
         },
         grid: {
           left: '3%',
@@ -110,12 +110,12 @@ export default {
         },
         series: [
           {
-            name: '任务数量',
+            name: '已分派工时',
             type: 'bar',
             barWidth: '30%',
             barGap: 0 // 表示柱子之间的距离
           }, {
-            name: '工时数量',
+            name: '已完成工时',
             type: 'bar',
             barWidth: '30%',
             barGap: 0 // 表示柱子之间的距离

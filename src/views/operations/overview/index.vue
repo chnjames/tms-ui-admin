@@ -313,7 +313,7 @@ export default {
           item.typeDesc = this.typeList.find(type => parseInt(type.value) === item.type).label
           item.statusDesc = this.statusList.find(status => parseInt(status.value) === item.status).label
           item.statusColor = this.statusList.find(status => parseInt(status.value) === item.status).colorType
-          item.progress = Math.floor((item.rate.current / item.rate.total) * 100)
+          item.progress = (item.rate.total && item.rate.current) ? Math.floor((item.rate.current / item.rate.total) * 100) : 0
           if (item.progress < 100) {
             if (item.endTime > new Date().getTime()) {
               item.progressColor = '#409EFF'

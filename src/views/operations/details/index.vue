@@ -216,7 +216,7 @@ export default {
         data.current = data.rate.current
         data.total = data.rate.total
         data.colorType = this.statusList.find(status => parseInt(status.value) === data.status).colorType
-        data.progress = Math.floor((data.rate.current / data.rate.total) * 100)
+        data.progress = (data.rate.current && data.rate.total) ? Math.floor((data.rate.current / data.rate.total) * 100) : 0
         if (data.progress < 100) {
           if (data.endTime > new Date().getTime()) {
             data.progressColor = '#409EFF'
