@@ -314,3 +314,12 @@ export const PromotionActivityStatusEnum = {
     name: '已关闭'
   }
 }
+/**
+ * 项目类型进度枚举
+ * '0' => 项目管理 { 已消耗工时, 预估工时 }
+ * '1' => 生产管理 { 已完成数量, 总数量 }
+ * '2' => 设备维保 { 已完成数量, 任务总数 }
+ */
+export const ProjectProgressEnum = {
+
+}

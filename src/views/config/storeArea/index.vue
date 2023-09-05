@@ -16,6 +16,10 @@
                    v-hasPermi="['config:store-area:create']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
+        <el-button plain icon="el-icon-download" size="mini" @click="handleDownload"
+                   v-hasPermi="['config:supplier:export']">下载库位编码</el-button>
+      </el-col>
+      <el-col :span="1.5">
         <el-button type="info" plain icon="el-icon-sort" size="mini" @click="toggleExpandAll">展开/折叠</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -95,7 +99,8 @@ import {
   deleteStoreArea,
   getStoreArea,
   getStoreAreaPage,
-  getStoreSimpleList
+  getStoreSimpleList,
+  exportStoreAreaExcel
 } from '@/api/config/storeArea'
 import DrawerPlus from '@/components/DrawerPlus/index.vue'
 
@@ -221,6 +226,12 @@ export default {
       this.isEdit = false
       this.open = true
       this.title = '添加仓库/库区'
+    },
+    /** 下载库位编码按钮操作 */
+    handleDownload() {
+      exportStoreAreaExcel().then(res => {
+        this.$download.excel(res, '库位信息.xls');
+      });
     },
     /** 修改按钮操作 */
     handleUpdate(row) {

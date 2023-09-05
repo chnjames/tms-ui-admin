@@ -44,12 +44,14 @@ export function getStoreAreaPage(query) {
 }
 
 // 导出仓库/库区 Excel
-export function exportStoreAreaExcel(query) {
+export function exportStoreAreaExcel() {
   return request({
     url: '/config/store-area/export-excel',
     method: 'get',
-    params: query,
-    responseType: 'blob'
+    responseType: 'blob',
+    header: {
+      headers: { 'Content-Type': 'application/x-download' }
+    }
   })
 }
 // 获取仓库精简信息列表

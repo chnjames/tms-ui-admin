@@ -207,6 +207,7 @@ export default {
     /** 获取项目详情 */
     getOverview() {
       this.projectLoading = true
+      console.log('this.typeList', this.typeList)
       getOverview(this.proId).then(response => {
         const { data } = response
         data.blameId = data.blame.id

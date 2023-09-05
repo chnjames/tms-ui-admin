@@ -298,9 +298,9 @@ export default {
       getTaskPlanPage(this.queryParams).then(response => {
         const {list, total} = response.data
         list.map(item => {
-          item.blameName = this.userList.find(user => user.id === item.blameId).nickname
-          item.periodDesc = this.taskPlanPeriodList.find(i => parseInt(i.value) === item.period).label
-          item.typeDesc = this.taskPlanTypeList.find(i => parseInt(i.value) === item.type).label
+          item.blameName = this.userList.find(user => user.id === item.blameId)?.nickname || ''
+          item.periodDesc = this.taskPlanPeriodList.find(i => parseInt(i.value) === item.period)?.label || ''
+          item.typeDesc = this.taskPlanTypeList.find(i => parseInt(i.value) === item.type)?.label || ''
         })
         this.list = list;
         this.total = total;

@@ -267,9 +267,9 @@ export default {
       typeHead = [
         { prop: 'name', label: '任务名称', width: 200 },
         { prop: 'blameName', label: '执行人' },
-        { prop: 'hours', label: '计划数量' },
-        { prop: 'hours', label: '已完成数量' },
-        { prop: 'outsourcingCost', label: '不合格数量' },
+        { prop: 'plannedQty', label: '计划数量' },
+        { prop: 'qualifiedQty', label: '已完成数量' },
+        { prop: 'unQualifiedQty', label: '不合格数量' },
         { prop: 'status', label: '状态' },
         { prop: 'activatedTime', label: '开始时间', width: 160 },
         { prop: 'completedTime', label: '完成时间', width: 160 },
@@ -329,13 +329,16 @@ export default {
         const { list, total } = response.data;
         list.map(item => {
           item.blameName = item.blame?.nickname || ''
-          item.estimatedHours = formatMinuteToHour(item?.plannedWorkMinute || 0)
-          item.consumedHours = formatMinuteToHour(item?.consumedWorkMinute || 0)
+          item.estimatedHours = formatMinuteToHour(item?.plannedWorkMinute || 0) // 项目管理
+          item.consumedHours = formatMinuteToHour(item?.consumedWorkMinute || 0) // 项目管理
+          item.plannedQty = item.extra?.plannedQty || 0 // 生产管理
+          item.qualifiedQty = item.extra?.qualifiedQty || 0 // 生产管理
+          item.unQualifiedQty = item.extra?.unQualifiedQty || 0 // 生产管理
           item.activatedTime = parseTime(item.activatedTime)
           item.completedTime = parseTime(item.completedTime)
           item.statusDesc = this.tabList.find(i => parseInt(i.value) === item.status).label
           item.statusColor = this.tabList.find(i => parseInt(i.value) === item.status).colorType
-          item.outsourcingCost = (item.outsourcingCost / 100).toFixed(2)
+          item.outsourcingCost = (item.outsourcingCost / 100).toFixed(2) // 项目管理
         })
         this.list = list;
         this.total = total;
