@@ -54,11 +54,11 @@
                 <count-to :style="{color: form.progressColor}" :start-val="0" :end-val="form.progress" suffix="%" />
               </el-col>
               <el-col :span="8">
-                <div class="progress-label">已消耗工时(h)</div>
+                <div class="progress-label">{{proTypeEnum.name1}}</div>
                 <count-to :start-val="0" :end-val="form.current" />
               </el-col>
               <el-col :span="8">
-                <div class="progress-label">预估工时(h)</div>
+                <div class="progress-label">{{proTypeEnum.name2}}</div>
                 <count-to :start-val="0" :end-val="form.total" />
               </el-col>
             </div>
@@ -95,6 +95,7 @@ import PayManage from '@/views/operations/details/components/PayManage.vue'
 import TaskInfo from '@/views/operations/details/components/TaskInfo.vue'
 import TaskPlan from '@/views/operations/details/components/TaskPlan.vue'
 import { arrayNotEqual } from '@/utils'
+import {ProjectProgressEnum} from '@/utils/constants'
 
 export default {
   name: 'Details',
@@ -130,6 +131,7 @@ export default {
         { label: '合同管理', name: '5', permission: 'operations:contract:query', component: 'ContractManage', tabsType: 1 },
         { label: '收款管理', name: '6', permission: 'operations:payment:query', component: 'PayManage', tabsType: 1 }
       ],
+      proTypeEnum: {},
       // 用户列表
       userList: [],
       // 项目类型列表
@@ -207,11 +209,11 @@ export default {
     /** 获取项目详情 */
     getOverview() {
       this.projectLoading = true
-      console.log('this.typeList', this.typeList)
       getOverview(this.proId).then(response => {
         const { data } = response
         data.blameId = data.blame.id
         data.followerIds = data.followers.map(item => item.id)
+        this.proTypeEnum = ProjectProgressEnum[data.type]
         data.typeDesc = this.typeList.find(type => parseInt(type.value) === data.type).label
         data.beginEndTime = [data.beginTime, data.endTime]
         data.current = data.rate.current

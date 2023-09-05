@@ -321,5 +321,16 @@ export const PromotionActivityStatusEnum = {
  * '2' => 设备维保 { 已完成数量, 任务总数 }
  */
 export const ProjectProgressEnum = {
-
+  0: {
+    name1: '已消耗工时(h)',
+    name2: '预估工时(h)'
+  },
+  1: {
+    name1: '已完成数量',
+    name2: '总数量'
+  },
+  2: {
+    name1: '已完成数量',
+    name2: '任务总数'
+  }
 }

@@ -9,6 +9,9 @@
                             type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
           </el-form-item>
           <el-form-item>
+            <el-input v-model="queryParams.projectName" placeholder="请输入项目名称" clearable @keyup.enter.native="handleQuery"/>
+          </el-form-item>
+          <el-form-item>
             <el-input v-model="queryParams.name" placeholder="请输入任务名称" clearable @keyup.enter.native="handleQuery"/>
           </el-form-item>
           <el-form-item>
@@ -89,6 +92,7 @@ export default {
       ],
       // 查询参数
       queryParams: {
+        projectName: null,
         name: null,
         status: 'all',
         pageNo: 1,
